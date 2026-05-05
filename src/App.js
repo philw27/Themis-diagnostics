@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback } from "react";
- 
+
 // ── SUPABASE CLIENT ─────────────────────────────────────────
 const SUPABASE_URL = "https://mvratboyodudbgcmwtku.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12cmF0Ym95b2R1ZGJnY213dGt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMTU0ODUsImV4cCI6MjA5Mjc5MTQ4NX0.2GQaY76N9KKXkKBxRU5ZCzthttUh49WM0J2Pd1QJw4U";
- 
+
 const sb = {
   // ── AUTH ──────────────────────────────────────────────────
   async signIn(email, password) {
@@ -14,7 +14,7 @@ const sb = {
     });
     return res.json();
   },
- 
+
   async signUp(email, password, fullName, role) {
     const res = await fetch(SUPABASE_URL + "/auth/v1/signup", {
       method: "POST",
@@ -23,14 +23,14 @@ const sb = {
     });
     return res.json();
   },
- 
+
   async signOut(token) {
     await fetch(SUPABASE_URL + "/auth/v1/logout", {
       method: "POST",
       headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + token },
     });
   },
- 
+
   // ── DATABASE ──────────────────────────────────────────────
   async query(table, token, options = {}) {
     let url = SUPABASE_URL + "/rest/v1/" + table + "?";
@@ -47,7 +47,7 @@ const sb = {
     });
     return res.json();
   },
- 
+
   async insert(table, token, data) {
     const res = await fetch(SUPABASE_URL + "/rest/v1/" + table, {
       method: "POST",
@@ -61,7 +61,7 @@ const sb = {
     });
     return res.json();
   },
- 
+
   async upsert(table, token, data, onConflict) {
     const url = SUPABASE_URL + "/rest/v1/" + table +
                 (onConflict ? "?on_conflict=" + onConflict : "");
@@ -77,7 +77,7 @@ const sb = {
     });
     return res.json();
   },
- 
+
   async update(table, token, data, filter) {
     const res = await fetch(SUPABASE_URL + "/rest/v1/" + table + "?" + filter, {
       method: "PATCH",
@@ -91,7 +91,7 @@ const sb = {
     });
     return res.json();
   },
- 
+
   async uploadPhoto(token, jobId, itemId, dataUrl, filename) {
     // Convert base64 dataUrl to blob
     const base64 = dataUrl.split(",")[1];
@@ -115,13 +115,13 @@ const sb = {
     return null;
   },
 };
- 
+
 const C = {
   bg:"#080c12",surface:"#0e1520",card:"#141f30",border:"#1e3a5f",
   green:"#00e887",blue:"#38bdf8",amber:"#fbbf24",red:"#f87171",
   purple:"#a78bfa",text:"#f1f5f9",muted:"#7096b8",accent:"#22d3ee",dim:"#a8c4d8",
 };
- 
+
 const S = {
   app:{ background:C.bg, minHeight:"100vh", fontFamily:"'IBM Plex Mono','Courier New',monospace", color:C.text, maxWidth:500, margin:"0 auto", fontSize:15 },
   header:{ background:"linear-gradient(135deg,#060a10,#0d1a2a)", borderBottom:`1px solid ${C.border}`, padding:"14px 18px", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 },
@@ -133,7 +133,7 @@ const S = {
   secTitle:{ fontSize:12, color:C.accent, letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700, marginBottom:12 },
   tag:(col)=>({ background:col+"22", color:col, border:`1px solid ${col}44`, borderRadius:5, padding:"2px 7px", fontSize:10, fontWeight:700, letterSpacing:"0.06em", display:"inline-block" }),
 };
- 
+
 // ── CHECKLIST DATA ──────────────────────────────────────────
 const SECTIONS = [
   { id:"panels", label:"Solar Panels", items:[
@@ -203,7 +203,7 @@ const SECTIONS = [
     {id:"mec4",q:"Is the cable entry weatherproof?"},
   ]},
 ];
- 
+
 const ANSWER_OPTS = [
   {val:"yes",label:"Yes",col:C.green},
   {val:"no",label:"No",col:C.red},
@@ -211,16 +211,16 @@ const ANSWER_OPTS = [
   {val:"fi",label:"FI",col:C.purple},
   {val:"na",label:"N/A",col:C.muted},
 ];
- 
+
 const RISK_TAGS = [
   {val:"C2",col:C.red},{val:"C3",col:C.amber},{val:"FI",col:C.purple},
 ];
- 
+
 // ── PHOTO CAPTURE ───────────────────────────────────────────
 function PhotoCapture({ photos, onAdd, onRemove, engineerName, stampEnabled }) {
   const ref = useRef();
   const [busy, setBusy] = useState(false);
- 
+
   const process = useCallback(async (files) => {
     setBusy(true);
     const results = [];
@@ -272,7 +272,7 @@ function PhotoCapture({ photos, onAdd, onRemove, engineerName, stampEnabled }) {
     onAdd(results);
     setBusy(false);
   }, [engineerName, stampEnabled, onAdd]);
- 
+
   return (
     <div style={{marginTop:8}}>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:photos.length?8:0}}>
@@ -290,19 +290,19 @@ function PhotoCapture({ photos, onAdd, onRemove, engineerName, stampEnabled }) {
     </div>
   );
 }
- 
+
 // ── LOCAL AI ENGINE ─────────────────────────────────────────
 function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   const risks = [], missing = [], actions = [];
   const a = checklist || {};
   const tr = testResults || {};
   const ast = asset || {};
- 
+
   const ans  = id => a[id]?.answer || null;
   const val  = id => a[id]?.value  || "";
   const pics = id => (a[id]?.photos || []).length;
   const isNA = id => ans(id) === "na";
- 
+
   // ── ASSET / SERIAL NUMBERS ──────────────────────────────
   if (!ast.panel_count && !val("sp2"))  missing.push("Number of solar panels not recorded");
   if (!ast.panel_make  && !val("inv1") && !isNA("sp6")) missing.push("Panel make not identified — record or mark N/A");
@@ -319,7 +319,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   if (!ast.meter_reading && !val("met4") && !isNA("met4")) missing.push("Generation meter reading not recorded");
   if (!ast.system_age) missing.push("System age not recorded");
   if (!ast.inverter_loc && !val("inv4")) missing.push("Inverter location not recorded");
- 
+
   // ── PHOTO EVIDENCE ──────────────────────────────────────
   const photoReq = [
     ["inv3","Inverter serial number label"],
@@ -333,7 +333,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   photoReq.forEach(([id, label]) => {
     if (!isNA(id) && pics(id) === 0) missing.push("Photo required: " + label + " — none uploaded");
   });
- 
+
   // ── UNANSWERED YES/NO ITEMS ─────────────────────────────
   const yesNo = [
     ["sp4","Panels damaged — not inspected"],
@@ -372,7 +372,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   yesNo.forEach(([id, label]) => {
     if (!ans(id) && !val(id) && !isNA(id)) missing.push(label);
   });
- 
+
   // ── TEST RESULTS ────────────────────────────────────────
   if (!tr.voc)        missing.push("Voc (open circuit voltage) not recorded");
   if (!tr.isc)        missing.push("Isc (short circuit current) not recorded");
@@ -382,18 +382,18 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   if (!tr.zs)         missing.push("Zs (earth fault loop impedance) not recorded");
   if (!tr.rcd_trip)   missing.push("RCD trip time not recorded");
   if (!tr.mcb_rating) missing.push("MCB rating not recorded");
- 
+
   // Test value safety
   if (tr.ir_pos && parseFloat(tr.ir_pos) < 1)   risks.push({code:"C2",issue:"Insulation resistance pos-earth below 1MΩ — DC fault indicated",regulation:"IEC 60364-7-712",recommended_action:"Isolate system and investigate DC insulation fault immediately"});
   if (tr.ir_neg && parseFloat(tr.ir_neg) < 1)   risks.push({code:"C2",issue:"Insulation resistance neg-earth below 1MΩ — DC fault indicated",regulation:"IEC 60364-7-712",recommended_action:"Isolate system and investigate DC insulation fault immediately"});
   if (tr.rcd_trip && parseFloat(tr.rcd_trip) > 300) risks.push({code:"C2",issue:"RCD trip time exceeds 300ms maximum",regulation:"BS 7671 531.2",recommended_action:"Replace RCD — not operating within safe parameters"});
   if (tr.polarity === "unsatisfactory")          risks.push({code:"C2",issue:"Polarity check unsatisfactory",regulation:"BS 7671",recommended_action:"Investigate and correct DC polarity immediately"});
   if (tr.inverter_ok === "unsatisfactory")       risks.push({code:"C2",issue:"Inverter not functioning correctly",regulation:"BS 7671",recommended_action:"Investigate inverter fault before leaving site"});
- 
+
   // ── SPEC COMPARISON ────────────────────────────────────────
   const iSpecs = ast.inverterSpecs;
   const pSpecs = ast.panelSpecs;
- 
+
   if (iSpecs) {
     // Voc comparison — adjust for irradiance
     if (tr.voc && iSpecs.rated_voc_v) {
@@ -407,7 +407,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
         risks.push({code:"C3", issue:"Measured Voc (" + measVoc + "V) deviates " + deviation.toFixed(0) + "% from expected " + expectedVoc.toFixed(1) + "V at " + irr + "W/m² — possible string fault or degradation", regulation:"IEC 60364-7-712 / Manufacturer datasheet", recommended_action:"Check string connections, bypass diodes and module condition"});
       }
     }
- 
+
     // Isc comparison — scales linearly with irradiance
     if (tr.isc && pSpecs && pSpecs.isc_a && ast.panel_count) {
       const measIsc    = parseFloat(tr.isc);
@@ -419,7 +419,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
         risks.push({code:"C3", issue:"Measured Isc (" + measIsc + "A) deviates " + deviation.toFixed(0) + "% from expected " + expectedIsc.toFixed(2) + "A at " + irr + "W/m²", regulation:"IEC 60364-7-712 / Manufacturer datasheet", recommended_action:"Check for shading, soiling, or module faults — consider IV curve trace"});
       }
     }
- 
+
     // Max DC voltage — string voltage vs inverter limit
     if (tr.voc && iSpecs.max_dc_voltage_v) {
       const measVoc  = parseFloat(tr.voc);
@@ -428,25 +428,25 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
         risks.push({code:"C2", issue:"Measured Voc (" + measVoc + "V) is at or above inverter max DC input (" + maxDCVoc + "V) — risk of inverter damage", regulation:"IEC 60364-7-712.433 / Manufacturer datasheet", recommended_action:"Immediately review string configuration — reduce string length if required"});
       }
     }
- 
+
     // Clearances
     if (iSpecs.min_clearance_top_mm || iSpecs.min_clearance_sides_mm) {
       const topC  = iSpecs.min_clearance_top_mm  ? iSpecs.min_clearance_top_mm+"mm"  : "per datasheet";
       const sideC = iSpecs.min_clearance_sides_mm ? iSpecs.min_clearance_sides_mm+"mm" : "per datasheet";
       missing.push("Verify inverter clearances: top=" + topC + ", sides=" + sideC + " (from " + iSpecs._make + " " + iSpecs._model + " datasheet)");
     }
- 
+
     // Mounting surface
     if (iSpecs.mounting_surface) {
       missing.push("Confirm mounting surface is suitable: manufacturer requires " + iSpecs.mounting_surface);
     }
- 
+
     // IP rating note
     if (iSpecs.ip_rating) {
       missing.push("Confirm inverter location is appropriate for IP" + iSpecs.ip_rating + " rated unit (check dust/moisture exposure)");
     }
   }
- 
+
   if (pSpecs) {
     // Max system voltage check
     if (tr.voc && pSpecs.max_system_voltage_v && ast.panel_count) {
@@ -457,7 +457,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
       }
     }
   }
- 
+
   // ── COMPLIANCE BASELINE ─────────────────────────────────
   const rcdType = tr.rcd_type || val("ac3");
   if (!rcdType || rcdType === "Type AC") risks.push({code:"C3",issue:"RCD type not confirmed or Type AC installed — Type A minimum required for solar PV",regulation:"BS 7671 531.3.3",recommended_action:"Confirm RCD type and replace with Type A or B if required"});
@@ -472,7 +472,7 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   if (ans("lab6") === "no")  risks.push({code:"C3",issue:"Emergency shutdown procedure not displayed",regulation:"IET CoP",recommended_action:"Display emergency shutdown procedure at inverter"});
   if (ans("sp8") === "no" || ans("sp8") === "lim") risks.push({code:"FI",issue:"Array frame equipotential bonding not confirmed",regulation:"IEC 60364-7-712",recommended_action:"Investigate bonding requirement and install if required"});
   if (ans("mec4") === "no")  risks.push({code:"C3",issue:"Cable entry not weatherproof",regulation:"IEC 60364-7-712.522.8.3",recommended_action:"Seal cable entry point to prevent water ingress"});
- 
+
   // ── FLAGGED ITEMS ───────────────────────────────────────
   const handled = ["inv5","inv8","inv9","iso7","ac4","ac5","lab3","lab4","lab6","sp8","mec4"];
   (flaggedItems||[]).forEach(item => {
@@ -480,19 +480,19 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
     const code = item.risk || (item.answer === "no" ? "C3" : "FI");
     risks.push({code, issue:"Failed: "+(item.id||"item")+(item.note?" — "+item.note:""), regulation:"BS 7671", recommended_action:"Inspect and remediate as required"});
   });
- 
+
   // ── STATUS ──────────────────────────────────────────────
   const c2s = risks.filter(r=>r.code==="C2");
   const c3s = risks.filter(r=>r.code==="C3");
   const fis = risks.filter(r=>r.code==="FI");
   const status = c2s.length>0 ? "Fail" : (risks.length>0||missing.length>0) ? "Advisory" : "Pass";
- 
+
   if (c2s.length>0) actions.push("URGENT: Remediate all C2 items before installation is used");
   if (c3s.length>0) actions.push("Schedule remedial works for "+c3s.length+" C3 advisory item(s)");
   if (fis.length>0) actions.push("Arrange further investigation for "+fis.length+" FI item(s) without delay");
   if (missing.length>0) actions.push("Complete "+missing.length+" missing record(s) — photos, serials, test results");
   actions.push("Retain report and make available for next inspection");
- 
+
   const tags = ["solar_pv"];
   if (risks.some(r=>r.issue.includes("inverter")||r.issue.includes("Inverter"))) tags.push("inverter");
   if (risks.some(r=>r.issue.includes("RCD")||r.issue.includes("rcd"))) tags.push("rcd");
@@ -501,15 +501,15 @@ function runAnalysis(job, asset, checklist, testResults, flaggedItems) {
   if (missing.some(m=>m.includes("photo")||m.includes("Photo"))) tags.push("missing_photos");
   if (missing.some(m=>m.includes("serial")||m.includes("Serial"))) tags.push("missing_serials");
   if (missing.some(m=>m.includes("not recorded"))) tags.push("incomplete_records");
- 
+
   let summary = "Solar PV inspection completed for "+(job?.client||"this site")+". ";
   if (status==="Pass") summary += "Installation found to be in satisfactory condition with no significant issues identified.";
   else if (status==="Fail") summary += c2s.length+" potentially dangerous condition(s) require immediate remedial action before the installation can be considered safe for continued use.";
   else summary += risks.length+" compliance finding(s) identified: "+c2s.length+" urgent (C2), "+c3s.length+" advisory (C3), "+fis.length+" for further investigation (FI). "+missing.length+" record(s) also incomplete.";
- 
+
   return { overall_status:status, summary, missing_information:missing, risk_items:risks, recommended_actions:actions, next_inspection:c2s.length>0?"Immediate":"12 months", tags };
 }
- 
+
 // ── ANSWER ROW ──────────────────────────────────────────────
 function AnswerRow({ value, onChange }) {
   return (
@@ -521,7 +521,7 @@ function AnswerRow({ value, onChange }) {
     </div>
   );
 }
- 
+
 // ── SECTION SCORE ───────────────────────────────────────────
 function SectionScore({ items, answers }) {
   const yesno = items.filter(i=>!i.type);
@@ -535,23 +535,23 @@ function SectionScore({ items, answers }) {
     </div>
   );
 }
- 
+
 // ── CHECKLIST SCREEN ────────────────────────────────────────
 function ChecklistScreen({ job, onBack, onNext }) {
   const [answers, setAnswers] = useState({});
   const [expanded, setExpanded] = useState("panels");
   const [stamp, setStamp] = useState(true);
   const [engName, setEngName] = useState(job?.engineer||"");
- 
+
   const setAns  = (id,f,v) => setAnswers(a=>({...a,[id]:{...(a[id]||{}),[f]:v}}));
   const addPics = (id,pics) => setAnswers(a=>({...a,[id]:{...(a[id]||{}),photos:[...(a[id]?.photos||[]),...pics]}}));
   const remPic  = (id,pid)  => setAnswers(a=>({...a,[id]:{...(a[id]||{}),photos:(a[id]?.photos||[]).filter(p=>p.id!==pid)}}));
- 
+
   const totalYN = SECTIONS.reduce((n,s)=>n+s.items.filter(i=>!i.type).length,0);
   const done    = Object.values(answers).filter(a=>a.answer).length;
   const pct     = Math.round(done/totalYN*100);
   const flagged = SECTIONS.reduce((n,s)=>n+s.items.filter(i=>["no","lim","fi"].includes(answers[i.id]?.answer)).length,0);
- 
+
   return (
     <div style={{padding:16}}>
       {/* Stamp settings */}
@@ -563,7 +563,7 @@ function ChecklistScreen({ job, onBack, onNext }) {
         </div>
         {stamp && (<div><label style={S.label}>Engineer name on photo</label><input style={S.input} value={engName} onChange={e=>setEngName(e.target.value)} placeholder="e.g. J. Harrison"/></div>)}
       </div>
- 
+
       {/* Progress */}
       <div style={{...S.card,padding:"10px 14px",marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
@@ -577,7 +577,7 @@ function ChecklistScreen({ job, onBack, onNext }) {
           <div style={{width:`${pct}%`,height:"100%",background:`linear-gradient(90deg,${C.green},${C.accent})`,borderRadius:4,transition:"width 0.3s"}}/>
         </div>
       </div>
- 
+
       {SECTIONS.map(sec => {
         const open = expanded === sec.id;
         return (
@@ -632,7 +632,7 @@ function ChecklistScreen({ job, onBack, onNext }) {
     </div>
   );
 }
- 
+
 // ── LOGIN ────────────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
   const [email,    setEmail]    = useState("");
@@ -642,7 +642,7 @@ function LoginScreen({ onLogin }) {
   const [mode,     setMode]     = useState("login"); // login | signup
   const [name,     setName]     = useState("");
   const [role,     setRole]     = useState("engineer");
- 
+
   const handleLogin = async () => {
     if (!email || !pass) { setError("Enter email and password"); return; }
     setLoading(true); setError(null);
@@ -667,7 +667,7 @@ function LoginScreen({ onLogin }) {
     }
     setLoading(false);
   };
- 
+
   const handleSignUp = async () => {
     if (!email || !pass || !name) { setError("Fill in all fields"); return; }
     if (pass.length < 6) { setError("Password must be at least 6 characters"); return; }
@@ -675,7 +675,7 @@ function LoginScreen({ onLogin }) {
     try {
       const data = await sb.signUp(email, pass, name, role);
       if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
- 
+
       // If email confirmation is disabled, access_token comes back immediately
       if (data.access_token) {
         onLogin({
@@ -687,7 +687,7 @@ function LoginScreen({ onLogin }) {
         });
         return;
       }
- 
+
       // Email confirmation required
       setMode("login");
       setError("✓ Account created — check your email to confirm, then sign in");
@@ -696,7 +696,7 @@ function LoginScreen({ onLogin }) {
     }
     setLoading(false);
   };
- 
+
   return (
     <div style={{padding:28,paddingTop:60}}>
       <div style={{textAlign:"center",marginBottom:36}}>
@@ -705,7 +705,7 @@ function LoginScreen({ onLogin }) {
         <div style={{fontSize:11,color:C.muted,letterSpacing:"0.25em",marginTop:2}}>DIAGNOSTICS</div>
         <div style={{width:40,height:2,background:`linear-gradient(90deg,${C.green},${C.accent})`,margin:"12px auto 0",borderRadius:2}}/>
       </div>
- 
+
       <div style={{display:"flex",gap:8,marginBottom:16}}>
         {["login","signup"].map(m=>(
           <button key={m} onClick={()=>{setMode(m);setError(null);}} style={{flex:1,padding:"10px",background:mode===m?C.green+"22":"transparent",border:`1px solid ${mode===m?C.green:C.border}`,color:mode===m?C.green:C.muted,borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
@@ -713,7 +713,7 @@ function LoginScreen({ onLogin }) {
           </button>
         ))}
       </div>
- 
+
       <div style={S.card}>
         {mode==="signup" && (
           <>
@@ -743,7 +743,7 @@ function LoginScreen({ onLogin }) {
     </div>
   );
 }
- 
+
 // ── DASHBOARD ────────────────────────────────────────────────
 // ── DEMO DATA ────────────────────────────────────────────────
 const DEMO_ASSET = {
@@ -765,7 +765,7 @@ const DEMO_ASSET = {
   },
   panelSpecs:null,
 };
- 
+
 const DEMO_CHECKLIST = {
   sp1:{value:"South"},
   sp2:{value:"4"},
@@ -820,7 +820,7 @@ const DEMO_CHECKLIST = {
   mec3:{answer:"yes",note:"Array frame correctly fixed and stable", photos:[]},
   mec4:{answer:"lim",note:"Could not inspect the cable outlet to the roof tile as this was inaccessible", photos:[]},
 };
- 
+
 const DEMO_TEST_RESULTS = {
   voc:"113", isc:"7.45", irradiance:"249.1",
   ir_pos:"200", ir_neg:"200",
@@ -829,7 +829,7 @@ const DEMO_TEST_RESULTS = {
   mcb_rating:"16", breaking_cap:"6",
   switchgear:"satisfactory", inverter_ok:"satisfactory", loss_mains:"satisfactory",
 };
- 
+
 const DEMO_JOB = {
   id:2, client:"Bolton at Home",
   address:"1 Back Alice Street, Little Lever, Bolton, BL3 1FX",
@@ -837,23 +837,23 @@ const DEMO_JOB = {
   status:"completed", date:"2024-08-01",
   engineer:"L. McKenna", flagged:true,
 };
- 
+
 const MOCK_JOBS = [
   DEMO_JOB,
   {id:1,client:"Sunrise Solar Ltd",address:"14 Park Lane, Bristol",jobNumber:"TH-2024-001",mode:"inspection",status:"open",date:"2024-01-15",engineer:"J. Harrison",flagged:false},
   {id:3,client:"EcoHomes UK",address:"7 Bluebell Close, Bristol",jobNumber:"TH-2024-003",mode:"diagnostic",status:"open",date:"2024-01-16",engineer:"J. Harrison",flagged:false},
 ];
- 
+
 function Dashboard({ user, onCreateJob, onSelectJob }) {
   const [jobs,    setJobs]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const modeCol = {inspection:C.blue,service:C.green,diagnostic:C.amber,commissioning:C.accent};
- 
+
   useEffect(() => {
     loadJobs();
   }, []);
- 
+
   const loadJobs = async () => {
     setLoading(true);
     try {
@@ -874,7 +874,7 @@ function Dashboard({ user, onCreateJob, onSelectJob }) {
     }
     setLoading(false);
   };
- 
+
   return (
     <div style={{padding:16}}>
       <div style={{...S.card,background:"linear-gradient(135deg,#0d1a28,#0a1220)",marginBottom:16}}>
@@ -913,7 +913,7 @@ function Dashboard({ user, onCreateJob, onSelectJob }) {
     </div>
   );
 }
- 
+
 // ── CREATE JOB ───────────────────────────────────────────────
 function CreateJobScreen({ onBack, onCreate }) {
   const [form, setForm] = useState({client:"",address:"",jobNumber:"TH-2024-004",engineer:"J. Harrison",date:new Date().toISOString().split("T")[0],mode:"inspection"});
@@ -938,7 +938,7 @@ function CreateJobScreen({ onBack, onCreate }) {
     </div>
   );
 }
- 
+
 // ── SPEC LOOKUP ENGINE ──────────────────────────────────────
 function buildSpecPrompt(make, model, type) {
   return [
@@ -985,7 +985,7 @@ function buildSpecPrompt(make, model, type) {
         })
   ].join(" ");
 }
- 
+
 // ── ASSET SCREEN ─────────────────────────────────────────────
 function AssetScreen({ job, onBack, onNext }) {
   const [a, setA] = useState({
@@ -998,23 +998,23 @@ function AssetScreen({ job, onBack, onNext }) {
   const [panelSpecs,    setPanelSpecs]    = useState(null);
   const [lookingUp,     setLookingUp]     = useState(null); // "inverter"|"panel"|null
   const [lookupError,   setLookupError]   = useState(null);
- 
+
   const set = (k,v) => setA(x=>({...x,[k]:v}));
- 
+
   const lookupSpecs = (type) => {
     const make  = type==="inverter" ? a.inverter_make  : a.panel_make;
     const model = type==="inverter" ? a.inverter_model : a.panel_model;
     if (!make || !model) { setLookupError("Enter make and model first"); return; }
     setLookingUp(type);
     setLookupError(null);
- 
+
     // Use local knowledge base for common inverters/panels
     // In production this would hit a backend API
     setTimeout(() => {
       try {
         const key = (make + " " + model).toLowerCase();
         let specs = null;
- 
+
         // ── INVERTER DATABASE ─────────────────────────────────
         if (type === "inverter") {
           if (key.includes("sunny boy") && (key.includes("sb1200") || key.includes("sb 1200"))) {
@@ -1057,7 +1057,7 @@ function AssetScreen({ job, onBack, onNext }) {
             };
           }
         }
- 
+
         // ── PANEL DATABASE ────────────────────────────────────
         if (type === "panel") {
           if (key.includes("ja solar") || key.includes("jasolar") || key.includes("jam")) {
@@ -1094,7 +1094,7 @@ function AssetScreen({ job, onBack, onNext }) {
             };
           }
         }
- 
+
         if (specs) {
           specs._make  = make;
           specs._model = model;
@@ -1109,7 +1109,7 @@ function AssetScreen({ job, onBack, onNext }) {
       setLookingUp(null);
     }, 600);
   };
- 
+
   const specCard = (specs, type) => {
     if (!specs) return null;
     const col = type==="inverter" ? C.blue : C.green;
@@ -1145,7 +1145,7 @@ function AssetScreen({ job, onBack, onNext }) {
           ["Temp Coeff Voc",   specs.temp_coeff_voc || null],
           ["IP Rating",        specs.ip_rating || null],
         ];
- 
+
     return (
       <div style={{...S.card, border:`1px solid ${col}33`, padding:12, marginTop:10}}>
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10}}>
@@ -1169,7 +1169,7 @@ function AssetScreen({ job, onBack, onNext }) {
       </div>
     );
   };
- 
+
   const fields = [
     ["panel_count","Panel Count","number"],["panel_make","Panel Make","text"],["panel_model","Panel Model","text"],
     ["inverter_make","Inverter Make","text"],["inverter_model","Inverter Model","text"],["inverter_serial","Inverter Serial No.","text"],
@@ -1177,7 +1177,7 @@ function AssetScreen({ job, onBack, onNext }) {
     ["meter_reading","Current Meter Reading","number"],["inverter_loc","Inverter Location","text"],
     ["dc_iso_loc","DC Isolator Location","text"],["ac_iso_loc","AC Isolator Location","text"],
   ];
- 
+
   return (
     <div style={{padding:16}}>
       <div style={S.secTitle}>◈ Asset Details</div>
@@ -1185,7 +1185,7 @@ function AssetScreen({ job, onBack, onNext }) {
         <div style={{fontSize:13, fontWeight:600}}>{job.client}</div>
         <div style={{fontSize:12, color:C.muted}}>{job.address} · {job.jobNumber}</div>
       </div>
- 
+
       {/* Panel section */}
       <div style={{...S.card, padding:12, marginBottom:10}}>
         <div style={{fontSize:12, color:C.green, fontWeight:700, letterSpacing:"0.08em", marginBottom:10}}>☀️ SOLAR PANELS</div>
@@ -1207,7 +1207,7 @@ function AssetScreen({ job, onBack, onNext }) {
         </button>
         {specCard(panelSpecs, "panel")}
       </div>
- 
+
       {/* Inverter section */}
       <div style={{...S.card, padding:12, marginBottom:10}}>
         <div style={{fontSize:12, color:C.blue, fontWeight:700, letterSpacing:"0.08em", marginBottom:10}}>⚡ INVERTER</div>
@@ -1229,7 +1229,7 @@ function AssetScreen({ job, onBack, onNext }) {
         </button>
         {specCard(inverterSpecs, "inverter")}
       </div>
- 
+
       {/* Meter + locations */}
       <div style={{...S.card, padding:12, marginBottom:10}}>
         <div style={{fontSize:12, color:C.accent, fontWeight:700, letterSpacing:"0.08em", marginBottom:10}}>📊 METER & LOCATIONS</div>
@@ -1240,19 +1240,19 @@ function AssetScreen({ job, onBack, onNext }) {
           </div>
         ))}
       </div>
- 
+
       {lookupError && (
         <div style={{...S.card, border:`1px solid ${C.amber}44`, padding:12, marginBottom:10}}>
           <div style={{fontSize:12, color:C.amber}}>⚠ {lookupError}</div>
         </div>
       )}
- 
+
       <button style={S.btn("primary")} onClick={()=>onNext({...a, inverterSpecs, panelSpecs})}>Continue →</button>
       <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
     </div>
   );
 }
- 
+
 // ── TEST RESULTS ─────────────────────────────────────────────
 function TestResultsScreen({ onBack, onNext }) {
   const [r, setR] = useState({voc:"",isc:"",irradiance:"",ir_pos:"",ir_neg:"",polarity:null,zs:"",rcd_type:"Type A",rcd_trip:"",mcb_rating:"",breaking_cap:"",switchgear:null,inverter_ok:null,loss_mains:null});
@@ -1284,16 +1284,16 @@ function TestResultsScreen({ onBack, onNext }) {
     </div>
   );
 }
- 
+
 // ── AI REVIEW SCREEN ─────────────────────────────────────────
 function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete }) {
   const [loading, setLoading] = useState(false);
   const [review, setReview] = useState(null);
- 
+
   const flaggedItems = checklist
     ? Object.entries(checklist).filter(([,v])=>["no","lim","fi"].includes(v.answer)).map(([k,v])=>({id:k,answer:v.answer,risk:v.risk,note:v.note}))
     : [];
- 
+
   const runAI = () => {
     setLoading(true);
     setTimeout(() => {
@@ -1302,9 +1302,9 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
       setLoading(false);
     }, 900);
   };
- 
+
   const statusCol = review?.overall_status==="Pass"?C.green:review?.overall_status==="Fail"?C.red:C.amber;
- 
+
   return (
     <div style={{padding:16}}>
       <div style={S.secTitle}>◈ AI Review Engine</div>
@@ -1320,7 +1320,7 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
           </div>
         )}
       </div>
- 
+
       {!review && !loading && (
         <div style={{...S.card,textAlign:"center",padding:36}}>
           <div style={{fontSize:44,marginBottom:10}}>🧠</div>
@@ -1329,7 +1329,7 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
           <button style={S.btn("primary")} onClick={runAI}>Run AI Review</button>
         </div>
       )}
- 
+
       {loading && (
         <div style={{...S.card,textAlign:"center",padding:44}}>
           <div style={{fontSize:36,marginBottom:12}}>⚡</div>
@@ -1337,19 +1337,19 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
           <div style={{color:C.muted,fontSize:12,marginTop:6}}>Checking BS7671 / IEC 60364 compliance</div>
         </div>
       )}
- 
+
       {review && (
         <>
           <div style={{...S.card,border:`2px solid ${statusCol}44`,background:statusCol+"0a",textAlign:"center",marginBottom:14}}>
             <div style={{fontSize:30,fontWeight:700,color:statusCol}}>{review.overall_status?.toUpperCase()}</div>
             <div style={{fontSize:10,color:C.muted,letterSpacing:"0.12em",marginTop:3}}>OVERALL STATUS</div>
           </div>
- 
+
           <div style={{...S.card,marginBottom:10}}>
             <div style={{fontSize:11,color:C.accent,fontWeight:700,marginBottom:8,letterSpacing:"0.1em"}}>SUMMARY</div>
             <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>{review.summary}</div>
           </div>
- 
+
           {review.risk_items?.length>0 && (
             <div style={{...S.card,marginBottom:10}}>
               <div style={{fontSize:11,color:C.accent,fontWeight:700,marginBottom:12,letterSpacing:"0.1em"}}>RISK FINDINGS ({review.risk_items.length})</div>
@@ -1368,7 +1368,7 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
               })}
             </div>
           )}
- 
+
           {review.missing_information?.length>0 && (
             <div style={{...S.card,border:`1px solid ${C.amber}22`,marginBottom:10}}>
               <div style={{fontSize:11,color:C.amber,fontWeight:700,marginBottom:10,letterSpacing:"0.1em"}}>MISSING INFORMATION ({review.missing_information.length})</div>
@@ -1379,7 +1379,7 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
               ))}
             </div>
           )}
- 
+
           {review.recommended_actions?.length>0 && (
             <div style={{...S.card,marginBottom:10}}>
               <div style={{fontSize:11,color:C.accent,fontWeight:700,marginBottom:10,letterSpacing:"0.1em"}}>RECOMMENDED ACTIONS</div>
@@ -1390,18 +1390,18 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
               ))}
             </div>
           )}
- 
+
           <div style={{...S.card,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontSize:12,color:C.muted}}>Next inspection</span>
             <span style={{fontSize:13,color:review.next_inspection==="Immediate"?C.red:C.green,fontWeight:700}}>{review.next_inspection}</span>
           </div>
- 
+
           {review.tags?.length>0 && (
             <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
               {review.tags.map(t=><span key={t} style={S.tag(C.blue)}>{t}</span>)}
             </div>
           )}
- 
+
           <button style={S.btn("primary")} onClick={()=>onComplete(review)}>View Summary →</button>
         </>
       )}
@@ -1409,7 +1409,7 @@ function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete
     </div>
   );
 }
- 
+
 // ── SUMMARY ──────────────────────────────────────────────────
 function SummaryScreen({ job, review, onBack, onReport }) {
   const statusCol = review?.overall_status==="Pass"?C.green:review?.overall_status==="Fail"?C.red:C.amber;
@@ -1451,11 +1451,11 @@ function SummaryScreen({ job, review, onBack, onReport }) {
     </div>
   );
 }
- 
+
 // ── INLINE REPORT RENDERER ──────────────────────────────────
 function ReportScreen({ job, asset, checklist, testResults, review, type, onDone }) {
   const [page, setPage] = useState(0); // 0=menu, 1..N=report pages
- 
+
   const statusCol = review?.overall_status==="Pass"?C.green:review?.overall_status==="Fail"?C.red:C.amber;
   const c2s = review?.risk_items?.filter(r=>r.code==="C2")||[];
   const c3s = review?.risk_items?.filter(r=>r.code==="C3")||[];
@@ -1465,7 +1465,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"});
   const certNum = "TH-"+now.getFullYear()+"-"+String(job?.id||"001").slice(-4);
- 
+
   const CHECKLIST_ITEMS = {
     panels:[
       {id:"sp1",q:"Orientation"},{id:"sp2",q:"Number of panels"},
@@ -1525,29 +1525,29 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
       {id:"mec4",q:"Cable entry weatherproof?"},
     ],
   };
- 
+
   const SECTION_LABELS = {
     panels:"Solar Panels", inverter:"Inverter",
     isolation:"Isolation", ac_supply:"AC Supply",
     labelling:"Labelling & Documentation",
     meter:"Generation Meter", mechanical:"General / Mechanical",
   };
- 
+
   const ansCol = a => a==="yes"?C.green:a==="no"?C.red:a==="lim"?C.amber:a==="fi"?C.purple:C.muted;
   const ansLabel = a => a==="yes"?"Yes":a==="no"?"No":a==="lim"?"Lim":a==="fi"?"FI":a==="na"?"N/A":"—";
- 
+
   const Tag = ({code}) => {
     const col = code==="C2"?C.red:code==="C3"?C.amber:code==="FI"?C.purple:C.blue;
     return <span style={{background:col+"22",color:col,border:`1px solid ${col}44`,borderRadius:5,padding:"2px 8px",fontSize:10,fontWeight:700,letterSpacing:"0.05em"}}>{code}</span>;
   };
- 
+
   const Row = ({label,value,highlight}) => (
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",borderBottom:`1px solid ${C.border}22`,paddingBottom:8,marginBottom:8}}>
       <span style={{fontSize:12,color:C.muted,flex:1}}>{label}</span>
       <span style={{fontSize:13,fontWeight:600,color:highlight||C.text,textAlign:"right",flex:1,paddingLeft:8}}>{value||"—"}</span>
     </div>
   );
- 
+
   const PageHeader = ({section,title}) => (
     <div style={{marginBottom:24}}>
       <div style={{fontSize:10,color:C.accent,letterSpacing:"0.2em",marginBottom:2}} className="mono">{section}</div>
@@ -1555,9 +1555,9 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
       <div style={{width:50,height:3,background:`linear-gradient(90deg,${C.green},${C.accent})`,borderRadius:2}}/>
     </div>
   );
- 
+
   const pages = [
- 
+
     // ── PAGE 0: COVER ──────────────────────────────────────
     <div style={{minHeight:"85vh",background:`linear-gradient(160deg,#060a10,#0d1a2a,#060e1a)`,borderRadius:16,padding:28,display:"flex",flexDirection:"column",justifyContent:"space-between",border:`1px solid ${C.border}`}}>
       <div>
@@ -1597,7 +1597,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         </div>
       </div>
     </div>,
- 
+
     // ── PAGE 1: EXEC SUMMARY ───────────────────────────────
     <div style={{padding:4}}>
       <PageHeader section="SECTION 1" title="Executive Summary"/>
@@ -1626,7 +1626,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         </div>
       </div>
     </div>,
- 
+
     // ── PAGE 2: ASSET REGISTER ─────────────────────────────
     <div style={{padding:4}}>
       <PageHeader section="SECTION 2" title="Asset Register"/>
@@ -1653,7 +1653,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         <Row label="Reading at Inspection" value={asset?.meter_reading?asset.meter_reading+" kWh":null}/>
       </div>
     </div>,
- 
+
     // ── PAGE 3: MANUFACTURER SPECS ─────────────────────────
     ...(iSpecs||pSpecs?[<div style={{padding:4}}>
       <PageHeader section="SECTION 3" title="Manufacturer Specifications"/>
@@ -1671,7 +1671,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         </div>
       )}
     </div>]:[]),
- 
+
     // ── PAGE 4: TEST RESULTS ───────────────────────────────
     <div style={{padding:4}}>
       <PageHeader section={`SECTION ${iSpecs||pSpecs?"4":"3"}`} title="Array Test Results"/>
@@ -1715,7 +1715,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         })}
       </div>
     </div>,
- 
+
     // ── PAGE 5: CHECKLIST ──────────────────────────────────
     <div style={{padding:4}}>
       <PageHeader section={`SECTION ${iSpecs||pSpecs?"5":"4"}`} title="Inspection Checklist"/>
@@ -1761,7 +1761,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         );
       })}
     </div>,
- 
+
     // ── PAGE 6: COMPLIANCE FINDINGS ───────────────────────
     <div style={{padding:4}}>
       <PageHeader section={`SECTION ${iSpecs||pSpecs?"6":"5"}`} title="Compliance Findings"/>
@@ -1798,7 +1798,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
         </div>
       )}
     </div>,
- 
+
     // ── PAGE 7: SIGN OFF ───────────────────────────────────
     <div style={{padding:4}}>
       <PageHeader section={`SECTION ${iSpecs||pSpecs?"7":"6"}`} title="Declaration & Sign-off"/>
@@ -1842,9 +1842,9 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
       </div>
     </div>,
   ];
- 
+
   const totalPages = pages.length;
- 
+
   if (page === 0) {
     // Report menu
     return (
@@ -1885,7 +1885,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
       </div>
     );
   }
- 
+
   // Report page viewer
   return (
     <div style={{paddingBottom:40}}>
@@ -1901,12 +1901,12 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
           {page<totalPages?"Next →":"Done"}
         </button>
       </div>
- 
+
       {/* Page content */}
       <div style={{padding:16}}>
         {pages[page-1]}
       </div>
- 
+
       {/* Page dots */}
       <div style={{display:"flex",justifyContent:"center",gap:6,padding:"8px 0"}}>
         {pages.map((_,i)=>(
@@ -1916,7 +1916,7 @@ function ReportScreen({ job, asset, checklist, testResults, review, type, onDone
     </div>
   );
 }
- 
+
 // ── ROOT APP ─────────────────────────────────────────────────
 export default function App() {
   const [user,        setUser]        = useState(() => {
@@ -1934,13 +1934,13 @@ export default function App() {
   const [review,      setReview]      = useState(null);
   const [reportType,  setReportType]  = useState(null);
   const [saving,      setSaving]      = useState(false);
- 
+
   const labels = {
     dashboard:"Dashboard", create_job:"New Job", asset:"Asset Details",
     checklist:"Checklist", test_results:"Test Results",
     ai_review:"AI Review", summary:"Summary", report:"Report"
   };
- 
+
   // ── SAVE JOB TO SUPABASE ────────────────────────────────────
   const saveJob = async (jobData) => {
     setSaving(true);
@@ -1965,7 +1965,7 @@ export default function App() {
     } catch(e) { console.error("Save job failed:", e); }
     setSaving(false);
   };
- 
+
   // ── SAVE ASSET TO SUPABASE ──────────────────────────────────
   const saveAsset = async (assetData) => {
     setSaving(true);
@@ -1994,7 +1994,7 @@ export default function App() {
     } catch(e) { console.error("Save asset failed:", e); }
     setSaving(false);
   };
- 
+
   // ── SAVE CHECKLIST TO SUPABASE ──────────────────────────────
   const saveChecklist = async (checklistData) => {
     setSaving(true);
@@ -2017,7 +2017,7 @@ export default function App() {
     } catch(e) { console.error("Save checklist failed:", e); }
     setSaving(false);
   };
- 
+
   // ── SAVE TEST RESULTS TO SUPABASE ──────────────────────────
   const saveTestResults = async (trData) => {
     setSaving(true);
@@ -2044,7 +2044,7 @@ export default function App() {
     } catch(e) { console.error("Save test results failed:", e); }
     setSaving(false);
   };
- 
+
   // ── SAVE AI REVIEW TO SUPABASE ──────────────────────────────
   const saveReview = async (reviewData) => {
     setSaving(true);
@@ -2069,7 +2069,7 @@ export default function App() {
     } catch(e) { console.error("Save review failed:", e); }
     setSaving(false);
   };
- 
+
   const handleLogout = async () => {
     if (user?.token) await sb.signOut(user.token).catch(()=>{});
     try { localStorage.removeItem("themis_user"); } catch(e) {}
@@ -2081,15 +2081,14 @@ export default function App() {
     setReview(null);
     setScreen("login");
   };
- 
-  // If user exists but screen is login, go to dashboard
-  const currentScreen = user && screen === "login" ? "dashboard" : screen;
- 
+
+
+
   return (
     <div style={S.app}>
       <style>{`*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}input,textarea{outline:none}textarea{resize:vertical}`}</style>
- 
-      {currentScreen!=="login" && (
+
+      {screen!=="login" && (
         <div style={S.header}>
           <div style={S.logo}><span style={{filter:`drop-shadow(0 0 6px ${C.green})`}}>⚡</span> THEMIS</div>
           <div style={{display:"flex",gap:10,alignItems:"center"}}>
@@ -2099,16 +2098,16 @@ export default function App() {
           </div>
         </div>
       )}
- 
+
       <div style={{paddingBottom:40}}>
-        {currentScreen==="login" && (
+        {screen==="login" && (
           <LoginScreen onLogin={u=>{
             try { localStorage.setItem("themis_user", JSON.stringify(u)); } catch(e) {}
             setUser(u);
             setScreen("dashboard");
           }}/>
         )}
-        {currentScreen==="dashboard" && (
+        {screen==="dashboard" && (
           <Dashboard
             user={user}
             onCreateJob={()=>setScreen("create_job")}
@@ -2131,53 +2130,59 @@ export default function App() {
             }}
           />
         )}
-        {currentScreen==="create_job" && (
+        {screen==="create_job" && (
           <CreateJobScreen
             onBack={()=>setScreen("dashboard")}
             onCreate={saveJob}
           />
         )}
-        {currentScreen==="asset" && (
+        {screen==="asset" && (
           <AssetScreen
             job={job}
             onBack={()=>setScreen("dashboard")}
             onNext={saveAsset}
           />
         )}
-        {currentScreen==="checklist" && (
+        {screen==="checklist" && (
           <ChecklistScreen
             job={job}
             onBack={()=>setScreen("asset")}
             onNext={saveChecklist}
           />
         )}
-        {currentScreen==="test_results" && (
+        {screen==="test_results" && (
           <TestResultsScreen
             onBack={()=>setScreen("checklist")}
             onNext={saveTestResults}
           />
         )}
-        {currentScreen==="ai_review" && (
+        {screen==="ai_review" && (
           <AIReviewScreen
             job={job} asset={asset} checklist={checklist} testResults={testResults}
             onBack={()=>setScreen("test_results")}
             onComplete={saveReview}
           />
         )}
-        {currentScreen==="summary" && (
+        {screen==="summary" && (
           <SummaryScreen
             job={job} review={review}
             onBack={()=>setScreen("ai_review")}
             onReport={t=>{setReportType(t);setScreen("report");}}
           />
         )}
-        {currentScreen==="report" && (
+        {screen==="report" && (
           <ReportScreen
             job={job} asset={asset} checklist={checklist}
             testResults={testResults} review={review}
             type={reportType}
             onDone={()=>setScreen("dashboard")}
           />
+        )}
+        {!["login","dashboard","create_job","asset","checklist","test_results","ai_review","summary","report"].includes(screen) && (
+          <div style={{padding:32,textAlign:"center"}}>
+            <div style={{color:"#00e887",fontSize:14,marginBottom:16}}>Unknown screen: {screen}</div>
+            <button style={{...S.btn("primary")}} onClick={()=>setScreen("dashboard")}>Go to Dashboard</button>
+          </div>
         )}
       </div>
     </div>
