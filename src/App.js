@@ -1,3 +1,4 @@
+// Themis Diagnostics v3.1 - build 2
 import { useState, useRef, useCallback, useEffect } from "react";
 
 // ── SUPABASE CLIENT ─────────────────────────────────────────
