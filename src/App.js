@@ -117,6 +117,7 @@ const sb = {
   },
 };
 
+const CARD2 = "linear-gradient(135deg, #141f30, #0f1a28)";
 const C = {
   bg:"#080c12",surface:"#0e1520",card:"#141f30",border:"#1e3a5f",
   green:"#00e887",blue:"#38bdf8",amber:"#fbbf24",red:"#f87171",
@@ -127,10 +128,10 @@ const S = {
   app:{ background:C.bg, minHeight:"100vh", fontFamily:"'IBM Plex Mono','Courier New',monospace", color:C.text, maxWidth:500, margin:"0 auto", fontSize:15 },
   header:{ background:"linear-gradient(135deg,#060a10,#0d1a2a)", borderBottom:`1px solid ${C.border}`, padding:"14px 18px", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 },
   logo:{ fontSize:17, fontWeight:700, letterSpacing:"0.08em", color:C.green, display:"flex", alignItems:"center", gap:8 },
-  card:{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:16, marginBottom:10, boxShadow:"0 2px 12px rgba(0,0,0,0.3)" },
+  card:{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:18, marginBottom:12, boxShadow:"0 2px 16px rgba(0,0,0,0.4)" },
   btn:(v="primary")=>({ background:v==="primary"?`linear-gradient(135deg,${C.green},#00a896)`:v==="danger"?C.red:"transparent", color:v==="ghost"?C.green:"#fff", border:v==="ghost"?`1px solid ${C.border}`:"none", borderRadius:10, padding:"13px 18px", fontSize:14, fontWeight:600, cursor:"pointer", width:"100%", letterSpacing:"0.03em", fontFamily:"inherit", marginBottom:8, display:"block" }),
-  input:{ background:"#0d1826", border:`1px solid ${C.border}`, borderRadius:8, padding:"11px 13px", color:C.text, fontSize:15, width:"100%", fontFamily:"inherit", boxSizing:"border-box" },
-  label:{ fontSize:11, color:C.accent, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:5, display:"block" },
+  input:{ background:"#182436", border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 14px", color:C.text, fontSize:15, width:"100%", fontFamily:"inherit", boxSizing:"border-box", outline:"none" },
+  label:{ fontSize:12, color:C.accent, letterSpacing:"0.04em", textTransform:"none", marginBottom:6, display:"block", fontWeight:600 },
   secTitle:{ fontSize:12, color:C.accent, letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700, marginBottom:12 },
   tag:(col)=>({ background:col+"22", color:col, border:`1px solid ${col}44`, borderRadius:5, padding:"2px 7px", fontSize:10, fontWeight:700, letterSpacing:"0.06em", display:"inline-block" }),
 };
@@ -878,36 +879,39 @@ function Dashboard({ user, onCreateJob, onSelectJob }) {
 
   return (
     <div style={{padding:16}}>
-      <div style={{...S.card,background:"linear-gradient(135deg,#0d1a28,#0a1220)",marginBottom:16}}>
-        <div style={{fontSize:11,color:C.muted}}>Signed in as</div>
-        <div style={{fontSize:18,fontWeight:700,color:C.green}}>{user.name}</div>
-        <div style={{fontSize:11,color:C.blue,marginTop:2,letterSpacing:"0.08em"}}>{user.role.toUpperCase()} · THEMIS DIAGNOSTICS</div>
+      <div style={{background:"linear-gradient(135deg,#0d1a28,#0a1220)",border:`1px solid ${C.border}`,borderRadius:14,padding:16,marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:11,color:C.muted,marginBottom:3}}>Signed in as</div>
+          <div style={{fontSize:20,fontWeight:700,color:C.green}}>{user.name||user.email?.split("@")[0]||"Engineer"}</div>
+          <div style={{fontSize:11,color:C.blue,marginTop:3,letterSpacing:"0.06em"}}>{(user.role||"engineer").toUpperCase()} · THEMIS DIAGNOSTICS</div>
+        </div>
+
       </div>
       {loading && <div style={{...S.card,textAlign:"center",padding:20,color:C.muted}}>Loading jobs...</div>}
       {error && <div style={{...S.card,color:C.red,fontSize:13}}>{error}</div>}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
         {[[jobs.filter(j=>j.status==="open"||j.status==="in_progress").length,"Open",C.blue],[jobs.filter(j=>j.status==="completed").length,"Done",C.green],[jobs.filter(j=>j.flagged).length,"Flagged",C.red]].map(([n,l,col])=>(
-          <div key={l} style={{...S.card,textAlign:"center",padding:12,border:`1px solid ${col}22`}}>
-            <div style={{fontSize:26,fontWeight:700,color:col}}>{n}</div>
-            <div style={{fontSize:10,color:C.muted,letterSpacing:"0.1em"}}>{l.toUpperCase()}</div>
+          <div key={l} style={{background:CARD2,border:`1px solid ${col}33`,borderRadius:14,padding:"14px 8px",textAlign:"center",boxShadow:`0 0 20px ${col}11`}}>
+            <div style={{fontSize:28,fontWeight:800,color:col,lineHeight:1}}>{n}</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:4,letterSpacing:"0.06em"}}>{l}</div>
           </div>
         ))}
       </div>
       <button style={S.btn("primary")} onClick={onCreateJob}>+ New Job</button>
       <div style={S.secTitle}>▸ Jobs</div>
       {jobs.map(j=>(
-        <div key={j.id} style={{...S.card,cursor:"pointer"}} onClick={()=>onSelectJob(j)}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <div style={{fontSize:15,fontWeight:600}}>{j.client}</div>
-            <div style={{display:"flex",gap:5}}>
+        <div key={j.id} style={{...S.card,cursor:"pointer",borderLeft:`3px solid ${j.status==="completed"?C.green:j.flagged?C.red:C.blue}`}} onClick={()=>onSelectJob(j)}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+            <div style={{fontSize:15,fontWeight:700,color:C.text}}>{j.client||"Unnamed Job"}</div>
+            <div style={{display:"flex",gap:5,flexShrink:0,marginLeft:8}}>
               {j.flagged && <span style={S.tag(C.red)}>⚑</span>}
-              <span style={S.tag(j.status==="completed"?C.green:C.blue)}>{j.status.toUpperCase()}</span>
+              <span style={S.tag(j.status==="completed"?C.green:j.status==="flagged"?C.red:C.blue)}>{(j.status||"open").toUpperCase()}</span>
             </div>
           </div>
-          <div style={{fontSize:12,color:C.muted,marginBottom:8}}>{j.address}</div>
-          <div style={{display:"flex",justifyContent:"space-between"}}>
-            <span style={S.tag(modeCol[j.mode]||C.muted)}>{j.mode.toUpperCase()}</span>
-            <span style={{fontSize:11,color:C.muted}}>{j.jobNumber}</span>
+          <div style={{fontSize:12,color:C.muted,marginBottom:8}}>{j.address||"No address"}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={S.tag(modeCol[j.mode]||C.muted)}>{(j.mode||"inspection").toUpperCase()}</span>
+            <span style={{fontSize:11,color:C.muted}}>{j.job_number||j.jobNumber||""}</span>
           </div>
         </div>
       ))}
