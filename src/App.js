@@ -117,34 +117,33 @@ return null;
 },
 };
 
-const CARD2 = “linear-gradient(135deg, #141f30, #0f1a28)”;
+const CARD2 = “linear-gradient(135deg,#f8fafc,#f1f5f9)”;
 const C = {
-bg:”#f0f4f8”,
-surface:”#ffffff”,
-card:”#ffffff”,
-border:”#e2e8f0”,
-green:”#059669”,
-blue:”#0284c7”,
-amber:”#d97706”,
-red:”#dc2626”,
-purple:”#7c3aed”,
-text:”#1e293b”,
-muted:”#64748b”,
-accent:”#0891b2”,
-dim:”#475569”,
-headerBg:”#0d1826”,
-headerText:”#00e887”,
+bg:      “#f1f5f9”,
+surface: “#ffffff”,
+card:    “#ffffff”,
+border:  “#e2e8f0”,
+green:   “#059669”,
+blue:    “#0284c7”,
+amber:   “#d97706”,
+red:     “#dc2626”,
+purple:  “#7c3aed”,
+text:    “#1e293b”,
+muted:   “#64748b”,
+accent:  “#0891b2”,
+dim:     “#475569”,
+navy:    “#1e3a5f”,
 };
 
 const S = {
-app:{ background:”#f0f4f8”, minHeight:“100vh”, fontFamily:”‘Inter’,‘Helvetica Neue’,Arial,sans-serif”, color:”#1e293b”, maxWidth:500, margin:“0 auto”, fontSize:15 },
-header:{ background:”#0d1826”, borderBottom:“3px solid #00e887”, padding:“14px 18px”, display:“flex”, alignItems:“center”, justifyContent:“space-between”, position:“sticky”, top:0, zIndex:100 },
+app:{ background:”#f1f5f9”, minHeight:“100vh”, fontFamily:”‘Inter’,‘Helvetica Neue’,Arial,sans-serif”, color:”#1e293b”, maxWidth:500, margin:“0 auto”, fontSize:15 },
+header:{ background:”#1e3a5f”, borderBottom:“3px solid #059669”, padding:“14px 18px”, display:“flex”, alignItems:“center”, justifyContent:“space-between”, position:“sticky”, top:0, zIndex:100 },
 logo:{ fontSize:17, fontWeight:700, letterSpacing:“0.08em”, color:”#00e887”, display:“flex”, alignItems:“center”, gap:8 },
-card:{ background:”#ffffff”, border:“1px solid #e2e8f0”, borderRadius:14, padding:18, marginBottom:12, boxShadow:“0 1px 8px rgba(0,0,0,0.08)” },
-btn:(v=“primary”)=>({ background:v===“primary”?“linear-gradient(135deg,#059669,#0284c7)”:v===“danger”?”#dc2626”:“transparent”, color:v===“ghost”?”#0284c7”:”#fff”, border:v===“ghost”?“1.5px solid #0284c7”:“none”, borderRadius:10, padding:“13px 18px”, fontSize:14, fontWeight:700, cursor:“pointer”, width:“100%”, letterSpacing:“0.01em”, fontFamily:“inherit”, marginBottom:8, display:“block” }),
-input:{ background:”#ffffff”, border:“1.5px solid #cbd5e1”, borderRadius:8, padding:“12px 14px”, color:”#1e293b”, fontSize:15, width:“100%”, fontFamily:“inherit”, boxSizing:“border-box”, outline:“none” },
-label:{ fontSize:12, color:”#475569”, letterSpacing:“0.01em”, textTransform:“none”, marginBottom:6, display:“block”, fontWeight:600 },
-secTitle:{ fontSize:13, color:”#0891b2”, letterSpacing:“0.06em”, textTransform:“uppercase”, fontWeight:700, marginBottom:14 },
+card:{ background:”#ffffff”, border:“1px solid #e2e8f0”, borderRadius:10, padding:18, marginBottom:12, boxShadow:“0 1px 6px rgba(0,0,0,0.06)” },
+btn:(v=“primary”)=>({ background:v===“primary”?”#1e3a5f”:v===“danger”?”#dc2626”:v===“green”?”#059669”:“transparent”, color:v===“ghost”?”#1e3a5f”:”#ffffff”, border:v===“ghost”?“1.5px solid #1e3a5f”:“none”, borderRadius:8, padding:“13px 18px”, fontSize:14, fontWeight:700, cursor:“pointer”, width:“100%”, letterSpacing:“0.01em”, fontFamily:“inherit”, marginBottom:8, display:“block” }),
+input:{ background:”#ffffff”, border:“1.5px solid #e2e8f0”, borderRadius:8, padding:“12px 14px”, color:”#1e293b”, fontSize:15, width:“100%”, fontFamily:“inherit”, boxSizing:“border-box”, outline:“none” },
+label:{ fontSize:11, color:”#64748b”, letterSpacing:“0.05em”, textTransform:“uppercase”, marginBottom:5, display:“block”, fontWeight:600 },
+secTitle:{ fontSize:11, color:”#1e3a5f”, letterSpacing:“0.08em”, textTransform:“uppercase”, fontWeight:700, marginBottom:14, paddingBottom:8, borderBottom:“2px solid #059669” },
 tag:(col)=>({ background:col+“22”, color:col, border:`1px solid ${col}44`, borderRadius:5, padding:“2px 7px”, fontSize:10, fontWeight:700, letterSpacing:“0.06em”, display:“inline-block” }),
 };
 
@@ -916,7 +915,7 @@ return (
   {error && <div style={{...S.card,color:C.red,fontSize:13}}>{error}</div>}
   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
     {[[jobs.filter(j=>j.status==="open"||j.status==="in_progress").length,"Open",C.blue],[jobs.filter(j=>j.status==="completed").length,"Done",C.green],[jobs.filter(j=>j.flagged).length,"Flagged",C.red]].map(([n,l,col])=>(
-      <div key={l} style={{background:CARD2,border:`1px solid ${col}33`,borderRadius:14,padding:"14px 8px",textAlign:"center",boxShadow:`0 0 20px ${col}11`}}>
+      <div key={l} style={{background:"#ffffff",border:`1px solid ${col}33`,borderRadius:10,padding:"14px 8px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,0.06)"}}>
         <div style={{fontSize:28,fontWeight:800,color:col,lineHeight:1}}>{n}</div>
         <div style={{fontSize:11,color:C.muted,marginTop:4,letterSpacing:"0.06em"}}>{l}</div>
       </div>
@@ -1990,13 +1989,14 @@ const [asset,       setAsset]       = useState(null);
 const [checklist,   setChecklist]   = useState(null);
 const [testResults, setTestResults] = useState(null);
 const [review,      setReview]      = useState(null);
-const [reportType,  setReportType]  = useState(null);
-const [saving,      setSaving]      = useState(false);
+const [reportType,     setReportType]     = useState(null);
+const [conditionality, setConditionality] = useState(null);
+const [saving,         setSaving]         = useState(false);
 
 const labels = {
 dashboard:“Dashboard”, create_job:“New Job”, asset:“Asset Details”,
 checklist:“Checklist”, test_results:“Test Results”,
-ai_review:“AI Review”, summary:“Summary”, report:“Report”
+ai_review:“AI Review”, conditionality:“Conditionality”, summary:“Summary”, report:“Report”
 };
 
 // ── SAVE JOB TO SUPABASE ────────────────────────────────────
@@ -2017,19 +2017,24 @@ const result = await sb.insert(“jobs”, user.token, payload);
 if (result && result[0]) {
 const saved = { …jobData, id: result[0].id };
 setJob(saved);
+setSaving(false);
 setScreen(“asset”);
 return saved;
+} else {
+console.error(“Job insert returned no data:”, result);
 }
 } catch(e) { console.error(“Save job failed:”, e); }
 setSaving(false);
 };
 
 // ── SAVE ASSET TO SUPABASE ──────────────────────────────────
-const saveAsset = async (assetData) => {
+const saveAsset = async (assetData, jobIdOverride) => {
+const jobId = jobIdOverride || job?.id;
+if (!jobId) { console.error(“No job ID for asset save”); return; }
 setSaving(true);
 try {
 const payload = {
-job_id:          job.id,
+job_id:          jobId,
 panel_count:     assetData.panel_count,
 panel_make:      assetData.panel_make,
 panel_model:     assetData.panel_model,
@@ -2048,6 +2053,7 @@ panel_specs:     assetData.panelSpecs || null,
 };
 await sb.upsert(“solar_assets”, user.token, payload, “job_id”);
 setAsset(assetData);
+setSaving(false);
 setScreen(job?.mode === “diagnostic” ? “ai_review” : “checklist”);
 } catch(e) { console.error(“Save asset failed:”, e); }
 setSaving(false);
@@ -2055,10 +2061,12 @@ setSaving(false);
 
 // ── SAVE CHECKLIST TO SUPABASE ──────────────────────────────
 const saveChecklist = async (checklistData) => {
+const jobId = job?.id;
+if (!jobId) { console.error(“No job ID for checklist save”); setScreen(“test_results”); return; }
 setSaving(true);
 try {
 const rows = Object.entries(checklistData).map(([itemId, val]) => ({
-job_id:  job.id,
+job_id:  jobId,
 item_id: itemId,
 answer:  val.answer || null,
 value:   val.value  || null,
@@ -2071,17 +2079,19 @@ await sb.upsert(“checklist_answers”, user.token,
 rows.slice(i, i+20), “job_id,item_id”);
 }
 setChecklist(checklistData);
-setScreen(“test_results”);
-} catch(e) { console.error(“Save checklist failed:”, e); }
 setSaving(false);
+setScreen(“test_results”);
+} catch(e) { console.error(“Save checklist failed:”, e); setSaving(false); }
 };
 
 // ── SAVE TEST RESULTS TO SUPABASE ──────────────────────────
 const saveTestResults = async (trData) => {
+const jobId = job?.id;
+if (!jobId) { console.error(“No job ID for test results save”); setScreen(“ai_review”); return; }
 setSaving(true);
 try {
 await sb.upsert(“test_results”, user.token, {
-job_id:       job.id,
+job_id:       jobId,
 voc:          trData.voc,
 isc:          trData.isc,
 irradiance:   trData.irradiance,
@@ -2098,17 +2108,19 @@ inverter_ok:  trData.inverter_ok,
 loss_mains:   trData.loss_mains,
 }, “job_id”);
 setTestResults(trData);
-setScreen(“ai_review”);
-} catch(e) { console.error(“Save test results failed:”, e); }
 setSaving(false);
+setScreen(“ai_review”);
+} catch(e) { console.error(“Save test results failed:”, e); setSaving(false); }
 };
 
 // ── SAVE AI REVIEW TO SUPABASE ──────────────────────────────
 const saveReview = async (reviewData) => {
+const jobId = job?.id;
+if (!jobId) { console.error(“No job ID for review save”); setReview(reviewData); setScreen(“summary”); return; }
 setSaving(true);
 try {
 await sb.upsert(“ai_reviews”, user.token, {
-job_id:              job.id,
+job_id:              jobId,
 overall_status:      reviewData.overall_status,
 summary:             reviewData.summary,
 missing_information: reviewData.missing_information || [],
@@ -2120,12 +2132,12 @@ tags:                reviewData.tags || [],
 // Update job status
 await sb.update(“jobs”, user.token,
 { status: “completed”, flagged: (reviewData.risk_items||[]).some(r=>r.code===“C2”) },
-“id=eq.” + job.id
+“id=eq.” + jobId
 );
 setReview(reviewData);
-setScreen(“summary”);
-} catch(e) { console.error(“Save review failed:”, e); }
 setSaving(false);
+setScreen(“conditionality”);
+} catch(e) { console.error(“Save review failed:”, e); setSaving(false); }
 };
 
 // ── LOAD FULL JOB DATA FROM SUPABASE ──────────────────────
@@ -2275,7 +2287,7 @@ return (
     <div style={S.header}>
       <div style={S.logo}><span style={{filter:`drop-shadow(0 0 6px ${C.green})`}}>⚡</span> THEMIS</div>
       <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        {saving && <span style={{fontSize:10,color:C.amber}}>saving...</span>}
+        {saving && <span style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>saving...</span>}
         {labels[screen] && <span style={{fontSize:10,color:"#7096b8",letterSpacing:"0.1em"}}>{labels[screen].toUpperCase()}</span>}
         <button onClick={handleLogout} style={{background:"none",border:"1px solid #1e3a5f",color:"#7096b8",borderRadius:6,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>OUT</button>
       </div>
@@ -2337,10 +2349,17 @@ return (
         onComplete={saveReview}
       />
     )}
+    {screen==="conditionality" && (
+      <ConditionalityScreen
+        job={job} asset={asset} checklist={checklist} review={review}
+        onBack={()=>setScreen("ai_review")}
+        onDone={()=>setScreen("summary")}
+      />
+    )}
     {screen==="summary" && (
       <SummaryScreen
         job={job} review={review}
-        onBack={()=>setScreen("ai_review")}
+        onBack={()=>setScreen("conditionality")}
         onReport={t=>{setReportType(t);setScreen("report");}}
       />
     )}
@@ -2359,6 +2378,128 @@ return (
       </div>
     )}
   </div>
+</div>
+```
+
+);
+}
+// ── CONDITIONALITY SCREEN ────────────────────────────────────
+const COMPONENT_LIFE = {
+inverter:   { label:“Inverter”,         expected:12, replace:“10-15 years” },
+panels:     { label:“Solar Panels”,     expected:28, replace:“25-30 years” },
+dc_iso:     { label:“DC Isolator”,      expected:18, replace:“15-20 years” },
+ac_iso:     { label:“AC Isolator”,      expected:18, replace:“15-20 years” },
+rcd:        { label:“RCD / Protection”, expected:15, replace:“12-18 years” },
+wiring:     { label:“DC Wiring”,        expected:25, replace:“20-30 years” },
+mounting:   { label:“Mounting System”,  expected:25, replace:“20-25 years” },
+meter:      { label:“Generation Meter”, expected:20, replace:“15-25 years” },
+};
+
+function ConditionalityScreen({ job, asset, checklist, review, onBack, onDone }) {
+const age = parseInt(asset?.system_age||“0”)||0;
+
+const getCondition = (component) => {
+const life = COMPONENT_LIFE[component];
+const pct = age / life.expected;
+if (pct < 0.4) return { rating:1, label:“Excellent”,   col:”#059669”, yrs:`${Math.round((life.expected*0.4)-age)}-${Math.round((life.expected*0.6)-age)} yrs` };
+if (pct < 0.6) return { rating:2, label:“Good”,        col:”#0284c7”, yrs:`${Math.round((life.expected*0.6)-age)}-${Math.round((life.expected*0.8)-age)} yrs` };
+if (pct < 0.8) return { rating:3, label:“Monitor”,     col:”#d97706”, yrs:`${Math.round((life.expected*0.8)-age)}-${Math.round(life.expected-age)} yrs` };
+if (pct < 1.0) return { rating:4, label:“Attention”,   col:”#ea580c”, yrs:`0-${Math.round(life.expected-age)} yrs` };
+return                { rating:5, label:“End of Life”, col:”#dc2626”, yrs:“Overdue” };
+};
+
+// Overall rating = worst component
+const ratings = Object.keys(COMPONENT_LIFE).map(k => getCondition(k).rating);
+const overall = Math.max(…ratings);
+const overallCol = overall<=1?”#059669”:overall<=2?”#0284c7”:overall<=3?”#d97706”:overall<=4?”#ea580c”:”#dc2626”;
+const overallLabel = overall<=1?“Excellent”:overall<=2?“Good”:overall<=3?“Monitor”:overall<=4?“Attention Required”:“End of Life”;
+
+// Ratings key
+const RATINGS = [
+{r:1,col:”#059669”,label:“Excellent”,   desc:“No action required”},
+{r:2,col:”#0284c7”,label:“Good”,        desc:“Routine maintenance only”},
+{r:3,col:”#d97706”,label:“Monitor”,     desc:“Components approaching mid-life”},
+{r:4,col:”#ea580c”,label:“Attention”,   desc:“Replacements forecast within 3 years”},
+{r:5,col:”#dc2626”,label:“End of Life”, desc:“Immediate replacement recommended”},
+];
+
+return (
+<div style={{padding:16}}>
+<div style={S.secTitle}>◈ System Conditionality Assessment</div>
+
+```
+  {/* System age banner */}
+  <div style={{...S.card,background:"#1e3a5f",marginBottom:14}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,0.5)",marginBottom:2}}>SYSTEM AGE</div>
+        <div style={{fontSize:28,fontWeight:700,color:"#ffffff"}}>{age} years</div>
+      </div>
+      <div style={{textAlign:"right"}}>
+        <div style={{fontSize:11,color:"rgba(255,255,255,0.5)",marginBottom:2}}>OVERALL RATING</div>
+        <div style={{fontSize:32,fontWeight:800,color:overallCol}}>{overall}</div>
+        <div style={{fontSize:10,color:overallCol,fontWeight:700}}>{overallLabel.toUpperCase()}</div>
+      </div>
+    </div>
+  </div>
+
+  {/* Component table */}
+  <div style={{...S.card,padding:0,overflow:"hidden"}}>
+    <div style={{background:"#1e3a5f",padding:"10px 14px",display:"grid",gridTemplateColumns:"1fr 60px 80px 80px",gap:8}}>
+      {["COMPONENT","AGE","RATING","EST. REMAINING"].map(h=>(
+        <div key={h} style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.7)",letterSpacing:"0.06em"}}>{h}</div>
+      ))}
+    </div>
+    {Object.entries(COMPONENT_LIFE).map(([key,comp],i)=>{
+      const cond = getCondition(key);
+      return (
+        <div key={key} style={{
+          display:"grid",gridTemplateColumns:"1fr 60px 80px 80px",
+          gap:8,padding:"10px 14px",
+          background:i%2===0?"#ffffff":"#f8fafc",
+          borderBottom:"1px solid #e2e8f0"
+        }}>
+          <div style={{fontSize:13,color:"#1e293b",fontWeight:500}}>{comp.label}</div>
+          <div style={{fontSize:13,color:"#64748b"}}>{age} yrs</div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div style={{width:24,height:24,borderRadius:"50%",background:cond.col,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:11,fontWeight:800}}>{cond.rating}</div>
+            <span style={{fontSize:10,color:cond.col,fontWeight:600}}>{cond.label}</span>
+          </div>
+          <div style={{fontSize:11,color:"#64748b"}}>{cond.yrs}</div>
+        </div>
+      );
+    })}
+  </div>
+
+  {/* Ratings key */}
+  <div style={{...S.card,marginTop:4}}>
+    <div style={{fontSize:11,color:"#1e3a5f",fontWeight:700,marginBottom:10,letterSpacing:"0.06em"}}>RATING KEY</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {RATINGS.map(({r,col,label,desc})=>(
+        <div key={r} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"#f8fafc",borderRadius:6,border:"1px solid #e2e8f0"}}>
+          <div style={{width:22,height:22,borderRadius:"50%",background:col,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:11,fontWeight:800,flexShrink:0}}>{r}</div>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:"#1e293b"}}>{label}</div>
+            <div style={{fontSize:9,color:"#64748b"}}>{desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  {/* Disclaimer */}
+  <div style={{...S.card,background:"#fef9ec",border:"1px solid #fde68a",marginTop:4}}>
+    <div style={{fontSize:10,color:"#92400e",fontWeight:700,marginBottom:4}}>IMPORTANT — INDICATIVE FORECAST ONLY</div>
+    <div style={{fontSize:10,color:"#78350f",lineHeight:1.6}}>
+      This conditionality assessment is based on typical component lifespans and visual inspection at the time of visit.
+      Actual replacement timelines may vary depending on usage, maintenance history and environmental conditions.
+      This assessment does not constitute a guarantee of component performance, structural survey or specialist report.
+      Themis Diagnostics and the inspecting engineer accept no liability for component failure outside of the stated inspection findings.
+    </div>
+  </div>
+
+  <button style={S.btn("primary")} onClick={onDone}>Continue to Summary →</button>
+  <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
 </div>
 ```
 
