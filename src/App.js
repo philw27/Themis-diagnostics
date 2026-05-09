@@ -295,7 +295,7 @@ return (
 <button onClick={()=>onRemove(p.id)} style={{position:“absolute”,top:-6,right:-6,background:C.red,border:“none”,borderRadius:“50%”,width:18,height:18,color:”#fff”,fontSize:11,cursor:“pointer”,fontWeight:700}}>x</button>
 </div>
 ))}
-<button onClick={()=>ref.current.click()} disabled={busy} style={{width:70,height:70,background:”#0a1220”,border:`1.5px dashed ${C.border}`,borderRadius:8,color:busy?C.muted:C.accent,fontSize:20,cursor:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”,flexDirection:“column”,gap:2}}>
+<button onClick={()=>ref.current.click()} disabled={busy} style={{width:70,height:70,background:”#f8fafc”,border:`1.5px dashed ${C.border}`,borderRadius:8,color:busy?C.muted:C.accent,fontSize:20,cursor:“pointer”,display:“flex”,alignItems:“center”,justifyContent:“center”,flexDirection:“column”,gap:2}}>
 {busy?”…”:(<>📷<span style={{fontSize:9,color:C.muted}}>Add</span></>)}
 </button>
 </div>
@@ -590,7 +590,7 @@ return (
         <span style={{fontSize:11,color:C.green,fontWeight:700}}>{pct}%</span>
       </div>
     </div>
-    <div style={{background:"#060b12",borderRadius:4,height:5}}>
+    <div style={{background:"#e2e8f0",borderRadius:4,height:5}}>
       <div style={{width:`${pct}%`,height:"100%",background:`linear-gradient(90deg,${C.green},${C.accent})`,borderRadius:4,transition:"width 0.3s"}}/>
     </div>
   </div>
@@ -2016,12 +2016,15 @@ flagged:       false,
 const result = await sb.insert(“jobs”, user.token, payload);
 if (result && result[0]) {
 const saved = { …jobData, id: result[0].id };
+console.log(“Job saved - Supabase ID:”, result[0].id);
 setJob(saved);
 setSaving(false);
 setScreen(“asset”);
 return saved;
 } else {
-console.error(“Job insert returned no data:”, result);
+console.error(“Job insert returned no data:”, JSON.stringify(result));
+// Navigate anyway with local ID
+setScreen(“asset”);
 }
 } catch(e) { console.error(“Save job failed:”, e); }
 setSaving(false);
@@ -2030,6 +2033,7 @@ setSaving(false);
 // – SAVE ASSET TO SUPABASE –––––––––––––––––
 const saveAsset = async (assetData, jobIdOverride) => {
 const jobId = jobIdOverride || job?.id;
+console.log(“saveAsset - jobId:”, jobId, “job:”, job?.id, “override:”, jobIdOverride);
 if (!jobId) { console.error(“No job ID for asset save”); return; }
 setSaving(true);
 try {
@@ -2062,6 +2066,7 @@ setSaving(false);
 // – SAVE CHECKLIST TO SUPABASE ——————————
 const saveChecklist = async (checklistData) => {
 const jobId = job?.id;
+console.log(“saveChecklist - jobId:”, jobId, “job:”, JSON.stringify(job));
 if (!jobId) { console.error(“No job ID for checklist save”); setScreen(“test_results”); return; }
 setSaving(true);
 try {
@@ -2087,6 +2092,7 @@ setScreen(“test_results”);
 // – SAVE TEST RESULTS TO SUPABASE –––––––––––––
 const saveTestResults = async (trData) => {
 const jobId = job?.id;
+console.log(“saveTestResults - jobId:”, jobId);
 if (!jobId) { console.error(“No job ID for test results save”); setScreen(“ai_review”); return; }
 setSaving(true);
 try {
