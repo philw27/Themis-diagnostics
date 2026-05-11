@@ -64,6 +64,7 @@ const sb = {
   },
 
   async upsert(table, token, data, onConflict) {
+    // Try INSERT first, if duplicate then UPDATE
     const url = SUPABASE_URL + "/rest/v1/" + table +
                 (onConflict ? "?on_conflict=" + onConflict : "");
     const res = await fetch(url, {
@@ -76,7 +77,30 @@ const sb = {
       },
       body: JSON.stringify(data),
     });
+    if (res.ok) {
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(e) { return text; }
+    }
+    // If failed, try PATCH on the conflict column
+    if (onConflict && res.status === 409) {
+      const conflictCol = onConflict.split(",")[0];
+      const conflictVal = Array.isArray(data) ? data[0][conflictCol] : data[conflictCol];
+      const patchUrl = SUPABASE_URL + "/rest/v1/" + table + "?" + conflictCol + "=eq." + conflictVal;
+      const patchRes = await fetch(patchUrl, {
+        method: "PATCH",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation",
+        },
+        body: JSON.stringify(Array.isArray(data) ? data[0] : data),
+      });
+      const patchText = await patchRes.text();
+      try { return JSON.parse(patchText); } catch(e) { return patchText; }
+    }
     const text = await res.text();
+    console.log("Upsert response:", res.status, text.slice(0,200));
     try { return JSON.parse(text); } catch(e) { return text; }
   },
 
