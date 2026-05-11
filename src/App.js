@@ -72,11 +72,12 @@ const sb = {
         "apikey": SUPABASE_KEY,
         "Authorization": "Bearer " + token,
         "Content-Type": "application/json",
-        "Prefer": "return=representation,resolution=merge-duplicates",
+        "Prefer": "resolution=merge-duplicates,return=representation",
       },
       body: JSON.stringify(data),
     });
-    return res.json();
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(e) { return text; }
   },
 
   async update(table, token, data, filter) {
@@ -2023,12 +2024,14 @@ export default function App() {
         panel_specs:     assetData.panelSpecs || null,
       };
       const assetResult = await sb.upsert("solar_assets", user.token, payload, "job_id");
-      console.log("saveAsset result:", JSON.stringify(assetResult));
+      console.log("saveAsset result:", JSON.stringify(assetResult)?.slice(0,300));
+      if (assetResult && assetResult.code) {
+        console.error("Asset save error:", assetResult.message || assetResult.hint);
+      }
       setAsset(assetData);
       setSaving(false);
       setScreen(job?.mode === "diagnostic" ? "ai_review" : "checklist");
-    } catch(e) { console.error("Save asset failed:", e); }
-    setSaving(false);
+    } catch(e) { console.error("Save asset failed:", e.message); setSaving(false); }
   };
 
   // -- SAVE CHECKLIST TO SUPABASE ------------------------------
@@ -2474,5 +2477,3 @@ function ConditionalityScreen({ job, asset, checklist, review, onBack, onDone })
     </div>
   );
 }
-
-
