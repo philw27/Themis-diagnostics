@@ -2022,7 +2022,8 @@ export default function App() {
         inverter_specs:  assetData.inverterSpecs || null,
         panel_specs:     assetData.panelSpecs || null,
       };
-      await sb.upsert("solar_assets", user.token, payload, "job_id");
+      const assetResult = await sb.upsert("solar_assets", user.token, payload, "job_id");
+      console.log("saveAsset result:", JSON.stringify(assetResult));
       setAsset(assetData);
       setSaving(false);
       setScreen(job?.mode === "diagnostic" ? "ai_review" : "checklist");
@@ -2047,8 +2048,9 @@ export default function App() {
       }));
       // Upsert in batches of 20
       for (let i = 0; i < rows.length; i += 20) {
-        await sb.upsert("checklist_answers", user.token,
+        const clResult = await sb.upsert("checklist_answers", user.token,
           rows.slice(i, i+20), "job_id,item_id");
+        console.log("saveChecklist batch", i, "result:", JSON.stringify(clResult)?.slice(0,200));
       }
       setChecklist(checklistData);
       setSaving(false);
@@ -2080,6 +2082,7 @@ export default function App() {
         inverter_ok:  trData.inverter_ok,
         loss_mains:   trData.loss_mains,
       }, "job_id");
+      console.log("saveTestResults result:", JSON.stringify(trResult)?.slice(0,300));
       setTestResults(trData);
       setSaving(false);
       setScreen("ai_review");
