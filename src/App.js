@@ -2082,7 +2082,7 @@ export default function App() {
         inverter_ok:  trData.inverter_ok,
         loss_mains:   trData.loss_mains,
       }, "job_id");
-      console.log("saveTestResults result:", JSON.stringify(trResult)?.slice(0,300));
+      console.log("saveTestResults completed OK");
       setTestResults(trData);
       setSaving(false);
       setScreen("ai_review");
