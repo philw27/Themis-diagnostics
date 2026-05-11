@@ -2001,27 +2001,8 @@ export default function App() {
   // -- SAVE ASSET TO SUPABASE ----------------------------------
   const saveAsset = async (assetData, jobIdOverride) => {
     const jobId = jobIdOverride || job?.id;
-    console.log("saveAsset - jobId:", jobId, "job:", job?.id, "override:", jobIdOverride);
-    if (!jobId) { console.error("No job ID for asset save"); return; }
-    
-    // Test raw insert first
-    try {
-      const testRes = await fetch("https://mvratboyodudbgcmwtku.supabase.co/rest/v1/solar_assets", {
-        method: "POST",
-        headers: {
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12cmF0Ym95b2R1ZGJnY213dGt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMTU0ODUsImV4cCI6MjA5Mjc5MTQ4NX0.2GQaY76N9KKXkKBxRU5ZCzthttUh49WM0J2Pd1QJw4U",
-          "Authorization": "Bearer " + user.token,
-          "Content-Type": "application/json",
-          "Prefer": "return=representation",
-        },
-        body: JSON.stringify({ job_id: jobId, panel_count: assetData.panel_count || "test" })
-      });
-      const testText = await testRes.text();
-      console.log("RAW asset insert - status:", testRes.status, "body:", testText.slice(0,300));
-    } catch(e) {
-      console.error("RAW asset insert failed:", e.message);
-    }
-    
+    console.log("saveAsset called - jobId:", jobId, "token:", user?.token?.slice(0,20));
+    if (!jobId) { console.error("No job ID for asset save"); setScreen("checklist"); return; }
     setSaving(true);
     try {
       const payload = {
@@ -2042,11 +2023,7 @@ export default function App() {
         inverter_specs:  assetData.inverterSpecs || null,
         panel_specs:     assetData.panelSpecs || null,
       };
-      const assetResult = await sb.upsert("solar_assets", user.token, payload, "job_id");
-      console.log("saveAsset result:", JSON.stringify(assetResult)?.slice(0,300));
-      if (assetResult && assetResult.code) {
-        console.error("Asset save error:", assetResult.message || assetResult.hint);
-      }
+      await sb.upsert("solar_assets", user.token, payload, "job_id");
       setAsset(assetData);
       setSaving(false);
       setScreen(job?.mode === "diagnostic" ? "ai_review" : "checklist");
