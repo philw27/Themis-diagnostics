@@ -689,13 +689,19 @@ const handleLogin = async () => {
 if (!email || !pass) { setError("Enter email and password"); return; }
 setLoading(true); setError(null);
 try {
-const data = await sb.signIn(email, pass);
+let data;
+try {
+data = await sb.signIn(email, pass);
+} catch(fetchErr) {
+throw new Error("Network error - check your connection: " + fetchErr.message);
+}
+if (!data) throw new Error("No response from server");
 if (data.error) {
 const msg = data.error.message || data.error.error_description || JSON.stringify(data.error);
 throw new Error(msg);
 }
 if (!data.access_token) {
-throw new Error("No token returned - email may need confirming first");
+throw new Error("No token returned - check your email is confirmed in Supabase");
 }
 onLogin({
 email,
