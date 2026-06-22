@@ -2357,7 +2357,7 @@ date:          jobData.date,
 flagged:       false,
 };
 const result = await sb.insert("jobs", user.token, payload);
-if (result && result[0]) {
+if (result && result[0] && result[0].id) {
 const saved = { ...jobData, id: result[0].id };
 console.log("Job saved - Supabase ID:", result[0].id);
 setJob(saved);
@@ -2365,11 +2365,12 @@ setSaving(false);
 setScreen("asset");
 return saved;
 } else {
-console.error("Job insert returned no data:", JSON.stringify(result));
-// Navigate anyway with local ID
+const errMsg = JSON.stringify(result);
+console.error("Job insert failed:", errMsg);
+alert("Save failed: " + errMsg);
 setScreen("asset");
 }
-} catch(e) { console.error("Save job failed:", e); }
+} catch(e) { console.error("Save job failed:", e); alert("Save error: " + e.message); }
 setSaving(false);
 };
 
