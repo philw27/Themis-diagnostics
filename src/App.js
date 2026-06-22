@@ -1760,7 +1760,8 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
           const val = data.cell.raw;
           if (val === "Yes") data.cell.styles.textColor = [5, 150, 105];
           else if (val === "No") data.cell.styles.textColor = [220, 38, 38];
-          else if (val === "Limited" || val === "FI") data.cell.styles.textColor = [217, 119, 6];
+          else if (val === "Limited") data.cell.styles.textColor = [217, 119, 6];
+          else if (val === "FI") data.cell.styles.textColor = [124, 58, 237];
           data.cell.styles.fontStyle = "bold";
         }
       },
