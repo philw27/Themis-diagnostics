@@ -2347,6 +2347,7 @@ setSaving(true);
 try {
 const payload = {
 job_number:    jobData.jobNumber,
+user_id:       user.id,
 client:        jobData.client,
 address:       jobData.address,
 mode:          jobData.mode,
