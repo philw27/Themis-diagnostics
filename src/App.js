@@ -1520,6 +1520,73 @@ return (
 
 // - PDF GENERATION ENGINE ------------------
 function generatePDF(job, asset, checklist, testResults, review, type) {
+  const PDF_SECTIONS = [
+    { id:"panels", label:"Solar Panels", items:[
+      {id:"sp1",q:"Orientation of solar panels"},{id:"sp2",q:"Number of solar panels"},
+      {id:"sp3",q:"Location of solar panels"},{id:"sp4",q:"Are the panels damaged?"},
+      {id:"sp5",q:"Are the panels clean / clear of debris?"},{id:"sp6",q:"Can the panel make be identified?"},
+      {id:"sp7",q:"Do PV array cables appear to be secure?"},
+      {id:"sp8",q:"Has array frame equipotential bonding been installed? (IEC 60364-7-712)"},
+      {id:"sp9",q:"Is there evidence of bird / pest damage or fouling?"},
+      {id:"sp10",q:"Are all junction boxes secure and undamaged?"},
+    ]},
+    { id:"inverter", label:"Inverter", items:[
+      {id:"inv1",q:"Make"},{id:"inv2",q:"Model"},{id:"inv3",q:"Serial number"},{id:"inv4",q:"Location"},
+      {id:"inv5",q:"Is there a smoke detector present at the inverter location? (BS 5839-6)"},
+      {id:"inv6",q:"Is the inverter functioning correctly?"},{id:"inv7",q:"Is the inverter clear of debris?"},
+      {id:"inv8",q:"Does the inverter have the correct recommended clearances? (BS 7671 reg 134.1.1)"},
+      {id:"inv9",q:"Is the inverter installed on a heat resistant / non-combustible material?"},
+      {id:"inv10",q:"Is the inverter securely mounted?"},{id:"inv11",q:"Are all LED indicators functioning correctly?"},
+    ]},
+    { id:"isolation", label:"Isolation", items:[
+      {id:"iso1",q:"Is there a DC switch disconnector fitted to DC side of inverter? (IEC 60364-7-712.536.2.2.5)"},
+      {id:"iso2",q:"Is the DC isolator correctly labelled?"},{id:"iso3",q:"Is the DC isolator in good working condition?"},
+      {id:"iso4",q:"Is there an AC switch disconnector installed?"},{id:"iso5",q:"Is the AC isolator correctly labelled?"},
+      {id:"iso6",q:"Is the AC isolator in good working condition?"},
+      {id:"iso7",q:"Is the AC isolator correctly installed and meeting minimum IP2x? (BS 7671 416.2.1)"},
+      {id:"iso8",q:"Is there an AC isolator local to the distribution equipment?"},
+    ]},
+    { id:"ac_supply", label:"AC Supply", items:[
+      {id:"ac1",q:"Is the installation protected by an RCD?"},{id:"ac2",q:"RCD BS number"},
+      {id:"ac3",q:"RCD type"},{id:"ac4",q:"Is the RCD bidirectional rated? (BS 7671 531.3.3)"},
+      {id:"ac5",q:"Is there surge protection (SPD) present?"},
+      {id:"ac6",q:"Is the array framework equipotential bonded?"},
+    ]},
+    { id:"labelling", label:"Labelling & Documentation", items:[
+      {id:"lab1",q:"Are all circuits, protective devices, switches and terminals suitably labelled?"},
+      {id:"lab2",q:"Is the main AC isolator clearly labelled?"},
+      {id:"lab3",q:"Are dual supply warning labels fitted at point of interconnection? (BS 7671 712.514)"},
+      {id:"lab4",q:"Is a single line wiring diagram displayed on site? (IET CoP 9.7b)"},
+      {id:"lab5",q:"Are inverter protection settings and installer details displayed?"},
+      {id:"lab6",q:"Are emergency shutdown procedures displayed on site?"},
+      {id:"lab7",q:"Are all DC junction boxes carrying warning labels?"},
+    ]},
+    { id:"meter", label:"Generation Meter", items:[
+      {id:"met1",q:"Make"},{id:"met2",q:"Model"},{id:"met3",q:"Serial number"},
+      {id:"met4",q:"Current meter reading"},{id:"met5",q:"Is the meter accessible and readable?"},
+      {id:"met6",q:"Is the meter correctly labelled?"},
+    ]},
+    { id:"mechanical", label:"General / Mechanical", items:[
+      {id:"mec1",q:"Is ventilation provided behind the array to prevent overheating?"},
+      {id:"mec2",q:"Is the array frame and material corrosion proof?"},
+      {id:"mec3",q:"Is the array frame correctly fixed and stable with weatherproof roof fixings?"},
+      {id:"mec4",q:"Is the cable entry weatherproof?"},
+    ]},
+  ];
+
+  const getAnswer = (id) => {
+    const item = checklist?.[id];
+    if (!item) return "-";
+    if (item.answer) {
+      const map = {yes:"Yes",no:"No",lim:"Limited",fi:"FI",na:"N/A"};
+      return map[item.answer] || item.answer;
+    }
+    if (item.value !== undefined && item.value !== null && item.value !== "") return String(item.value);
+    return "-";
+  };
+
+  const getNote = (id) => checklist?.[id]?.note || "";
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = 210, pageH = 297, margin = 14;
   const contentW = pageW - margin * 2;
@@ -1557,6 +1624,8 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     doc.text("Page " + pageNum, pageW - margin, pageH - 5, { align: "right" });
   };
 
+  let pageNum = 1;
+
   // PAGE 1 - COVER
   addHeader(type === "client" ? "CLIENT REPORT" : "QA REPORT");
   doc.setFillColor(248, 250, 252);
@@ -1578,7 +1647,6 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
   doc.text("Address: " + (job?.address || "-"), margin + 8, 68);
   doc.text("Job No: " + (job?.jobNumber || "-") + "   Engineer: " + (job?.engineer || "-"), margin + 8, 74);
 
-  // Risk summary boxes
   const boxes = [[c2s.length, "C2 URGENT", [220, 38, 38]], [c3s.length, "C3 ADVISORY", [217, 119, 6]], [fis.length, "FOR INVESTIGATION", [124, 58, 237]]];
   boxes.forEach(([n, label, col], i) => {
     const bx = margin + i * (contentW / 3) + 2;
@@ -1597,7 +1665,7 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
   doc.setFontSize(9);
   doc.setTextColor(80, 100, 120);
   doc.text(review?.summary || "", margin, 118, { maxWidth: contentW, lineHeightFactor: 1.5 });
-  addFooter(1);
+  addFooter(pageNum++);
 
   // PAGE 2 - ASSET REGISTER
   doc.addPage();
@@ -1610,11 +1678,16 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
 
   const assetRows = [
     ["Panel Make", asset?.panel_make || "-"], ["Panel Model", asset?.panel_model || "-"],
-    ["Panel Count", asset?.panel_count || "-"], ["System kWp", asset?.system_kwp || "-"],
+    ["Panel Count", asset?.panel_count ? String(asset.panel_count) : "-"],
+    ["System kWp", asset?.system_kwp ? String(asset.system_kwp) : "-"],
     ["Inverter Make", asset?.inverter_make || "-"], ["Inverter Model", asset?.inverter_model || "-"],
     ["Inverter Serial", asset?.inverter_serial || "-"], ["Inverter Location", asset?.inverter_loc || "-"],
-    ["Meter Serial", asset?.meter_serial || "-"], ["Meter Reading", asset?.meter_reading || "-"],
-    ["System Age", asset?.system_age ? asset.system_age + " years" : "-"], ["System Type", asset?.system_type || "-"],
+    ["Meter Serial", asset?.meter_serial || "-"],
+    ["Meter Reading", asset?.meter_reading ? String(asset.meter_reading) : "-"],
+    ["System Age", asset?.system_age ? asset.system_age + " years" : "-"],
+    ["System Type", asset?.system_type || "-"],
+    ["Inspection Date", dateStr],
+    ["Certificate No.", certNum],
   ];
   autoTable(doc, {
     startY: y, head: [["Field", "Value"]], body: assetRows,
@@ -1624,7 +1697,7 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
   });
-  addFooter(2);
+  addFooter(pageNum++);
 
   // PAGE 3 - TEST RESULTS
   doc.addPage();
@@ -1639,12 +1712,12 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     ["Voc (Open Circuit Voltage)", testResults?.voc ? testResults.voc + " V" : "-"],
     ["Isc (Short Circuit Current)", testResults?.isc ? testResults.isc + " A" : "-"],
     ["Irradiance", testResults?.irradiance ? testResults.irradiance + " W/m2" : "-"],
-    ["IR Pos-Earth", testResults?.ir_pos ? testResults.ir_pos + " MΩ" : "-"],
-    ["IR Neg-Earth", testResults?.ir_neg ? testResults.ir_neg + " MΩ" : "-"],
-    ["Zs (Earth Fault Loop)", testResults?.zs ? testResults.zs + " Ω" : "-"],
+    ["IR Pos-Earth", testResults?.ir_pos ? testResults.ir_pos + " MOhm" : "-"],
+    ["IR Neg-Earth", testResults?.ir_neg ? testResults.ir_neg + " MOhm" : "-"],
+    ["Zs (Earth Fault Loop)", testResults?.zs ? testResults.zs + " Ohm" : "-"],
     ["RCD Trip Time", testResults?.rcd_trip ? testResults.rcd_trip + " ms" : "-"],
     ["MCB Rating", testResults?.mcb_rating ? testResults.mcb_rating + " A" : "-"],
-    ["Inverter OK", testResults?.inverter_ok || "-"],
+    ["Inverter Status", testResults?.inverter_ok || "-"],
     ["RCD Type", testResults?.rcd_type || "-"],
   ];
   autoTable(doc, {
@@ -1655,9 +1728,47 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 } },
   });
-  addFooter(3);
+  addFooter(pageNum++);
 
-  // PAGE 4 - COMPLIANCE FINDINGS
+  // PAGES - INSPECTION CHECKLIST (one page per section)
+  PDF_SECTIONS.forEach((section) => {
+    doc.addPage();
+    addHeader("INSPECTION CHECKLIST - " + section.label.toUpperCase());
+    y = 26;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...navy);
+    doc.text(section.label, margin, y + 6); y += 14;
+
+    const checkRows = section.items.map(item => {
+      const ans = getAnswer(item.id);
+      const note = getNote(item.id);
+      return [item.q, ans, note];
+    });
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Inspection Item", "Result", "Notes"]],
+      body: checkRows,
+      margin: { left: margin, right: margin },
+      headStyles: { fillColor: navy, textColor: [255, 255, 255], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 20, halign: "center" }, 2: { cellWidth: 72 } },
+      didParseCell: (data) => {
+        if (data.column.index === 1 && data.section === "body") {
+          const val = data.cell.raw;
+          if (val === "Yes") data.cell.styles.textColor = [5, 150, 105];
+          else if (val === "No") data.cell.styles.textColor = [220, 38, 38];
+          else if (val === "Limited" || val === "FI") data.cell.styles.textColor = [217, 119, 6];
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+    });
+    addFooter(pageNum++);
+  });
+
+  // PAGE - COMPLIANCE FINDINGS
   doc.addPage();
   addHeader("COMPLIANCE FINDINGS");
   y = 26;
@@ -1673,7 +1784,7 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     doc.setTextColor(5, 150, 105);
     doc.text("No compliance findings identified. Installation passed inspection.", margin, y + 6);
   } else {
-    const riskRows = allRisks.map(r => [r.code, r.issue, r.regulation || "-", r.recommended_action || "-"]);
+    const riskRows = allRisks.map(r => [r.code, r.issue || "-", r.regulation || "-", r.recommended_action || "-"]);
     autoTable(doc, {
       startY: y,
       head: [["Code", "Issue", "Regulation", "Recommended Action"]],
@@ -1682,7 +1793,7 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
       headStyles: { fillColor: navy, textColor: [255, 255, 255], fontSize: 8 },
       bodyStyles: { fontSize: 8 },
       alternateRowStyles: { fillColor: [248, 250, 252] },
-      columnStyles: { 0: { cellWidth: 16, fontStyle: "bold" }, 1: { cellWidth: 50 }, 2: { cellWidth: 40 } },
+      columnStyles: { 0: { cellWidth: 14, fontStyle: "bold" }, 1: { cellWidth: 52 }, 2: { cellWidth: 44 } },
       didParseCell: (data) => {
         if (data.column.index === 0 && data.section === "body") {
           const code = data.cell.raw;
@@ -1693,9 +1804,9 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
       },
     });
   }
-  addFooter(4);
+  addFooter(pageNum++);
 
-  // PAGE 5 - SIGN OFF
+  // PAGE - SIGN OFF
   doc.addPage();
   addHeader("DECLARATION & SIGN-OFF");
   y = 26;
@@ -1725,12 +1836,12 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
   });
-  addFooter(5);
+  addFooter(pageNum++);
 
-  // Save
   const filename = "Themis-" + (job?.client || "Report").replace(/\s+/g, "-") + "-" + certNum + ".pdf";
   doc.save(filename);
 }
+
 
 // - INLINE REPORT RENDERER -----------------
 function ReportScreen({ job, asset, checklist, testResults, review, type, onDone }) {
