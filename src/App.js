@@ -1695,16 +1695,45 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
   addHeader("EXECUTIVE SUMMARY");
   let y=26;
   doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
-  doc.text("Executive Summary", margin, y+8); y+=18;
+  doc.text("Executive Summary", margin, y+8); y+=16;
+
+  // Report details block
+  doc.setFillColor(240,245,252);
+  doc.roundedRect(margin,y,contentW,52,3,3,"F");
+  doc.setDrawColor(200,215,230); doc.setLineWidth(0.3);
+  doc.roundedRect(margin,y,contentW,52,3,3);
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
+  doc.text("REPORT DETAILS", margin+6, y+8);
+  doc.setDrawColor(200,215,230); doc.setLineWidth(0.3);
+  doc.line(margin+6, y+11, margin+contentW-6, y+11);
+  const detailRows = [
+    ["Report Type", type==="client"?"Client Solar PV Inspection Report":"QA Solar PV Inspection Report"],
+    ["Prepared for", (job?.client||"-")+" | "+(job?.address||"-")],
+    ["Inspection by", (profile?.full_name||job?.engineer||"-")+(profile?.qualification?", "+profile.qualification:"")+(profile?.company?", "+profile.company:"")],
+    ["Certificate No.", certNum],
+    ["Inspection Date", dateStr],
+    ["Job Reference", job?.jobNumber||"-"],
+  ];
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(50,70,90);
+  detailRows.forEach(([k,v],i)=>{
+    const ry = y+16+(i*6);
+    doc.setFont("helvetica","bold"); doc.setTextColor(...navy);
+    doc.text(k+":", margin+6, ry);
+    doc.setFont("helvetica","normal"); doc.setTextColor(50,70,90);
+    doc.text(v, margin+52, ry);
+  });
+  y+=60;
 
   // Status banner
   doc.setFillColor(...statusCol.map(v=>Math.min(255,v+175)));
   doc.roundedRect(margin,y,contentW,16,3,3,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...statusCol);
-  doc.text("Overall Status: "+(review?.overall_status||"Advisory"), margin+6, y+10);
+  doc.text("Overall Inspection Status: "+(review?.overall_status||"Advisory"), margin+6, y+10);
   y+=22;
 
-  // Summary text
+  // AI Summary
+  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
+  doc.text("Inspection Summary", margin, y+6); y+=10;
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
   const summaryLines = doc.splitTextToSize(review?.summary||"No summary available.", contentW);
   doc.text(summaryLines, margin, y); y+=summaryLines.length*5+8;
@@ -1712,11 +1741,12 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
   // Engineer notes
   if(review?.engineer_notes){
     doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
-    doc.text("Engineer's Installation Notes", margin, y+6); y+=12;
-    doc.setFillColor(248,250,252); doc.roundedRect(margin,y,contentW,4+doc.splitTextToSize(review.engineer_notes,contentW-8).length*5,"F");
-    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
+    doc.text("Engineer's Installation Notes", margin, y+6); y+=10;
+    doc.setFillColor(248,250,252);
     const noteLines=doc.splitTextToSize(review.engineer_notes,contentW-8);
-    doc.text(noteLines, margin+4, y+6); y+=noteLines.length*5+12;
+    doc.roundedRect(margin,y,contentW,noteLines.length*5+8,2,2,"F");
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
+    doc.text(noteLines, margin+4, y+6); y+=noteLines.length*5+14;
   }
 
   // Risk summary table
