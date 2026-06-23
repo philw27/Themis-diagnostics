@@ -1361,9 +1361,10 @@ return (
 }
 
 // - AI REVIEW SCREEN --------------
-function AIReviewScreen({ job, asset, checklist, testResults, onBack, onComplete }) {
+function AIReviewScreen({ job, asset, checklist, testResults, profile, onBack, onComplete }) {
 const [loading, setLoading] = useState(false);
 const [review, setReview] = useState(null);
+const [engineerNotes, setEngineerNotes] = useState("");
 
 const flaggedItems = checklist
 ? Object.entries(checklist).filter(([,v])=>["no","lim","fi"].includes(v.answer)).map(([k,v])=>({id:k,answer:v.answer,risk:v.risk,note:v.note}))
@@ -1477,7 +1478,16 @@ return (
         </div>
       )}
 
-      <button style={S.btn("primary")} onClick={()=>onComplete(review)}>View Summary -></button>
+      <div style={{marginBottom:14}}>
+        <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.05em",display:"block",marginBottom:4}}>ENGINEER'S INSTALLATION NOTES</label>
+        <textarea
+          style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e2e8f0",borderRadius:10,fontSize:14,fontFamily:"inherit",background:"#f8fafc",minHeight:100}}
+          placeholder="Describe the installation, any notable observations, site conditions, access issues etc..."
+          value={engineerNotes}
+          onChange={e=>setEngineerNotes(e.target.value)}
+        />
+      </div>
+      <button style={S.btn("primary")} onClick={()=>onComplete({...review, engineer_notes: engineerNotes})}>View Summary -></button>
     </>
   )}
   <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
@@ -1529,7 +1539,7 @@ return (
 }
 
 // - PDF GENERATION ENGINE ------------------
-function generatePDF(job, asset, checklist, testResults, review, type) {
+function generatePDF(job, asset, checklist, testResults, review, type, profile) {
   const PDF_SECTIONS = [
     { id:"panels", label:"Solar Panels", items:[
       {id:"sp1",q:"Orientation of solar panels"},{id:"sp2",q:"Number of solar panels"},
@@ -1698,6 +1708,16 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
   const summaryLines = doc.splitTextToSize(review?.summary||"No summary available.", contentW);
   doc.text(summaryLines, margin, y); y+=summaryLines.length*5+8;
+
+  // Engineer notes
+  if(review?.engineer_notes){
+    doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
+    doc.text("Engineer's Installation Notes", margin, y+6); y+=12;
+    doc.setFillColor(248,250,252); doc.roundedRect(margin,y,contentW,4+doc.splitTextToSize(review.engineer_notes,contentW-8).length*5,"F");
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
+    const noteLines=doc.splitTextToSize(review.engineer_notes,contentW-8);
+    doc.text(noteLines, margin+4, y+6); y+=noteLines.length*5+12;
+  }
 
   // Risk summary table
   autoTable(doc,{
@@ -1959,14 +1979,20 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
   const decl="I/We, being the person(s) responsible for the inspection and testing of the solar PV installation described in this report, having exercised reasonable skill and care, hereby declare that the information in this report provides an accurate assessment of the condition of the installation at the time of inspection, to the best of my/our knowledge and belief.";
   doc.text(doc.splitTextToSize(decl, contentW-8), margin+4, y+8);
   y+=46;
+  // Signature image
+  if(profile?.signature_data){
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
+    doc.text("Signature:", margin, y+6); y+=10;
+    try { doc.addImage(profile.signature_data,"PNG",margin,y,80,25); y+=30; } catch(e){}
+  }
   autoTable(doc,{
     startY:y,
     body:[
-      ["Engineer Name", job?.engineer||""],
-      ["Qualification",""],
-      ["Registration No.",""],
-      ["Signature",""],
-      ["Date",""],
+      ["Engineer Name", profile?.full_name || job?.engineer||""],
+      ["Qualification", profile?.qualification||""],
+      ["Registration No.", profile?.reg_number||""],
+      ["Company", profile?.company||""],
+      ["Date", new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})],
     ],
     margin:{left:margin,right:margin},
     bodyStyles:{fontSize:10,minCellHeight:14},
@@ -1981,7 +2007,7 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
 
 
 // - INLINE REPORT RENDERER -----------------
-function ReportScreen({ job, asset, checklist, testResults, review, type, onDone }) {
+function ReportScreen({ job, asset, checklist, testResults, review, type, profile, onDone }) {
 const [page, setPage] = useState(0); // 0=menu, 1..N=report pages
 
 const statusCol = review?.overall_status==="Pass"?C.green:review?.overall_status==="Fail"?C.red:C.amber;
@@ -2407,7 +2433,7 @@ return (
 <button style={{...S.btn("primary"),fontSize:15,padding:"16px"}} onClick={()=>setPage(1)}>
 📄 View Report
 </button>
-<button style={{...S.btn("primary"),fontSize:15,padding:"16px",background:"#059669",marginTop:8}} onClick={()=>generatePDF(job,asset,checklist,testResults,review,type)}>
+<button style={{...S.btn("primary"),fontSize:15,padding:"16px",background:"#059669",marginTop:8}} onClick={()=>generatePDF(job,asset,checklist,testResults,review,type,profile)}>
 ⬇ Download PDF
 </button>
 <button style={S.btn("ghost")} onClick={onDone}>← Dashboard</button>
@@ -2431,7 +2457,7 @@ return (
 </button>
 </div>
 <div style={{background:"#0f2744",padding:"8px 16px",textAlign:"center"}}>
-<button onClick={()=>generatePDF(job,asset,checklist,testResults,review,type)} style={{background:"#059669",border:"none",color:"#ffffff",borderRadius:8,padding:"8px 20px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+<button onClick={()=>generatePDF(job,asset,checklist,testResults,review,type,profile)} style={{background:"#059669",border:"none",color:"#ffffff",borderRadius:8,padding:"8px 20px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
   ⬇ Download PDF
 </button>
 </div>
@@ -2452,6 +2478,100 @@ return (
 );
 }
 
+
+// - PROFILE SCREEN ----------------------
+function ProfileScreen({ user, profile, onSave, onBack }) {
+const [fullName,    setFullName]    = useState(profile?.full_name    || "");
+const [qual,        setQual]        = useState(profile?.qualification || "");
+const [regNum,      setRegNum]      = useState(profile?.reg_number    || "");
+const [company,     setCompany]     = useState(profile?.company       || "");
+const [sig,         setSig]         = useState(profile?.signature_data || null);
+const [drawing,     setDrawing]     = useState(false);
+const canvasRef = useRef(null);
+const lastPos   = useRef(null);
+const [saving,  setSaving] = useState(false);
+
+const startDraw = (e) => {
+  setDrawing(true);
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches?.[0] || e;
+  lastPos.current = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+};
+
+const draw = (e) => {
+  if (!drawing) return;
+  e.preventDefault();
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches?.[0] || e;
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  ctx.beginPath();
+  ctx.moveTo(lastPos.current.x, lastPos.current.y);
+  ctx.lineTo(x, y);
+  ctx.strokeStyle = "#1e3a5f";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.stroke();
+  lastPos.current = { x, y };
+};
+
+const stopDraw = () => {
+  setDrawing(false);
+  setSig(canvasRef.current.toDataURL());
+};
+
+const clearSig = () => {
+  const canvas = canvasRef.current;
+  canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+  setSig(null);
+};
+
+const handleSave = async () => {
+  setSaving(true);
+  await onSave({ full_name: fullName, qualification: qual, reg_number: regNum, company, signature_data: sig });
+  setSaving(false);
+};
+
+return (
+<div style={{padding:16}}>
+  <div style={{fontSize:18,fontWeight:700,color:"#1e3a5f",marginBottom:20}}>Engineer Profile</div>
+
+  {[["Full Name", fullName, setFullName],["Qualification (e.g. MCS, NICEIC)", qual, setQual],["Registration Number", regNum, setRegNum],["Company", company, setCompany]].map(([label,val,setter])=>(
+    <div key={label} style={{marginBottom:14}}>
+      <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.05em",display:"block",marginBottom:4}}>{label.toUpperCase()}</label>
+      <input style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e2e8f0",borderRadius:10,fontSize:15,fontFamily:"inherit",background:"#f8fafc"}}
+        value={val} onChange={e=>setter(e.target.value)} placeholder={label}/>
+    </div>
+  ))}
+
+  <div style={{marginBottom:14}}>
+    <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.05em",display:"block",marginBottom:4}}>SIGNATURE</label>
+    <div style={{border:"1.5px solid #e2e8f0",borderRadius:10,background:"#f8fafc",overflow:"hidden",position:"relative"}}>
+      {sig && <img src={sig} style={{width:"100%",display:"block"}} alt="signature"/>}
+      <canvas
+        ref={canvasRef}
+        width={340} height={100}
+        style={{display:sig?"none":"block",width:"100%",touchAction:"none",cursor:"crosshair"}}
+        onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+        onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
+      />
+      {!sig && <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",color:"#cbd5e1",fontSize:12,pointerEvents:"none"}}>Sign here with your finger</div>}
+    </div>
+    <button onClick={clearSig} style={{marginTop:6,fontSize:11,color:"#64748b",background:"none",border:"none",cursor:"pointer",padding:0}}>Clear signature</button>
+  </div>
+
+  <button onClick={handleSave} disabled={saving} style={{width:"100%",padding:"14px",background:"#1e3a5f",color:"#fff",border:"none",borderRadius:12,fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:10}}>
+    {saving ? "Saving..." : "Save Profile"}
+  </button>
+  <button onClick={onBack} style={{width:"100%",padding:"12px",background:"none",color:"#64748b",border:"1.5px solid #e2e8f0",borderRadius:12,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>← Back</button>
+</div>
+);
+}
+
+
 // - ROOT APP -----------------
 export default function App() {
 const [user,        setUser]        = useState(() => {
@@ -2470,11 +2590,13 @@ const [review,      setReview]      = useState(null);
 const [reportType,     setReportType]     = useState(null);
 const [conditionality, setConditionality] = useState(null);
 const [saving,         setSaving]         = useState(false);
+const [profile,        setProfile]        = useState(null);
 
 const labels = {
 dashboard:"Dashboard", create_job:"New Job", asset:"Asset Details",
 checklist:"Checklist", test_results:"Test Results",
-ai_review:"AI Review", conditionality:"Conditionality", summary:"Summary", report:"Report"
+ai_review:"AI Review", conditionality:"Conditionality", summary:"Summary", report:"Report",
+profile:"My Profile"
 };
 
 // - SAVE JOB TO SUPABASE ------------
@@ -2633,6 +2755,7 @@ risk_items:          reviewData.risk_items || [],
 recommended_actions: reviewData.recommended_actions || [],
 next_inspection:     reviewData.next_inspection,
 tags:                reviewData.tags || [],
+engineer_notes:      reviewData.engineer_notes || null,
 }, "job_id").catch(e => console.error("Review save error:", e));
 sb.update("jobs", await getValidToken(),
 { status: "completed", flagged: (reviewData.risk_items||[]).some(r=>r.code==="C2") },
@@ -2756,6 +2879,7 @@ try {
     recommended_actions: revData[0].recommended_actions || [],
     next_inspection:     revData[0].next_inspection,
     tags:                revData[0].tags || [],
+    engineer_notes:      revData[0].engineer_notes || null,
   } : null;
 
   setAsset(asset);
@@ -2805,6 +2929,7 @@ return (
       <div style={{display:"flex",gap:10,alignItems:"center"}}>
         {saving && <span style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>saving...</span>}
         {labels[screen] && <span style={{fontSize:10,color:"rgba(255,255,255,0.6)",letterSpacing:"0.1em"}}>{labels[screen].toUpperCase()}</span>}
+        <button onClick={()=>setScreen("profile")} style={{background:"none",border:"1px solid rgba(255,255,255,0.3)",color:"rgba(255,255,255,0.7)",borderRadius:6,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>👤</button>
         <button onClick={handleLogout} style={{background:"none",border:"1px solid rgba(255,255,255,0.3)",color:"rgba(255,255,255,0.7)",borderRadius:6,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>OUT</button>
       </div>
     </div>
@@ -2822,6 +2947,10 @@ return (
       <LoginScreen onLogin={u=>{
         try { localStorage.setItem("themis_user", JSON.stringify(u)); } catch(e) {}
         setUser(u);
+        // Load engineer profile
+        sb.query("engineer_profiles", u.token, {select:"*",filter:"user_id=eq."+u.id,limit:1})
+          .then(d=>{ if(d&&d[0]) setProfile(d[0]); })
+          .catch(()=>{});
         setScreen("dashboard");
       }}/>
     )}
@@ -2864,6 +2993,7 @@ return (
     {screen==="ai_review" && (
       <AIReviewScreen
         job={job} asset={asset} checklist={checklist} testResults={testResults}
+        profile={profile}
         onBack={()=>setScreen("test_results")}
         onComplete={saveReview}
       />
@@ -2887,7 +3017,27 @@ return (
         job={job} asset={asset} checklist={checklist}
         testResults={testResults} review={review}
         type={reportType}
+        profile={profile}
         onDone={()=>setScreen("dashboard")}
+      />
+    )}
+    {screen==="profile" && (
+      <ProfileScreen
+        user={user}
+        profile={profile}
+        onSave={async (p)=>{
+          const token = await getValidToken();
+          const payload={user_id:user.id,...p};
+          const existing=await sb.query("engineer_profiles",token,{select:"id",filter:"user_id=eq."+user.id,limit:1});
+          if(existing&&existing[0]){
+            await sb.update("engineer_profiles",token,p,"user_id=eq."+user.id);
+          } else {
+            await sb.insert("engineer_profiles",token,payload);
+          }
+          setProfile({...payload});
+          setScreen("dashboard");
+        }}
+        onBack={()=>setScreen("dashboard")}
       />
     )}
     {!["login","loading","dashboard","create_job","asset","checklist","test_results","ai_review","conditionality","summary","report"].includes(screen) && (
