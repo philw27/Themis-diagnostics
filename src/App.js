@@ -3092,6 +3092,7 @@ return (
     )}
     {screen==="asset" && (
       <AssetScreen
+        key={job?.id||"new"}
         job={job}
         initialData={asset}
         onBack={()=>setScreen("dashboard")}
@@ -3100,6 +3101,7 @@ return (
     )}
     {screen==="checklist" && (
       <ChecklistScreen
+        key={job?.id||"new"}
         job={job}
         initialData={checklist}
         onBack={()=>setScreen("asset")}
@@ -3108,6 +3110,7 @@ return (
     )}
     {screen==="test_results" && (
       <TestResultsScreen
+        key={job?.id||"new"}
         initialData={testResults}
         onBack={()=>setScreen("checklist")}
         onNext={saveTestResults}
