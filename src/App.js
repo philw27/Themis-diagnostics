@@ -34,6 +34,15 @@ headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + token },
 });
 },
 
+async refreshSession(refreshToken) {
+const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+method: "POST",
+headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+body: JSON.stringify({ refresh_token: refreshToken }),
+});
+return res.json();
+},
+
 // - DATABASE -----------------------
 async query(table, token, options = {}) {
 let url = SUPABASE_URL + "/rest/v1/" + table + "?";
@@ -708,6 +717,7 @@ email,
 name: data.user?.user_metadata?.full_name || email.split("@")[0],
 role: data.user?.user_metadata?.role || "engineer",
 token: data.access_token,
+refreshToken: data.refresh_token,
 id: data.user?.id,
 });
 } catch(e) {
@@ -2342,9 +2352,26 @@ ai_review:"AI Review", conditionality:"Conditionality", summary:"Summary", repor
 };
 
 // - SAVE JOB TO SUPABASE ------------
+const getValidToken = async () => {
+  // Try to refresh if we have a refresh token
+  if (user?.refreshToken) {
+    try {
+      const data = await sb.refreshSession(user.refreshToken);
+      if (data.access_token) {
+        const updated = { ...user, token: data.access_token, refreshToken: data.refresh_token };
+        setUser(updated);
+        try { localStorage.setItem("themis_user", JSON.stringify(updated)); } catch(e) {}
+        return data.access_token;
+      }
+    } catch(e) { console.log("Token refresh failed:", e); }
+  }
+  return user?.token;
+};
+
 const saveJob = async (jobData) => {
 setSaving(true);
 try {
+const token = await getValidToken();
 const payload = {
 job_number:    jobData.jobNumber,
 user_id:       user.id,
@@ -2356,7 +2383,7 @@ engineer_name: jobData.engineer,
 date:          jobData.date,
 flagged:       false,
 };
-const result = await sb.insert("jobs", user.token, payload);
+const result = await sb.insert("jobs", token, payload);
 if (result && result[0] && result[0].id) {
 const saved = { ...jobData, id: result[0].id };
 console.log("Job saved - Supabase ID:", result[0].id);
@@ -2398,7 +2425,7 @@ inverter_specs:  assetData.inverterSpecs || null,
 panel_specs:     assetData.panelSpecs || null,
 };
 // Save in background - don't block navigation
-sb.upsert("solar_assets", user.token, payload, "job_id")
+sb.upsert("solar_assets", await getValidToken(), payload, "job_id")
 .then(r => console.log("Asset saved"))
 .catch(e => console.error("Asset save error:", e.message));
 setAsset(assetData);
@@ -2422,7 +2449,7 @@ risk:    val.risk   || null,
 // Save in background - don't block navigation
 (async () => {
 for (let i = 0; i < rows.length; i += 20) {
-await sb.upsert("checklist_answers", user.token,
+await sb.upsert("checklist_answers", await getValidToken(),
 rows.slice(i, i+20), "job_id,item_id").catch(e => console.error("Checklist batch error:", e));
 }
 console.log("Checklist saved");
@@ -2438,7 +2465,7 @@ const jobId = job?.id;
 if (!jobId) { setTestResults(trData); setScreen("ai_review"); return; }
 setSaving(true);
 // Save in background - don't block navigation
-sb.upsert("test_results", user.token, {
+sb.upsert("test_results", await getValidToken(), {
 job_id:       jobId,
 voc:          trData.voc,
 isc:          trData.isc,
@@ -2468,7 +2495,7 @@ const jobId = job?.id;
 if (!jobId) { setReview(reviewData); setScreen("conditionality"); return; }
 setSaving(true);
 // Save in background
-sb.upsert("ai_reviews", user.token, {
+sb.upsert("ai_reviews", await getValidToken(), {
 job_id:              jobId,
 overall_status:      reviewData.overall_status,
 summary:             reviewData.summary,
@@ -2478,7 +2505,7 @@ recommended_actions: reviewData.recommended_actions || [],
 next_inspection:     reviewData.next_inspection,
 tags:                reviewData.tags || [],
 }, "job_id").catch(e => console.error("Review save error:", e));
-sb.update("jobs", user.token,
+sb.update("jobs", await getValidToken(),
 { status: "completed", flagged: (reviewData.risk_items||[]).some(r=>r.code==="C2") },
 "id=eq." + jobId
 ).catch(e => console.error("Job update error:", e));
