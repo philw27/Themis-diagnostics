@@ -979,6 +979,21 @@ return (
 }
 
 // - CREATE JOB ----------------
+const DEFAULT_LIMITATIONS = [
+  "No roof access obtained — array not physically inspected",
+  "Concealed DC cabling not inspected",
+  "Loft hatch locked — inverter not physically accessible",
+  "Generation meter not accessible",
+  "Distribution board not accessible",
+  "Occupier not present — limited access to property",
+  "Adverse weather conditions — roof inspection not carried out",
+  "System not generating at time of inspection",
+  "Inverter display faulty — operational data unavailable",
+  "Original installation documentation not available",
+  "DC isolator inaccessible",
+  "AC isolator inaccessible",
+];
+
 function CreateJobScreen({ onBack, onCreate }) {
 const generateJobNumber = () => {
 const now = new Date();
@@ -988,8 +1003,23 @@ const day = String(now.getDate()).padStart(2,"0");
 const rand = String(Math.floor(Math.random()*9000)+1000);
 return `TH-${year}${month}${day}-${rand}`;
 };
-const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:""});
+const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:[]});
+const [customLim, setCustomLim] = useState("");
 const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+const toggleLim = (lim) => setForm(f=>({
+  ...f,
+  limitations: f.limitations.includes(lim)
+    ? f.limitations.filter(l=>l!==lim)
+    : [...f.limitations, lim]
+}));
+
+const addCustom = () => {
+  if(!customLim.trim()) return;
+  setForm(f=>({...f, limitations:[...f.limitations, customLim.trim()]}));
+  setCustomLim("");
+};
+
 return (
 <div style={{padding:16}}>
 <div style={S.secTitle}>* New Job</div>
@@ -1005,15 +1035,34 @@ return (
 ))}
 </div>
 </div>
+
 <div style={{marginBottom:18}}>
 <label style={S.label}>Limitations / Exclusions</label>
-<textarea style={{...S.input,minHeight:80,resize:"vertical"}}
-  placeholder="e.g. No roof access obtained. Concealed DC cabling not inspected. Loft hatch locked - inverter not physically accessible."
-  value={form.limitations}
-  onChange={e=>set("limitations",e.target.value)}
-/>
+<div style={{marginBottom:8}}>
+{DEFAULT_LIMITATIONS.map(lim=>{
+  const ticked = form.limitations.includes(lim);
+  return (
+    <button key={lim} onClick={()=>toggleLim(lim)} style={{display:"flex",alignItems:"flex-start",gap:10,width:"100%",background:ticked?"#f0f9ff":"#f8fafc",border:"1.5px solid",borderColor:ticked?"#1e3a5f":"#e2e8f0",borderRadius:8,padding:"10px 12px",marginBottom:6,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+      <span style={{fontSize:16,color:ticked?"#1e3a5f":"#cbd5e1",flexShrink:0,marginTop:1}}>{ticked?"☑":"☐"}</span>
+      <span style={{fontSize:13,color:ticked?"#1e3a5f":"#64748b",lineHeight:1.4}}>{lim}</span>
+    </button>
+  );
+})}
 </div>
-<button style={S.btn("primary")} onClick={()=>onCreate({...form,id:Date.now(),status:"open",flagged:false})}>Create Job -></button>
+{form.limitations.filter(l=>!DEFAULT_LIMITATIONS.includes(l)).map(lim=>(
+  <div key={lim} style={{display:"flex",alignItems:"center",gap:8,background:"#f0f9ff",border:"1.5px solid #1e3a5f",borderRadius:8,padding:"8px 12px",marginBottom:6}}>
+    <span style={{fontSize:16,color:"#1e3a5f"}}>☑</span>
+    <span style={{fontSize:13,color:"#1e3a5f",flex:1}}>{lim}</span>
+    <button onClick={()=>setForm(f=>({...f,limitations:f.limitations.filter(l=>l!==lim)}))} style={{background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:16,padding:0}}>×</button>
+  </div>
+))}
+<div style={{display:"flex",gap:8,marginTop:6}}>
+  <input style={{...S.input,flex:1,marginBottom:0}} placeholder="Add custom limitation..." value={customLim} onChange={e=>setCustomLim(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustom()}/>
+  <button onClick={addCustom} style={{padding:"12px 16px",background:"#1e3a5f",color:"#fff",border:"none",borderRadius:10,fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Add</button>
+</div>
+</div>
+
+<button style={S.btn("primary")} onClick={()=>onCreate({...form,id:Date.now(),status:"open",flagged:false,limitations:form.limitations.join(". ")})}>Create Job -></button>
 <button style={S.btn("ghost")} onClick={onBack}>Cancel</button>
 </div>
 );
