@@ -2692,85 +2692,104 @@ return (
 
 // - EICR VISUAL INSPECTION CHECKLIST (BS 7671 / GN3 Section 5)
 const EICR_SECTIONS = [
-  { id:"service_equipment", label:"Service Equipment & Intake", items:[
-    {id:"se1", q:"Presence and condition of service cable"},
-    {id:"se2", q:"Presence and condition of service head"},
-    {id:"se3", q:"Condition of tails between service head and meter"},
-    {id:"se4", q:"Condition of metering equipment"},
-    {id:"se5", q:"Condition of isolator (where present)"},
+  { id:"intake", label:"1.0 Intake Equipment (Visual Inspection Only)", items:[
+    {id:"1.1.1", q:"Service cable", reg:""},
+    {id:"1.1.2", q:"Service head", reg:""},
+    {id:"1.1.3", q:"Earthing arrangement", reg:""},
+    {id:"1.1.4", q:"Meter tails", reg:""},
+    {id:"1.1.5", q:"Metering equipment", reg:""},
+    {id:"1.1.6", q:"Isolator (where present)", reg:""},
+    {id:"1.2",   q:"Consumer's isolator (where present)", reg:""},
+    {id:"1.3",   q:"Consumer's meter tails", reg:""},
   ]},
-  { id:"earthing_bonding", label:"Earthing & Bonding", items:[
-    {id:"eb1", q:"Presence and condition of earthing conductor"},
-    {id:"eb2", q:"Presence and condition of main protective bonding conductors"},
-    {id:"eb3", q:"Accessibility and condition of all earth electrodes"},
-    {id:"eb4", q:"Provision of earthing and bonding labels"},
-    {id:"eb5", q:"Main protective bonding conductor — water installation pipes"},
-    {id:"eb6", q:"Main protective bonding conductor — gas installation pipes"},
-    {id:"eb7", q:"Main protective bonding conductor — structural steel"},
-    {id:"eb8", q:"Supplementary bonding where required"},
+  { id:"microgen", label:"2.0 Presence of Adequate Arrangements for Other Sources (Microgenerators)", items:[
+    {id:"2.1", q:"Adequate arrangements for microgenerators/other sources (551.6; 551.7)", reg:"551.6; 551.7"},
   ]},
-  { id:"consumer_unit", label:"Consumer Unit / Distribution Board", items:[
-    {id:"cu1", q:"Adequacy of working space and accessibility to consumer unit"},
-    {id:"cu2", q:"Security of fixing"},
-    {id:"cu3", q:"Condition of enclosure"},
-    {id:"cu4", q:"Presence of circuit chart or equivalent"},
-    {id:"cu5", q:"Presence and condition of appropriate locking/latch"},
-    {id:"cu6", q:"Presence of RCD quarterly test notice"},
-    {id:"cu7", q:"Condition of insulants, including insulation and sheathing of cables"},
-    {id:"cu8", q:"Connections — including circuit protective conductors"},
-    {id:"cu9", q:"Correct identification of conductors"},
-    {id:"cu10",q:"Correct type of protective devices for the installation"},
-    {id:"cu11",q:"Single-pole protective devices in line conductors only"},
-    {id:"cu12",q:"Protection against mechanical damage"},
-    {id:"cu13",q:"Presence of SPD where required"},
-    {id:"cu14",q:"Presence of AFDD where required"},
+  { id:"earthing", label:"3.0 Earthing / Bonding Arrangements", items:[
+    {id:"3.1", q:"Presence and condition of distributor's earthing arrangement (542.1.2.1; 542.1.2.2)", reg:"542.1.2.1; 542.1.2.2"},
+    {id:"3.2", q:"Presence and condition of earth electrode connection where applicable (542.1.2.3)", reg:"542.1.2.3"},
+    {id:"3.3", q:"Provision of earthing/bonding labels at all appropriate locations (514.13.1)", reg:"514.13.1"},
+    {id:"3.4", q:"Confirmation of earthing conductor size (542.3; 543.1.1)", reg:"542.3; 543.1.1"},
+    {id:"3.5", q:"Accessibility and condition of earthing conductor at MET (543.3.2)", reg:"543.3.2"},
+    {id:"3.6", q:"Confirmation of main protective bonding conductor sizes (544.1)", reg:"544.1"},
+    {id:"3.7", q:"Condition and accessibility of main protective bonding conductor connections (543.3.2; 544.1.2)", reg:"543.3.2; 544.1.2"},
+    {id:"3.8", q:"Accessibility and condition of other protective bonding connections (543.3.1; 543.3.2)", reg:"543.3.1; 543.3.2"},
   ]},
-  { id:"circuits", label:"Circuits — General", items:[
-    {id:"ci1", q:"Identification of conductors"},
-    {id:"ci2", q:"Cables correctly supported"},
-    {id:"ci3", q:"Examination of cables for signs of mechanical damage"},
-    {id:"ci4", q:"Condition of insulation of live parts"},
-    {id:"ci5", q:"Non-sheathed cables protected by conduit or trunking"},
-    {id:"ci6", q:"Routing of cables in safe zones or protected"},
-    {id:"ci7", q:"Cable joints — approved"},
-    {id:"ci8", q:"Presence of fire barriers and sealing"},
-    {id:"ci9", q:"Band II cables segregated from Band I"},
-    {id:"ci10",q:"Adequate temperature rating of cable insulation"},
-    {id:"ci11",q:"Wiring systems suitable for external influences"},
+  { id:"consumer_unit", label:"4.0 Consumer Unit(s) / Distribution Board(s)", items:[
+    {id:"4.1",  q:"Adequacy of working space/accessibility to consumer unit/distribution board (132.12; 513.1)", reg:"132.12; 513.1"},
+    {id:"4.2",  q:"Security of fixing (134.1.1)", reg:"134.1.1"},
+    {id:"4.3",  q:"Condition of enclosure(s) in terms of IP rating etc (416.2)", reg:"416.2"},
+    {id:"4.4",  q:"Condition of enclosure(s) in terms of fire rating etc (421.1.201; 526.5)", reg:"421.1.201; 526.5"},
+    {id:"4.5",  q:"Enclosure not damaged/deteriorated so as to impair safety (651.2)", reg:"651.2"},
+    {id:"4.6",  q:"Presence of main linked switch (as required by 462.1.201)", reg:"462.1.201"},
+    {id:"4.7",  q:"Operation of main switch (functional check) (643.10)", reg:"643.10"},
+    {id:"4.8",  q:"Manual operation of circuit-breakers and RCDs to prove disconnection (643.10)", reg:"643.10"},
+    {id:"4.9",  q:"Correct identification of circuit details and protective devices (514.8.1; 514.9.1)", reg:"514.8.1; 514.9.1"},
+    {id:"4.10", q:"Presence of RCD six-monthly test notice, where required (514.12.2)", reg:"514.12.2"},
+    {id:"4.11", q:"Presence of alternative supply warning notice at or near consumer unit/distribution board (514.15)", reg:"514.15"},
+    {id:"4.12", q:"Presence of other required labelling (please specify) (Section 514)", reg:"Section 514"},
+    {id:"4.13", q:"Compatibility of protective devices, bases and other components; correct type and rating (411.3.2; 411.4; 411.5; 411.6; Sections 432, 433)", reg:"411.3.2; 411.4; 411.5; 411.6"},
+    {id:"4.14", q:"Single-pole switching or protective devices in line conductor only (132.14.1; 530.3.3)", reg:"132.14.1; 530.3.3"},
+    {id:"4.15", q:"Protection against mechanical damage where cables enter consumer unit/distribution board (132.14.1; 522.8.1; 522.8.5; 522.8.11)", reg:"522.8.1; 522.8.5"},
+    {id:"4.16", q:"Protection against electromagnetic effects where cables enter consumer unit/distribution board/enclosures (521.5.1)", reg:"521.5.1"},
+    {id:"4.17", q:"RCD(s) provided for fault protection - includes RCBOs (411.4.204; 411.5.2; 531.2)", reg:"411.4.204; 411.5.2; 531.2"},
+    {id:"4.18", q:"RCD(s) provided for additional protection/requirements - includes RCBOs (411.3.3; 415.1)", reg:"411.3.3; 415.1"},
+    {id:"4.19", q:"Confirmation of indication that SPD is functional (651.4)", reg:"651.4"},
+    {id:"4.20", q:"Confirmation that ALL conductor connections, including connections to busbars, are correctly located in terminals and are tight and secure (526.1)", reg:"526.1"},
+    {id:"4.21", q:"Adequate arrangements where a generating set operates as a switched alternative to the public supply (551.6)", reg:"551.6"},
+    {id:"4.22", q:"Adequate arrangements where a generating set operates in parallel with the public supply (551.7)", reg:"551.7"},
   ]},
-  { id:"isolation", label:"Isolation & Switching", items:[
-    {id:"is1", q:"Presence and condition of appropriate devices for isolation and switching"},
-    {id:"is2", q:"Capable of being secured in the open position"},
-    {id:"is3", q:"Correct operation of switches"},
-    {id:"is4", q:"Presence of appropriate protection against electric shock — SELV/PELV"},
-    {id:"is5", q:"Presence of correct identification of circuits, switches and protective devices"},
-    {id:"is6", q:"Presence of warning labels — alternative supplies"},
-    {id:"is7", q:"SELV and PELV circuits adequately segregated"},
+  { id:"final_circuits", label:"5.0 Final Circuits", items:[
+    {id:"5.1",    q:"Identification of conductors (514.3.1)", reg:"514.3.1"},
+    {id:"5.2",    q:"Cables correctly supported throughout their run (521.10.202; 522.8.5)", reg:"521.10.202; 522.8.5"},
+    {id:"5.3",    q:"Condition of insulation of live parts (416.1)", reg:"416.1"},
+    {id:"5.4",    q:"Non-sheathed cables protected by enclosure in conduit, ducting or trunking (521.10.1)", reg:"521.10.1"},
+    {id:"5.4.1",  q:"To include the integrity of conduit and trunking systems (metallic and plastic)", reg:""},
+    {id:"5.5",    q:"Adequacy of cables for current-carrying capacity with regard for the type and nature of installation (Section 523)", reg:"Section 523"},
+    {id:"5.6",    q:"Coordination between conductors and overload protective devices (433.1; 533.2.1)", reg:"433.1; 533.2.1"},
+    {id:"5.7",    q:"Adequacy of protective devices: type and rated current for fault protection (411.3)", reg:"411.3"},
+    {id:"5.8",    q:"Presence and adequacy of circuit protective conductors (411.3.1; Section 543)", reg:"411.3.1; Section 543"},
+    {id:"5.9",    q:"Wiring system(s) appropriate for the type and nature of the installation and external influences (Section 522)", reg:"Section 522"},
+    {id:"5.10",   q:"Concealed cables installed in prescribed zones (522.6.202)", reg:"522.6.202"},
+    {id:"5.11",   q:"Cables concealed under floors, above ceilings or in walls/partitions, adequately protected against damage (522.6.204)", reg:"522.6.204"},
+    {id:"5.12.1", q:"Additional protection by RCD ≤30mA — for all socket-outlets of rating 32A or less, unless an exception is permitted (411.3.3)", reg:"411.3.3"},
+    {id:"5.12.2", q:"Additional protection by RCD ≤30mA — for supply of mobile equipment not exceeding 32A rating for use outdoors (411.3.3)", reg:"411.3.3"},
+    {id:"5.12.3", q:"Additional protection by RCD ≤30mA — for cables concealed in walls at depth less than 50mm (522.6.202; 522.6.203)", reg:"522.6.202; 522.6.203"},
+    {id:"5.12.4", q:"Additional protection by RCD ≤30mA — for cables in walls/partitions containing metal parts regardless of depth (522.6.203)", reg:"522.6.203"},
+    {id:"5.12.5", q:"Additional protection by RCD ≤30mA — final circuits supplying luminaires within domestic premises (411.3.4)", reg:"411.3.4"},
+    {id:"5.13",   q:"Provision of fire barriers, sealing arrangements and protection against thermal effects (Section 527)", reg:"Section 527"},
+    {id:"5.14",   q:"Band II cables segregated/separated from Band I cables (528.1)", reg:"528.1"},
+    {id:"5.15",   q:"Cables segregated/separated from communications cabling (528.2)", reg:"528.2"},
+    {id:"5.16",   q:"Cables segregated/separated from non-electrical services (528.3)", reg:"528.3"},
+    {id:"5.17.1", q:"Termination of cables at enclosures — connections soundly made and under no undue strain (526.6)", reg:"526.6"},
+    {id:"5.17.2", q:"Termination of cables at enclosures — no basic insulation of a conductor visible outside enclosure (526.8)", reg:"526.8"},
+    {id:"5.17.3", q:"Termination of cables at enclosures — connections of live conductors adequately enclosed (526.5)", reg:"526.5"},
+    {id:"5.17.4", q:"Termination of cables at enclosures — adequately connected at point of entry to enclosure (glands, bushes etc.) (522.8.5)", reg:"522.8.5"},
+    {id:"5.18",   q:"Condition of accessories including socket-outlets, switches and joint boxes (651.2(v))", reg:"651.2"},
+    {id:"5.19",   q:"Suitability of accessories for external influences (512.2)", reg:"512.2"},
+    {id:"5.20",   q:"Adequacy of working space/accessibility to equipment (132.12; 513.1)", reg:"132.12; 513.1"},
+    {id:"5.21",   q:"Single-pole switching or protective devices in line conductors only (132.14.1, 530.3.3)", reg:"132.14.1; 530.3.3"},
   ]},
-  { id:"sockets_accessories", label:"Sockets & Accessories", items:[
-    {id:"sa1", q:"Condition of socket outlets and accessories"},
-    {id:"sa2", q:"Suitability of socket outlets — IP rating for location"},
-    {id:"sa3", q:"RCD protection for socket outlets (where required)"},
-    {id:"sa4", q:"Presence of appropriate shutter protection"},
-    {id:"sa5", q:"Condition of wiring to accessories"},
-    {id:"sa6", q:"Presence and condition of accessories in hazardous locations"},
+  { id:"bathroom", label:"6.0 Location(s) Containing a Bath or Shower", items:[
+    {id:"6.1", q:"Additional protection for all low voltage (LV) circuits by RCD not exceeding 30mA (701.411.3.3)", reg:"701.411.3.3"},
+    {id:"6.2", q:"Where used as a protective measure, requirements for SELV or PELV met (701.414.4.5)", reg:"701.414.4.5"},
+    {id:"6.3", q:"Shaver supply units comply with BS EN 61558-2-5 formerly BS 3535 (701.512.3)", reg:"701.512.3"},
+    {id:"6.4", q:"Presence of supplementary bonding conductors, unless not required by BS 7671:2018 (701.415.2)", reg:"701.415.2"},
+    {id:"6.5", q:"Low voltage (e.g. 230V) socket-outlets sited at least 2.5m from zone 1 (701.512.3)", reg:"701.512.3"},
+    {id:"6.6", q:"Suitability of equipment for external influences for installed location in terms of IP rating (701.512.2)", reg:"701.512.2"},
+    {id:"6.7", q:"Suitability of accessories and controlgear etc. for a particular zone (701.512.3)", reg:"701.512.3"},
+    {id:"6.8", q:"Suitability of current-using equipment for particular position within the location (701.55)", reg:"701.55"},
   ]},
-  { id:"special_locations", label:"Special Installations & Locations", items:[
-    {id:"sl1", q:"Additional protection by RCD for circuits in bathroom/shower rooms"},
-    {id:"sl2", q:"Presence of shaver supply unit in bathroom (where applicable)"},
-    {id:"sl3", q:"Equipotential bonding in bathroom/shower rooms"},
-    {id:"sl4", q:"Condition of electric heating equipment"},
-    {id:"sl5", q:"Condition of electrical installation in outbuildings/garages"},
-    {id:"sl6", q:"Condition of electrical installation for EV charging (where applicable)"},
-    {id:"sl7", q:"Condition of solar PV installation (where applicable)"},
+  { id:"special", label:"7.0 Other Part 7 Special Installations or Locations", items:[
+    {id:"7.1", q:"Special installation or location 1 (list if applicable)", reg:"Part 7"},
+    {id:"7.2", q:"Special installation or location 2 (list if applicable)", reg:"Part 7"},
   ]},
-  { id:"fire_detection", label:"Fire Detection & Alarms", items:[
-    {id:"fd1", q:"Presence and condition of smoke/heat alarms"},
-    {id:"fd2", q:"Interlinked smoke/heat alarms (where required)"},
-    {id:"fd3", q:"Carbon monoxide detector (where required)"},
-    {id:"fd4", q:"Correct grade and category of fire alarm for premises type"},
+  { id:"prosumer", label:"8.0 Prosumer's Low Voltage Electrical Installation(s)", items:[
+    {id:"8.1", q:"Additional requirements relating to Chapter 82 — item 1", reg:"Chapter 82"},
+    {id:"8.2", q:"Additional requirements relating to Chapter 82 — item 2", reg:"Chapter 82"},
   ]},
 ];
+
 
 // - EICR INSTALLATION DETAILS SCREEN ----
 function EICRInstallationScreen({ job, initialData, onBack, onNext }) {
@@ -3062,7 +3081,7 @@ return (
               <div key={item.id} style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid #f1f5f9"}}>
                 <div style={{fontSize:13,color:"#334155",marginBottom:6,lineHeight:1.4}}>{item.q}</div>
                 <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:ans&&ans!=="na"?6:0}}>
-                  {[{v:"pass",l:"✓ Pass",col:"#059669",bg:"#f0fdf4"},{v:"fail",l:"✗ Fail",col:"#dc2626",bg:"#fef2f2"},{v:"lim",l:"Limited",col:"#d97706",bg:"#fffbeb"},{v:"na",l:"N/A",col:"#64748b",bg:"#f8fafc"}].map(opt=>(
+                  {[{v:"pass",l:"PASS",col:"#059669",bg:"#f0fdf4"},{v:"c1",l:"C1",col:"#dc2626",bg:"#fef2f2"},{v:"c2",l:"C2",col:"#ea580c",bg:"#fff7ed"},{v:"c3",l:"C3",col:"#d97706",bg:"#fffbeb"},{v:"fi",l:"FI",col:"#7c3aed",bg:"#faf5ff"},{v:"lim",l:"LIM",col:"#0284c7",bg:"#f0f9ff"},{v:"nv",l:"N/V",col:"#64748b",bg:"#f8fafc"},{v:"na",l:"N/A",col:"#94a3b8",bg:"#f8fafc"}].map(opt=>(
                     <button key={opt.v} onClick={()=>setAns(item.id,opt.v)}
                       style={{padding:"6px 12px",borderRadius:20,border:"1.5px solid",borderColor:ans===opt.v?opt.col:"#e2e8f0",background:ans===opt.v?opt.bg:"#fff",color:ans===opt.v?opt.col:"#94a3b8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {opt.l}
@@ -3460,10 +3479,19 @@ const saveEicrObservations = async (observations) => {
   const c2s = observations.filter(o=>o.code==="C2");
   const c3s = observations.filter(o=>o.code==="C3");
   const fis = observations.filter(o=>o.code==="FI");
-  const status = c1s.length>0?"Unsatisfactory":c2s.length>0?"Unsatisfactory":"Satisfactory";
+  // Also check inspection checklist for C1/C2 outcomes
+  const inspC1 = eicrInspection ? Object.values(eicrInspection).filter(v=>v.answer==="c1").length : 0;
+  const inspC2 = eicrInspection ? Object.values(eicrInspection).filter(v=>v.answer==="c2").length : 0;
+  const inspC3 = eicrInspection ? Object.values(eicrInspection).filter(v=>v.answer==="c3").length : 0;
+  const inspFI = eicrInspection ? Object.values(eicrInspection).filter(v=>v.answer==="fi").length : 0;
+  const totalC1 = c1s.length + inspC1;
+  const totalC2 = c2s.length + inspC2;
+  const totalC3 = c3s.length + inspC3;
+  const totalFI = fis.length + inspFI;
+  const status = totalC1>0||totalC2>0?"Unsatisfactory":"Satisfactory";
   const autoReview = {
     overall_status: status,
-    summary: `EICR completed for ${job?.client||"client"} at ${job?.address||"address"}. ${observations.length} observation(s) recorded: ${c1s.length} C1 (danger present), ${c2s.length} C2 (potentially dangerous), ${c3s.length} C3 (improvement recommended), ${fis.length} FI (further investigation). Overall condition: ${status}.`,
+    summary: `EICR completed for ${job?.client||"client"} at ${job?.address||"address"}. Overall assessment: ${status}. ${observations.length} formal observation(s) recorded: ${totalC1} C1 (danger present), ${totalC2} C2 (potentially dangerous), ${totalC3} C3 (improvement recommended), ${totalFI} FI (further investigation required).`,
     risk_items: observations.map(o=>({ code:o.code, issue:o.description, regulation:o.regulation, recommended_action:o.recommendation })),
     next_inspection: c1s.length>0||c2s.length>0?"Immediate remedial works required":c3s.length>0?"Recommended within 12 months":"5 years (domestic) or as required by tenure",
     tags: [],
