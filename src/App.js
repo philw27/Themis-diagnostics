@@ -1753,20 +1753,20 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
   let y=26;
 
   const addSection = (title, text, col) => {
-    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...(col||navy));
-    doc.text(title, margin, y); y+=5;
+    doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...(col||navy));
+    doc.text(title, margin, y); y+=4.5;
     doc.setDrawColor(...(col||navy)); doc.setLineWidth(0.3);
-    doc.line(margin, y, margin+contentW, y); y+=4;
-    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(50,70,90);
+    doc.line(margin, y, margin+contentW, y); y+=3.5;
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(50,70,90);
     const lines = doc.splitTextToSize(text, contentW);
-    doc.text(lines, margin, y); y+=lines.length*4.5+8;
+    doc.text(lines, margin, y); y+=lines.length*4+6;
   };
 
   // Report details block
   doc.setFillColor(240,245,252);
-  doc.roundedRect(margin,y,contentW,50,3,3,"F");
+  doc.roundedRect(margin,y,contentW,46,3,3,"F");
   doc.setDrawColor(200,215,230); doc.setLineWidth(0.3);
-  doc.roundedRect(margin,y,contentW,50,3,3);
+  doc.roundedRect(margin,y,contentW,46,3,3);
   const detailRows = [
     ["Report Type", type==="client"?"Client Solar PV Inspection Report":"QA Solar PV Inspection Report"],
     ["Prepared for", (job?.client||"-")+" | "+(job?.address||"-")],
@@ -1776,13 +1776,13 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
     ["Job Reference", job?.jobNumber||"-"],
   ];
   detailRows.forEach(([k,v],i)=>{
-    const ry = y+8+(i*7);
-    doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...navy);
+    const ry = y+7+(i*6.5);
+    doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...navy);
     doc.text(k+":", margin+5, ry);
     doc.setFont("helvetica","normal"); doc.setTextColor(50,70,90);
-    doc.text(String(v), margin+50, ry);
+    doc.text(String(v), margin+48, ry);
   });
-  y+=58;
+  y+=52;
 
   // Status banner
   doc.setFillColor(...statusCol.map(v=>Math.min(255,v+175)));
@@ -1792,7 +1792,7 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
   y+=20;
 
   // Purpose
-  const purposeMap={inspection:"Periodic inspection of solar PV installation in accordance with IET Code of Practice for Grid Connected Solar PV Systems and BS 7671:2018+A2:2022.",service:"Routine service and maintenance inspection of solar PV installation.",commissioning:"Commissioning inspection of newly installed solar PV system in accordance with MCS MIS 3002 and IET Code of Practice.",diagnostic:"Diagnostic investigation of reported fault or performance issue with solar PV installation.",postfault:"Post-fault inspection following reported system failure or damage."};
+  const purposeMap={inspection:"Periodic inspection of solar PV installation in accordance with the IET Code of Practice for Grid Connected Solar PV Systems (2nd Edition) and BS 7671:2018+A2:2022 Requirements for Electrical Installations.",service:"Routine service and maintenance inspection of solar PV installation to assess system condition, verify safe operation and identify any defects or deterioration.",commissioning:"Commissioning inspection of newly installed solar PV system in accordance with MCS MIS 3002 and IET Code of Practice for Grid Connected Solar PV Systems.",diagnostic:"Diagnostic investigation of reported fault or performance issue with solar PV installation to identify root cause and recommend remedial action.",postfault:"Post-fault inspection following reported system failure or damage to assess extent of defects and recommend remedial works."};
   addSection("PURPOSE OF INSPECTION", purposeMap[job?.mode||"inspection"]||purposeMap.inspection);
 
   // Scope - auto from mode
@@ -3072,7 +3072,11 @@ return (
     {screen==="dashboard" && (
       <Dashboard
         user={user}
-        onCreateJob={()=>setScreen("create_job")}
+        onCreateJob={()=>{
+          setJob(null); setAsset(null); setChecklist(null);
+          setTestResults(null); setReview(null);
+          setScreen("create_job");
+        }}
         onSelectJob={j=>{ loadJobData(j); }}
       />
     )}
