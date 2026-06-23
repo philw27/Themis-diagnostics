@@ -587,8 +587,8 @@ return (
 }
 
 // - CHECKLIST SCREEN --------------------
-function ChecklistScreen({ job, onBack, onNext }) {
-const [answers, setAnswers] = useState({});
+function ChecklistScreen({ job, initialData, onBack, onNext }) {
+const [answers, setAnswers] = useState(initialData || {});
 const [expanded, setExpanded] = useState("panels");
 const [stamp, setStamp] = useState(true);
 const [engName, setEngName] = useState(job?.engineer||"");
@@ -1059,15 +1059,15 @@ key_notes: null
 }
 
 // - ASSET SCREEN ---------------
-function AssetScreen({ job, onBack, onNext }) {
-const [a, setA] = useState({
+function AssetScreen({ job, initialData, onBack, onNext }) {
+const [a, setA] = useState(initialData || {
 panel_count:"", panel_make:"", panel_model:"",
 inverter_make:"", inverter_model:"", inverter_serial:"",
 system_age:"", meter_make:"", meter_serial:"", meter_reading:"",
 inverter_loc:"", dc_iso_loc:"", ac_iso_loc:""
 });
-const [inverterSpecs, setInverterSpecs] = useState(null);
-const [panelSpecs,    setPanelSpecs]    = useState(null);
+const [inverterSpecs, setInverterSpecs] = useState(initialData?.inverterSpecs || null);
+const [panelSpecs,    setPanelSpecs]    = useState(initialData?.panelSpecs || null);
 const [lookingUp,     setLookingUp]     = useState(null); // "inverter"|"panel"|null
 const [lookupError,   setLookupError]   = useState(null);
 
@@ -1329,8 +1329,8 @@ return (
 }
 
 // - TEST RESULTS ---------------
-function TestResultsScreen({ onBack, onNext }) {
-const [r, setR] = useState({voc:"",isc:"",irradiance:"",ir_pos:"",ir_neg:"",polarity:null,zs:"",rcd_type:"Type A",rcd_trip:"",mcb_rating:"",breaking_cap:"",switchgear:null,inverter_ok:null,loss_mains:null});
+function TestResultsScreen({ initialData, onBack, onNext }) {
+const [r, setR] = useState(initialData || {voc:"",isc:"",irradiance:"",ir_pos:"",ir_neg:"",polarity:null,zs:"",rcd_type:"Type A",rcd_trip:"",mcb_rating:"",breaking_cap:"",switchgear:null,inverter_ok:null,loss_mains:null});
 const set = (k,v) => setR(x=>({...x,[k]:v}));
 return (
 <div style={{padding:16}}>
@@ -2712,6 +2712,7 @@ return (
     {screen==="asset" && (
       <AssetScreen
         job={job}
+        initialData={asset}
         onBack={()=>setScreen("dashboard")}
         onNext={saveAsset}
       />
@@ -2719,12 +2720,14 @@ return (
     {screen==="checklist" && (
       <ChecklistScreen
         job={job}
+        initialData={checklist}
         onBack={()=>setScreen("asset")}
         onNext={saveChecklist}
       />
     )}
     {screen==="test_results" && (
       <TestResultsScreen
+        initialData={testResults}
         onBack={()=>setScreen("checklist")}
         onNext={saveTestResults}
       />
