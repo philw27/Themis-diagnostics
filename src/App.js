@@ -1029,9 +1029,9 @@ return (
 <div style={{marginBottom:12}}><label style={S.label}>Date</label><input style={S.input} type="date" value={form.date} onChange={e=>set("date",e.target.value)}/></div>
 <div style={{marginBottom:14}}>
 <label style={S.label}>Mode</label>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-{["inspection","service","commissioning","diagnostic","eicr"].map(m=>(
-<button key={m} onClick={()=>set("mode",m)} style={{...S.btn(form.mode===m?"primary":"ghost"),marginBottom:0,padding:"11px 8px",fontSize:13}}>{m.charAt(0).toUpperCase()+m.slice(1)}</button>
+<div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+{[["inspection","Inspection"],["service","Service"],["commissioning","Commission"],["diagnostic","Diagnostic"],["eicr","EICR"]].map(([v,l])=>(
+<button key={v} onClick={()=>set("mode",v)} style={{...S.btn(form.mode===v?"primary":"ghost"),marginBottom:0,padding:"10px 14px",fontSize:13,flex:"1 0 calc(50% - 3px)"}}>{l}</button>
 ))}
 </div>
 </div>
