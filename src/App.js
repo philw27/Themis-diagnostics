@@ -1584,272 +1584,398 @@ function generatePDF(job, asset, checklist, testResults, review, type) {
     ]},
   ];
 
+  const COMP_LIFE = {
+    inverter: { label:"Inverter",          expected:12 },
+    panels:   { label:"Solar Panels",      expected:28 },
+    dc_iso:   { label:"DC Isolator",       expected:18 },
+    ac_iso:   { label:"AC Isolator",       expected:18 },
+    rcd:      { label:"RCD / Protection",  expected:15 },
+    wiring:   { label:"DC Wiring",         expected:25 },
+    mounting: { label:"Mounting System",   expected:25 },
+    meter:    { label:"Generation Meter",  expected:20 },
+  };
+
+  const getCondition = (key, age) => {
+    const life = COMP_LIFE[key];
+    const pct = age / life.expected;
+    if (pct < 0.4) return { rating:1, label:"Excellent",   col:[5,150,105],   yrs:`${Math.round((life.expected*0.4)-age)}-${Math.round((life.expected*0.6)-age)} yrs` };
+    if (pct < 0.6) return { rating:2, label:"Good",        col:[2,132,199],   yrs:`${Math.round((life.expected*0.6)-age)}-${Math.round((life.expected*0.8)-age)} yrs` };
+    if (pct < 0.8) return { rating:3, label:"Monitor",     col:[217,119,6],   yrs:`${Math.round((life.expected*0.8)-age)}-${Math.round(life.expected-age)} yrs` };
+    if (pct < 1.0) return { rating:4, label:"Attention",   col:[234,88,12],   yrs:`0-${Math.round(life.expected-age)} yrs` };
+    return               { rating:5, label:"End of Life",  col:[220,38,38],   yrs:"Overdue" };
+  };
+
   const getAnswer = (id) => {
     const item = checklist?.[id];
     if (!item) return "-";
-    if (item.answer) {
-      const map = {yes:"Yes",no:"No",lim:"Limited",fi:"FI",na:"N/A"};
-      return map[item.answer] || item.answer;
-    }
+    if (item.answer) { const m={yes:"Yes",no:"No",lim:"Limited",fi:"FI",na:"N/A"}; return m[item.answer]||item.answer; }
     if (item.value !== undefined && item.value !== null && item.value !== "") return String(item.value);
     return "-";
   };
-
   const getNote = (id) => checklist?.[id]?.note || "";
 
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pageW = 210, pageH = 297, margin = 14;
-  const contentW = pageW - margin * 2;
+  const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+  const pageW=210, pageH=297, margin=14, contentW=210-14*2;
   const now = new Date();
-  const dateStr = now.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-  const certNum = "TH-" + now.getFullYear() + "-" + String(job?.id || "001").slice(-4);
-  const statusCol = review?.overall_status === "Pass" ? [5, 150, 105] : review?.overall_status === "Fail" ? [220, 38, 38] : [217, 119, 6];
-  const navy = [30, 58, 95];
-  const c2s = review?.risk_items?.filter(r => r.code === "C2") || [];
-  const c3s = review?.risk_items?.filter(r => r.code === "C3") || [];
-  const fis = review?.risk_items?.filter(r => r.code === "FI") || [];
+  const dateStr = now.toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"});
+  const certNum = "TH-"+now.getFullYear()+"-"+String(job?.id||"001").slice(-4);
+  const navy=[30,58,95];
+  const c2s=(review?.risk_items||[]).filter(r=>r.code==="C2");
+  const c3s=(review?.risk_items||[]).filter(r=>r.code==="C3");
+  const fis=(review?.risk_items||[]).filter(r=>r.code==="FI");
+  const statusCol = review?.overall_status==="Pass"?[5,150,105]:review?.overall_status==="Fail"?[220,38,38]:[217,119,6];
+  let pageNum=1;
 
   const addHeader = (title) => {
     doc.setFillColor(...navy);
-    doc.rect(0, 0, pageW, 18, "F");
+    doc.rect(0,0,pageW,18,"F");
     doc.setFillColor(...statusCol);
-    doc.rect(0, 18, pageW, 1.5, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
+    doc.rect(0,18,pageW,1.5,"F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(255,255,255);
     doc.text("THEMIS DIAGNOSTICS", margin, 11);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(180, 200, 220);
-    doc.text(title, pageW - margin, 11, { align: "right" });
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(180,200,220);
+    doc.text(title, pageW-margin, 11, {align:"right"});
   };
 
-  const addFooter = (pageNum) => {
-    doc.setFillColor(245, 248, 252);
-    doc.rect(0, pageH - 12, pageW, 12, "F");
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(120, 130, 150);
-    doc.text("Cert: " + certNum + "  |  " + dateStr + "  |  Themis Diagnostics Solar PV Inspection Platform", margin, pageH - 5);
-    doc.text("Page " + pageNum, pageW - margin, pageH - 5, { align: "right" });
+  const addFooter = (n) => {
+    doc.setFillColor(245,248,252);
+    doc.rect(0,pageH-12,pageW,12,"F");
+    doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(120,130,150);
+    doc.text("Cert: "+certNum+"  |  "+dateStr+"  |  Themis Diagnostics Solar PV Inspection Platform", margin, pageH-5);
+    doc.text("Page "+n, pageW-margin, pageH-5, {align:"right"});
   };
 
-  let pageNum = 1;
+  // ---- PAGE 1: COVER ----
+  addHeader(type==="client"?"CLIENT REPORT":"QA REPORT");
+  doc.setFillColor(248,250,252);
+  doc.rect(margin,26,contentW,52,"F");
+  doc.setDrawColor(...statusCol); doc.setLineWidth(0.8);
+  doc.rect(margin,26,contentW,52);
+  doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(...navy);
+  doc.text("Solar PV Inspection Report", margin+8, 42);
+  doc.setFontSize(13); doc.setTextColor(...statusCol);
+  doc.text(review?.overall_status?.toUpperCase()||"ADVISORY", margin+8, 52);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(60,80,100);
+  doc.text("Client:   "+(job?.client||"-"), margin+8, 62);
+  doc.text("Address: "+(job?.address||"-"), margin+8, 68);
+  doc.text("Job No:  "+(job?.jobNumber||"-")+"     Engineer: "+(job?.engineer||"-"), margin+8, 74);
 
-  // PAGE 1 - COVER
-  addHeader(type === "client" ? "CLIENT REPORT" : "QA REPORT");
-  doc.setFillColor(248, 250, 252);
-  doc.rect(margin, 26, contentW, 50, "F");
-  doc.setDrawColor(...statusCol);
-  doc.setLineWidth(0.8);
-  doc.rect(margin, 26, contentW, 50);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.setTextColor(...navy);
-  doc.text("Solar PV Inspection Report", margin + 8, 42);
-  doc.setFontSize(13);
-  doc.setTextColor(...statusCol);
-  doc.text(review?.overall_status?.toUpperCase() || "ADVISORY", margin + 8, 52);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(60, 80, 100);
-  doc.text("Client: " + (job?.client || "-"), margin + 8, 62);
-  doc.text("Address: " + (job?.address || "-"), margin + 8, 68);
-  doc.text("Job No: " + (job?.jobNumber || "-") + "   Engineer: " + (job?.engineer || "-"), margin + 8, 74);
-
-  const boxes = [[c2s.length, "C2 URGENT", [220, 38, 38]], [c3s.length, "C3 ADVISORY", [217, 119, 6]], [fis.length, "FOR INVESTIGATION", [124, 58, 237]]];
-  boxes.forEach(([n, label, col], i) => {
-    const bx = margin + i * (contentW / 3) + 2;
-    const by = 84;
-    doc.setFillColor(...col.map(v => Math.min(255, v + 180)));
-    doc.roundedRect(bx, by, contentW / 3 - 4, 22, 3, 3, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(...col);
-    doc.text(String(n), bx + (contentW / 3 - 4) / 2, by + 12, { align: "center" });
+  // Risk boxes
+  [[c2s.length,"C2 URGENT",[220,38,38]],[c3s.length,"C3 ADVISORY",[217,119,6]],[fis.length,"FOR INVESTIGATION",[124,58,237]]].forEach(([n,label,col],i)=>{
+    const bx=margin+i*(contentW/3)+2, by=86;
+    doc.setFillColor(...col.map(v=>Math.min(255,v+175)));
+    doc.roundedRect(bx,by,contentW/3-4,22,3,3,"F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(...col);
+    doc.text(String(n), bx+(contentW/3-4)/2, by+13, {align:"center"});
     doc.setFontSize(7);
-    doc.text(label, bx + (contentW / 3 - 4) / 2, by + 19, { align: "center" });
+    doc.text(label, bx+(contentW/3-4)/2, by+20, {align:"center"});
   });
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(80, 100, 120);
-  doc.text(review?.summary || "", margin, 118, { maxWidth: contentW, lineHeightFactor: 1.5 });
+  // Cert details box
+  doc.setFillColor(240,244,248);
+  doc.rect(margin,116,contentW,28,"F");
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(80,100,120);
+  doc.text("Certificate No: "+certNum, margin+6, 126);
+  doc.text("Inspection Date: "+dateStr, margin+6, 133);
+  doc.text("Report Type: "+(type==="client"?"Client Report":"QA Report"), margin+6, 140);
   addFooter(pageNum++);
 
-  // PAGE 2 - ASSET REGISTER
+  // ---- PAGE 2: EXECUTIVE SUMMARY ----
+  doc.addPage();
+  addHeader("EXECUTIVE SUMMARY");
+  let y=26;
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+  doc.text("Executive Summary", margin, y+8); y+=18;
+
+  // Status banner
+  doc.setFillColor(...statusCol.map(v=>Math.min(255,v+175)));
+  doc.roundedRect(margin,y,contentW,16,3,3,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...statusCol);
+  doc.text("Overall Status: "+(review?.overall_status||"Advisory"), margin+6, y+10);
+  y+=22;
+
+  // Summary text
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
+  const summaryLines = doc.splitTextToSize(review?.summary||"No summary available.", contentW);
+  doc.text(summaryLines, margin, y); y+=summaryLines.length*5+8;
+
+  // Risk summary table
+  autoTable(doc,{
+    startY:y,
+    head:[["Category","Count","Description"]],
+    body:[
+      ["C2 Urgent", String(c2s.length), "Immediate action required - safety critical"],
+      ["C3 Advisory", String(c3s.length), "Recommended improvements"],
+      ["For Investigation", String(fis.length), "Requires further investigation"],
+    ],
+    margin:{left:margin,right:margin},
+    headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:9},
+    bodyStyles:{fontSize:9},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{fontStyle:"bold",cellWidth:45},1:{cellWidth:20,halign:"center"}},
+    didParseCell:(data)=>{
+      if(data.section==="body" && data.column.index===0){
+        if(data.row.index===0) data.cell.styles.textColor=[220,38,38];
+        else if(data.row.index===1) data.cell.styles.textColor=[217,119,6];
+        else data.cell.styles.textColor=[124,58,237];
+      }
+    },
+  });
+  y=doc.lastAutoTable.finalY+10;
+
+  // Next inspection
+  if(review?.next_inspection){
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
+    doc.text("Recommended Next Inspection: ", margin, y);
+    doc.setFont("helvetica","normal"); doc.setTextColor(60,80,100);
+    doc.text(review.next_inspection, margin+58, y);
+  }
+  addFooter(pageNum++);
+
+  // ---- PAGE 3: ASSET REGISTER ----
   doc.addPage();
   addHeader("ASSET REGISTER");
-  let y = 26;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...navy);
-  doc.text("Asset Register", margin, y + 6); y += 14;
-
-  const assetRows = [
-    ["Panel Make", asset?.panel_make || "-"], ["Panel Model", asset?.panel_model || "-"],
-    ["Panel Count", asset?.panel_count ? String(asset.panel_count) : "-"],
-    ["System kWp", asset?.system_kwp ? String(asset.system_kwp) : "-"],
-    ["Inverter Make", asset?.inverter_make || "-"], ["Inverter Model", asset?.inverter_model || "-"],
-    ["Inverter Serial", asset?.inverter_serial || "-"], ["Inverter Location", asset?.inverter_loc || "-"],
-    ["Meter Serial", asset?.meter_serial || "-"],
-    ["Meter Reading", asset?.meter_reading ? String(asset.meter_reading) : "-"],
-    ["System Age", asset?.system_age ? asset.system_age + " years" : "-"],
-    ["System Type", asset?.system_type || "-"],
-    ["Inspection Date", dateStr],
-    ["Certificate No.", certNum],
-  ];
-  autoTable(doc, {
-    startY: y, head: [["Field", "Value"]], body: assetRows,
-    margin: { left: margin, right: margin },
-    headStyles: { fillColor: navy, textColor: [255, 255, 255], fontSize: 9 },
-    bodyStyles: { fontSize: 9 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
+  y=26;
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+  doc.text("Asset Register", margin, y+8); y+=18;
+  autoTable(doc,{
+    startY:y,
+    head:[["Field","Value"]],
+    body:[
+      ["Panel Make", asset?.panel_make||"-"],
+      ["Panel Model", asset?.panel_model||"-"],
+      ["Panel Count", asset?.panel_count?String(asset.panel_count):"-"],
+      ["System kWp", asset?.system_kwp?String(asset.system_kwp):"-"],
+      ["Inverter Make", asset?.inverter_make||"-"],
+      ["Inverter Model", asset?.inverter_model||"-"],
+      ["Inverter Serial", asset?.inverter_serial||"-"],
+      ["Inverter Location", asset?.inverter_loc||"-"],
+      ["DC Isolator Location", asset?.dc_iso_loc||"-"],
+      ["AC Isolator Location", asset?.ac_iso_loc||"-"],
+      ["Meter Make", asset?.meter_make||"-"],
+      ["Meter Serial", asset?.meter_serial||"-"],
+      ["Meter Reading", asset?.meter_reading?String(asset.meter_reading):"-"],
+      ["System Age", asset?.system_age?asset.system_age+" years":"-"],
+      ["System Type", asset?.system_type||"-"],
+      ["Inspection Date", dateStr],
+      ["Certificate No.", certNum],
+    ],
+    margin:{left:margin,right:margin},
+    headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:9},
+    bodyStyles:{fontSize:9},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{fontStyle:"bold",cellWidth:55}},
   });
   addFooter(pageNum++);
 
-  // PAGE 3 - TEST RESULTS
-  doc.addPage();
-  addHeader("TEST RESULTS");
-  y = 26;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...navy);
-  doc.text("Electrical Test Results", margin, y + 6); y += 14;
-
-  const testRows = [
-    ["Voc (Open Circuit Voltage)", testResults?.voc ? testResults.voc + " V" : "-"],
-    ["Isc (Short Circuit Current)", testResults?.isc ? testResults.isc + " A" : "-"],
-    ["Irradiance", testResults?.irradiance ? testResults.irradiance + " W/m2" : "-"],
-    ["IR Pos-Earth", testResults?.ir_pos ? testResults.ir_pos + " MOhm" : "-"],
-    ["IR Neg-Earth", testResults?.ir_neg ? testResults.ir_neg + " MOhm" : "-"],
-    ["Zs (Earth Fault Loop)", testResults?.zs ? testResults.zs + " Ohm" : "-"],
-    ["RCD Trip Time", testResults?.rcd_trip ? testResults.rcd_trip + " ms" : "-"],
-    ["MCB Rating", testResults?.mcb_rating ? testResults.mcb_rating + " A" : "-"],
-    ["Inverter Status", testResults?.inverter_ok || "-"],
-    ["RCD Type", testResults?.rcd_type || "-"],
-  ];
-  autoTable(doc, {
-    startY: y, head: [["Test", "Result"]], body: testRows,
-    margin: { left: margin, right: margin },
-    headStyles: { fillColor: navy, textColor: [255, 255, 255], fontSize: 9 },
-    bodyStyles: { fontSize: 9 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 } },
-  });
-  addFooter(pageNum++);
-
-  // PAGES - INSPECTION CHECKLIST (one page per section)
-  PDF_SECTIONS.forEach((section) => {
+  // ---- PAGES 4+: INSPECTION CHECKLIST ----
+  PDF_SECTIONS.forEach((section)=>{
     doc.addPage();
-    addHeader("INSPECTION CHECKLIST - " + section.label.toUpperCase());
-    y = 26;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(...navy);
-    doc.text(section.label, margin, y + 6); y += 14;
-
-    const checkRows = section.items.map(item => {
-      const ans = getAnswer(item.id);
-      const note = getNote(item.id);
-      return [item.q, ans, note];
-    });
-
-    autoTable(doc, {
-      startY: y,
-      head: [["Inspection Item", "Result", "Notes"]],
-      body: checkRows,
-      margin: { left: margin, right: margin },
-      headStyles: { fillColor: navy, textColor: [255, 255, 255], fontSize: 8 },
-      bodyStyles: { fontSize: 8 },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 20, halign: "center" }, 2: { cellWidth: 72 } },
-      didParseCell: (data) => {
-        if (data.column.index === 1 && data.section === "body") {
-          const val = data.cell.raw;
-          if (val === "Yes") data.cell.styles.textColor = [5, 150, 105];
-          else if (val === "No") data.cell.styles.textColor = [220, 38, 38];
-          else if (val === "Limited") data.cell.styles.textColor = [217, 119, 6];
-          else if (val === "FI") data.cell.styles.textColor = [124, 58, 237];
-          data.cell.styles.fontStyle = "bold";
+    addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase());
+    y=26;
+    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+    doc.text(section.label, margin, y+8); y+=18;
+    autoTable(doc,{
+      startY:y,
+      head:[["Inspection Item","Result","Notes"]],
+      body:section.items.map(item=>[item.q, getAnswer(item.id), getNote(item.id)]),
+      margin:{left:margin,right:margin},
+      headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:8},
+      bodyStyles:{fontSize:8},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      columnStyles:{0:{cellWidth:90},1:{cellWidth:20,halign:"center"},2:{cellWidth:72}},
+      didParseCell:(data)=>{
+        if(data.column.index===1 && data.section==="body"){
+          const v=data.cell.raw;
+          if(v==="Yes") data.cell.styles.textColor=[5,150,105];
+          else if(v==="No") data.cell.styles.textColor=[220,38,38];
+          else if(v==="Limited") data.cell.styles.textColor=[217,119,6];
+          else if(v==="FI") data.cell.styles.textColor=[124,58,237];
+          data.cell.styles.fontStyle="bold";
         }
       },
     });
     addFooter(pageNum++);
   });
 
-  // PAGE - COMPLIANCE FINDINGS
+  // ---- NEXT PAGE: TEST RESULTS ----
+  doc.addPage();
+  addHeader("TEST RESULTS");
+  y=26;
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+  doc.text("Electrical Test Results", margin, y+8); y+=18;
+  autoTable(doc,{
+    startY:y,
+    head:[["Test","Result"]],
+    body:[
+      ["Voc (Open Circuit Voltage)", testResults?.voc?testResults.voc+" V":"-"],
+      ["Isc (Short Circuit Current)", testResults?.isc?testResults.isc+" A":"-"],
+      ["Irradiance", testResults?.irradiance?testResults.irradiance+" W/m2":"-"],
+      ["IR Pos-Earth", testResults?.ir_pos?testResults.ir_pos+" MOhm":"-"],
+      ["IR Neg-Earth", testResults?.ir_neg?testResults.ir_neg+" MOhm":"-"],
+      ["Zs (Earth Fault Loop)", testResults?.zs?testResults.zs+" Ohm":"-"],
+      ["RCD Trip Time", testResults?.rcd_trip?testResults.rcd_trip+" ms":"-"],
+      ["MCB Rating", testResults?.mcb_rating?testResults.mcb_rating+" A":"-"],
+      ["Breaking Capacity", testResults?.breaking_cap?testResults.breaking_cap+" kA":"-"],
+      ["Polarity Check", testResults?.polarity||"-"],
+      ["Switchgear Functioning", testResults?.switchgear||"-"],
+      ["Inverter Status", testResults?.inverter_ok||"-"],
+      ["Loss of Mains Test", testResults?.loss_mains||"-"],
+      ["RCD Type", testResults?.rcd_type||"-"],
+    ],
+    margin:{left:margin,right:margin},
+    headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:9},
+    bodyStyles:{fontSize:9},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{fontStyle:"bold",cellWidth:80}},
+  });
+  addFooter(pageNum++);
+
+  // ---- NEXT PAGE: CONDITIONALITY ----
+  doc.addPage();
+  addHeader("SYSTEM CONDITIONALITY ASSESSMENT");
+  y=26;
+  const age=parseInt(asset?.system_age||"0")||0;
+  const allRatings=Object.keys(COMP_LIFE).map(k=>getCondition(k,age).rating);
+  const overall=Math.max(...allRatings);
+  const overallCond=getCondition(Object.keys(COMP_LIFE).find(k=>getCondition(k,age).rating===overall)||"inverter",age);
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+  doc.text("System Conditionality Assessment", margin, y+8); y+=18;
+
+  // System age / overall banner
+  doc.setFillColor(...navy);
+  doc.roundedRect(margin,y,contentW,22,3,3,"F");
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(180,200,220);
+  doc.text("SYSTEM AGE", margin+6, y+7);
+  doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.setTextColor(255,255,255);
+  doc.text(age+" years", margin+6, y+18);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(180,200,220);
+  doc.text("OVERALL RATING", pageW-margin-50, y+7);
+  doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(...overallCond.col);
+  doc.text(String(overall), pageW-margin-30, y+18);
+  doc.setFontSize(8); doc.text(overallCond.label.toUpperCase(), pageW-margin-50, y+18);
+  y+=28;
+
+  // Component table
+  autoTable(doc,{
+    startY:y,
+    head:[["Component","System Age","Rating","Est. Remaining Life"]],
+    body:Object.entries(COMP_LIFE).map(([key,comp])=>{
+      const cond=getCondition(key,age);
+      return [comp.label, age+" yrs", cond.rating+" - "+cond.label, cond.yrs];
+    }),
+    margin:{left:margin,right:margin},
+    headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:9},
+    bodyStyles:{fontSize:9},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{cellWidth:60},1:{cellWidth:25,halign:"center"},2:{cellWidth:40},3:{cellWidth:57}},
+    didParseCell:(data)=>{
+      if(data.column.index===2 && data.section==="body"){
+        const r=parseInt(data.cell.raw);
+        if(r===1) data.cell.styles.textColor=[5,150,105];
+        else if(r===2) data.cell.styles.textColor=[2,132,199];
+        else if(r===3) data.cell.styles.textColor=[217,119,6];
+        else if(r===4) data.cell.styles.textColor=[234,88,12];
+        else data.cell.styles.textColor=[220,38,38];
+        data.cell.styles.fontStyle="bold";
+      }
+    },
+  });
+  y=doc.lastAutoTable.finalY+8;
+
+  // Rating key
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
+  doc.text("Rating Key", margin, y+6); y+=10;
+  autoTable(doc,{
+    startY:y,
+    body:[
+      ["1 - Excellent","No action required"],
+      ["2 - Good","Routine maintenance only"],
+      ["3 - Monitor","Components approaching mid-life"],
+      ["4 - Attention","Replacements forecast within 3 years"],
+      ["5 - End of Life","Immediate replacement recommended"],
+    ],
+    margin:{left:margin,right:margin},
+    bodyStyles:{fontSize:8},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{fontStyle:"bold",cellWidth:45}},
+    didParseCell:(data)=>{
+      if(data.column.index===0 && data.section==="body"){
+        const cols=[[5,150,105],[2,132,199],[217,119,6],[234,88,12],[220,38,38]];
+        data.cell.styles.textColor=cols[data.row.index]||[60,80,100];
+      }
+    },
+  });
+  y=doc.lastAutoTable.finalY+8;
+  doc.setFillColor(255,251,235); doc.roundedRect(margin,y,contentW,20,2,2,"F");
+  doc.setDrawColor(217,119,6); doc.setLineWidth(0.3); doc.roundedRect(margin,y,contentW,20,2,2);
+  doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(180,80,0);
+  doc.text("IMPORTANT - INDICATIVE FORECAST ONLY", margin+4, y+6);
+  doc.setFont("helvetica","normal"); doc.setTextColor(120,60,0);
+  const disclaimer="This conditionality assessment is based on typical component lifespans and visual inspection at the time of visit. Actual replacement timelines may vary depending on usage, maintenance history and environmental conditions.";
+  doc.text(doc.splitTextToSize(disclaimer, contentW-8), margin+4, y+11);
+  addFooter(pageNum++);
+
+  // ---- NEXT PAGE: COMPLIANCE FINDINGS ----
   doc.addPage();
   addHeader("COMPLIANCE FINDINGS");
-  y = 26;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...navy);
-  doc.text("Compliance Findings", margin, y + 6); y += 14;
-
-  const allRisks = review?.risk_items || [];
-  if (allRisks.length === 0) {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(5, 150, 105);
-    doc.text("No compliance findings identified. Installation passed inspection.", margin, y + 6);
+  y=26;
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+  doc.text("Compliance Findings", margin, y+8); y+=18;
+  const allRisks=review?.risk_items||[];
+  if(allRisks.length===0){
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(5,150,105);
+    doc.text("No compliance findings identified. Installation passed inspection.", margin, y+6);
   } else {
-    const riskRows = allRisks.map(r => [r.code, r.issue || "-", r.regulation || "-", r.recommended_action || "-"]);
-    autoTable(doc, {
-      startY: y,
-      head: [["Code", "Issue", "Regulation", "Recommended Action"]],
-      body: riskRows,
-      margin: { left: margin, right: margin },
-      headStyles: { fillColor: navy, textColor: [255, 255, 255], fontSize: 8 },
-      bodyStyles: { fontSize: 8 },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      columnStyles: { 0: { cellWidth: 14, fontStyle: "bold" }, 1: { cellWidth: 52 }, 2: { cellWidth: 44 } },
-      didParseCell: (data) => {
-        if (data.column.index === 0 && data.section === "body") {
-          const code = data.cell.raw;
-          if (code === "C2") data.cell.styles.textColor = [220, 38, 38];
-          else if (code === "C3") data.cell.styles.textColor = [217, 119, 6];
-          else if (code === "FI") data.cell.styles.textColor = [124, 58, 237];
+    autoTable(doc,{
+      startY:y,
+      head:[["Code","Issue","Regulation","Recommended Action"]],
+      body:allRisks.map(r=>[r.code, r.issue||"-", r.regulation||"-", r.recommended_action||"-"]),
+      margin:{left:margin,right:margin},
+      headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:8},
+      bodyStyles:{fontSize:8},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      columnStyles:{0:{cellWidth:14,fontStyle:"bold"},1:{cellWidth:52},2:{cellWidth:44}},
+      didParseCell:(data)=>{
+        if(data.column.index===0 && data.section==="body"){
+          const code=data.cell.raw;
+          if(code==="C2") data.cell.styles.textColor=[220,38,38];
+          else if(code==="C3") data.cell.styles.textColor=[217,119,6];
+          else if(code==="FI") data.cell.styles.textColor=[124,58,237];
         }
       },
     });
   }
   addFooter(pageNum++);
 
-  // PAGE - SIGN OFF
+  // ---- LAST PAGE: SIGN OFF ----
   doc.addPage();
   addHeader("DECLARATION & SIGN-OFF");
-  y = 26;
-  doc.setFillColor(248, 250, 252);
-  doc.rect(margin, y, contentW, 40, "F");
-  doc.setDrawColor(200, 215, 230);
-  doc.setLineWidth(0.3);
-  doc.rect(margin, y, contentW, 40);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(60, 80, 100);
-  const declaration = "I/We, being the person(s) responsible for the inspection and testing of the solar PV installation described in this report, having exercised reasonable skill and care, hereby declare that the information in this report provides an accurate assessment of the condition of the installation at the time of inspection, to the best of my/our knowledge and belief.";
-  doc.text(declaration, margin + 4, y + 8, { maxWidth: contentW - 8, lineHeightFactor: 1.6 });
-  y += 48;
-
-  const signRows = [
-    ["Engineer Name", job?.engineer || ""],
-    ["Qualification", ""],
-    ["Registration No.", ""],
-    ["Signature", ""],
-    ["Date", ""],
-  ];
-  autoTable(doc, {
-    startY: y, body: signRows,
-    margin: { left: margin, right: margin },
-    bodyStyles: { fontSize: 10, minCellHeight: 14 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
+  y=26;
+  doc.setFillColor(248,250,252); doc.rect(margin,y,contentW,38,"F");
+  doc.setDrawColor(200,215,230); doc.setLineWidth(0.3); doc.rect(margin,y,contentW,38);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(60,80,100);
+  const decl="I/We, being the person(s) responsible for the inspection and testing of the solar PV installation described in this report, having exercised reasonable skill and care, hereby declare that the information in this report provides an accurate assessment of the condition of the installation at the time of inspection, to the best of my/our knowledge and belief.";
+  doc.text(doc.splitTextToSize(decl, contentW-8), margin+4, y+8);
+  y+=46;
+  autoTable(doc,{
+    startY:y,
+    body:[
+      ["Engineer Name", job?.engineer||""],
+      ["Qualification",""],
+      ["Registration No.",""],
+      ["Signature",""],
+      ["Date",""],
+    ],
+    margin:{left:margin,right:margin},
+    bodyStyles:{fontSize:10,minCellHeight:14},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:{0:{fontStyle:"bold",cellWidth:55}},
   });
   addFooter(pageNum++);
 
-  const filename = "Themis-" + (job?.client || "Report").replace(/\s+/g, "-") + "-" + certNum + ".pdf";
+  const filename="Themis-"+(job?.client||"Report").replace(/\s+/g,"-")+"-"+certNum+".pdf";
   doc.save(filename);
 }
 
