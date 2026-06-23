@@ -2426,8 +2426,11 @@ panel_specs:     assetData.panelSpecs || null,
 };
 // Save in background - don't block navigation
 sb.upsert("solar_assets", await getValidToken(), payload, "job_id")
-.then(r => console.log("Asset saved"))
-.catch(e => console.error("Asset save error:", e.message));
+.then(r => { 
+  if(r && r[0]) console.log("Asset saved ok");
+  else alert("Asset save issue: " + JSON.stringify(r).slice(0,200));
+})
+.catch(e => alert("Asset save error: " + e.message));
 setAsset(assetData);
 setSaving(false);
 setScreen(job?.mode === "diagnostic" ? "ai_review" : "checklist");
