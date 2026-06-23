@@ -3382,6 +3382,99 @@ setSaving(false);
 setScreen("conditionality");
 };
 
+// - SAVE EICR INSTALLATION ---------------
+const saveEicrInstall = async (data) => {
+  const jobId = job?.id;
+  if(!jobId) { setEicrInstall(data); setScreen("eicr_circuits"); return; }
+  setSaving(true);
+  const token = await getValidToken();
+  sb.upsert("eicr_installation", token, { job_id: jobId, ...data }, "job_id")
+    .then(r => { if(!r||!r[0]) console.log("EICR install save issue:", JSON.stringify(r)); })
+    .catch(e => alert("EICR install save error: " + e.message));
+  setEicrInstall(data);
+  setSaving(false);
+  setScreen("eicr_circuits");
+};
+
+// - SAVE EICR CIRCUITS -------------------
+const saveEicrCircuits = async (circuits) => {
+  const jobId = job?.id;
+  if(!jobId) { setEicrCircuits(circuits); setScreen("eicr_inspection"); return; }
+  setSaving(true);
+  const token = await getValidToken();
+  // Delete existing circuits then re-insert
+  try {
+    await fetch(SUPABASE_URL + "/rest/v1/eicr_circuits?job_id=eq." + jobId, {
+      method: "DELETE",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + token }
+    });
+    if(circuits.length > 0) {
+      const rows = circuits.map((c, i) => ({ job_id: jobId, ...c, sort_order: i }));
+      await sb.insert("eicr_circuits", token, rows);
+    }
+  } catch(e) { alert("Circuit save error: " + e.message); }
+  setEicrCircuits(circuits);
+  setSaving(false);
+  setScreen("eicr_inspection");
+};
+
+// - SAVE EICR INSPECTION -----------------
+const saveEicrInspection = async (answers) => {
+  const jobId = job?.id;
+  if(!jobId) { setEicrInspection(answers); setScreen("eicr_observations"); return; }
+  setSaving(true);
+  const token = await getValidToken();
+  const rows = Object.entries(answers).map(([item_id, v]) => ({
+    job_id: jobId, item_id, answer: v.answer||null, note: v.note||null
+  }));
+  // Save in batches of 20
+  for(let i=0; i<rows.length; i+=20) {
+    await sb.upsert("checklist_answers", token, rows.slice(i,i+20), "job_id,item_id")
+      .catch(e => console.error("EICR inspection save error:", e));
+  }
+  setEicrInspection(answers);
+  setSaving(false);
+  setScreen("eicr_observations");
+};
+
+// - SAVE EICR OBSERVATIONS ---------------
+const saveEicrObservations = async (observations) => {
+  const jobId = job?.id;
+  if(!jobId) { setEicrObservations(observations); setScreen("summary"); return; }
+  setSaving(true);
+  const token = await getValidToken();
+  try {
+    await fetch(SUPABASE_URL + "/rest/v1/eicr_observations?job_id=eq." + jobId, {
+      method: "DELETE",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + token }
+    });
+    if(observations.length > 0) {
+      const rows = observations.map((o, i) => ({ job_id: jobId, ...o, sort_order: i }));
+      await sb.insert("eicr_observations", token, rows);
+    }
+  } catch(e) { alert("Observations save error: " + e.message); }
+  setEicrObservations(observations);
+  setSaving(false);
+  // Build auto review from observations
+  const c1s = observations.filter(o=>o.code==="C1");
+  const c2s = observations.filter(o=>o.code==="C2");
+  const c3s = observations.filter(o=>o.code==="C3");
+  const fis = observations.filter(o=>o.code==="FI");
+  const status = c1s.length>0?"Unsatisfactory":c2s.length>0?"Unsatisfactory":"Satisfactory";
+  const autoReview = {
+    overall_status: status,
+    summary: `EICR completed for ${job?.client||"client"} at ${job?.address||"address"}. ${observations.length} observation(s) recorded: ${c1s.length} C1 (danger present), ${c2s.length} C2 (potentially dangerous), ${c3s.length} C3 (improvement recommended), ${fis.length} FI (further investigation). Overall condition: ${status}.`,
+    risk_items: observations.map(o=>({ code:o.code, issue:o.description, regulation:o.regulation, recommended_action:o.recommendation })),
+    next_inspection: c1s.length>0||c2s.length>0?"Immediate remedial works required":c3s.length>0?"Recommended within 12 months":"5 years (domestic) or as required by tenure",
+    tags: [],
+    missing_information: [],
+    recommended_actions: [],
+  };
+  setReview(autoReview);
+  setScreen("summary");
+};
+
+
 // - LOAD FULL JOB DATA FROM SUPABASE -----------
 // Test Supabase connection
 const testSupabase = async () => {
@@ -3402,10 +3495,11 @@ console.error("Supabase test failed:", e.message);
 const loadJobData = async (j) => {
 setJob(j);
 setAsset(null); setChecklist(null); setTestResults(null); setReview(null);
+setEicrInstall(null); setEicrCircuits(null); setEicrInspection(null); setEicrObservations(null);
 setScreen("loading");
 
 try {
-  const token = user.token;
+  const token = await getValidToken();
 
   // Load asset
   const assetData = await sb.query("solar_assets", token, {
@@ -3504,16 +3598,33 @@ try {
   setReview(review);
 
   // Navigate to appropriate screen
-  if (review) {
-    setScreen("summary");
-  } else if (tr) {
-    setScreen("ai_review");
-  } else if (Object.keys(checklist).length > 0) {
-    setScreen("test_results");
-  } else if (asset) {
-    setScreen("checklist");
+  if(j.mode === "eicr") {
+    // Load EICR specific data
+    const eicrInstData = await sb.query("eicr_installation", token, { select:"*", filter:`job_id=eq.${j.id}`, limit:1 });
+    const eicrCircData = await sb.query("eicr_circuits", token, { select:"*", filter:`job_id=eq.${j.id}`, limit:100 });
+    const eicrObsData  = await sb.query("eicr_observations", token, { select:"*", filter:`job_id=eq.${j.id}`, limit:100 });
+    if(eicrInstData?.[0]) setEicrInstall(eicrInstData[0]);
+    if(eicrCircData?.length) setEicrCircuits(eicrCircData);
+    if(Object.keys(checklist).length>0) setEicrInspection(checklist);
+    if(eicrObsData?.length) setEicrObservations(eicrObsData);
+    if(review) setScreen("summary");
+    else if(eicrObsData?.length) setScreen("eicr_observations");
+    else if(Object.keys(checklist).length>0) setScreen("eicr_inspection");
+    else if(eicrCircData?.length) setScreen("eicr_circuits");
+    else if(eicrInstData?.[0]) setScreen("eicr_install");
+    else setScreen("eicr_install");
   } else {
-    setScreen("asset");
+    if (review) {
+      setScreen("summary");
+    } else if (tr) {
+      setScreen("ai_review");
+    } else if (Object.keys(checklist).length > 0) {
+      setScreen("test_results");
+    } else if (asset) {
+      setScreen("checklist");
+    } else {
+      setScreen("asset");
+    }
   }
 
 } catch(e) {
@@ -3650,7 +3761,7 @@ return (
         job={job}
         initialData={eicrInstall}
         onBack={()=>setScreen("dashboard")}
-        onNext={async (data)=>{ setEicrInstall(data); setScreen("eicr_circuits"); }}
+        onNext={saveEicrInstall}
       />
     )}
     {screen==="eicr_circuits" && (
@@ -3659,7 +3770,7 @@ return (
         job={job}
         initialData={eicrCircuits}
         onBack={()=>setScreen("eicr_install")}
-        onNext={async (data)=>{ setEicrCircuits(data); setScreen("eicr_inspection"); }}
+        onNext={saveEicrCircuits}
       />
     )}
     {screen==="eicr_inspection" && (
@@ -3668,7 +3779,7 @@ return (
         job={job}
         initialData={eicrInspection}
         onBack={()=>setScreen("eicr_circuits")}
-        onNext={async (data)=>{ setEicrInspection(data); setScreen("eicr_observations"); }}
+        onNext={saveEicrInspection}
       />
     )}
     {screen==="eicr_observations" && (
@@ -3676,10 +3787,7 @@ return (
         job={job}
         initialData={eicrObservations}
         onBack={()=>setScreen("eicr_inspection")}
-        onNext={async (data)=>{
-          setEicrObservations(data);
-          setScreen("summary");
-        }}
+        onNext={saveEicrObservations}
       />
     )}
     {screen==="profile" && (
