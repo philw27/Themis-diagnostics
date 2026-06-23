@@ -2751,6 +2751,10 @@ if (result && result[0] && result[0].id) {
 const saved = { ...jobData, id: result[0].id };
 console.log("Job saved - Supabase ID:", result[0].id);
 setJob(saved);
+setAsset(null);
+setChecklist(null);
+setTestResults(null);
+setReview(null);
 setSaving(false);
 setScreen("asset");
 return saved;
