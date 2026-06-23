@@ -988,7 +988,7 @@ const day = String(now.getDate()).padStart(2,"0");
 const rand = String(Math.floor(Math.random()*9000)+1000);
 return `TH-${year}${month}${day}-${rand}`;
 };
-const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection"});
+const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:""});
 const set = (k,v) => setForm(f=>({...f,[k]:v}));
 return (
 <div style={{padding:16}}>
@@ -997,13 +997,21 @@ return (
 <div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={l}/></div>
 ))}
 <div style={{marginBottom:12}}><label style={S.label}>Date</label><input style={S.input} type="date" value={form.date} onChange={e=>set("date",e.target.value)}/></div>
-<div style={{marginBottom:18}}>
+<div style={{marginBottom:14}}>
 <label style={S.label}>Mode</label>
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
 {["inspection","service","commissioning","diagnostic"].map(m=>(
 <button key={m} onClick={()=>set("mode",m)} style={{...S.btn(form.mode===m?"primary":"ghost"),marginBottom:0,padding:"11px 8px",fontSize:13}}>{m.charAt(0).toUpperCase()+m.slice(1)}</button>
 ))}
 </div>
+</div>
+<div style={{marginBottom:18}}>
+<label style={S.label}>Limitations / Exclusions</label>
+<textarea style={{...S.input,minHeight:80,resize:"vertical"}}
+  placeholder="e.g. No roof access obtained. Concealed DC cabling not inspected. Loft hatch locked - inverter not physically accessible."
+  value={form.limitations}
+  onChange={e=>set("limitations",e.target.value)}
+/>
 </div>
 <button style={S.btn("primary")} onClick={()=>onCreate({...form,id:Date.now(),status:"open",flagged:false})}>Create Job -></button>
 <button style={S.btn("ghost")} onClick={onBack}>Cancel</button>
@@ -1694,18 +1702,22 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
   doc.addPage();
   addHeader("EXECUTIVE SUMMARY");
   let y=26;
-  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
-  doc.text("Executive Summary", margin, y+8); y+=16;
+
+  const addSection = (title, text, col) => {
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...(col||navy));
+    doc.text(title, margin, y); y+=5;
+    doc.setDrawColor(...(col||navy)); doc.setLineWidth(0.3);
+    doc.line(margin, y, margin+contentW, y); y+=4;
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(50,70,90);
+    const lines = doc.splitTextToSize(text, contentW);
+    doc.text(lines, margin, y); y+=lines.length*4.5+8;
+  };
 
   // Report details block
   doc.setFillColor(240,245,252);
-  doc.roundedRect(margin,y,contentW,52,3,3,"F");
+  doc.roundedRect(margin,y,contentW,50,3,3,"F");
   doc.setDrawColor(200,215,230); doc.setLineWidth(0.3);
-  doc.roundedRect(margin,y,contentW,52,3,3);
-  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
-  doc.text("REPORT DETAILS", margin+6, y+8);
-  doc.setDrawColor(200,215,230); doc.setLineWidth(0.3);
-  doc.line(margin+6, y+11, margin+contentW-6, y+11);
+  doc.roundedRect(margin,y,contentW,50,3,3);
   const detailRows = [
     ["Report Type", type==="client"?"Client Solar PV Inspection Report":"QA Solar PV Inspection Report"],
     ["Prepared for", (job?.client||"-")+" | "+(job?.address||"-")],
@@ -1714,39 +1726,62 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
     ["Inspection Date", dateStr],
     ["Job Reference", job?.jobNumber||"-"],
   ];
-  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(50,70,90);
   detailRows.forEach(([k,v],i)=>{
-    const ry = y+16+(i*6);
-    doc.setFont("helvetica","bold"); doc.setTextColor(...navy);
-    doc.text(k+":", margin+6, ry);
+    const ry = y+8+(i*7);
+    doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...navy);
+    doc.text(k+":", margin+5, ry);
     doc.setFont("helvetica","normal"); doc.setTextColor(50,70,90);
-    doc.text(v, margin+52, ry);
+    doc.text(String(v), margin+50, ry);
   });
-  y+=60;
+  y+=58;
 
   // Status banner
   doc.setFillColor(...statusCol.map(v=>Math.min(255,v+175)));
-  doc.roundedRect(margin,y,contentW,16,3,3,"F");
-  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...statusCol);
-  doc.text("Overall Inspection Status: "+(review?.overall_status||"Advisory"), margin+6, y+10);
-  y+=22;
+  doc.roundedRect(margin,y,contentW,14,3,3,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...statusCol);
+  doc.text("Overall Inspection Status: "+(review?.overall_status||"Advisory"), margin+5, y+9);
+  y+=20;
+
+  // Purpose
+  const purposeMap={inspection:"Periodic inspection of solar PV installation in accordance with IET Code of Practice for Grid Connected Solar PV Systems and BS 7671:2018+A2:2022.",service:"Routine service and maintenance inspection of solar PV installation.",commissioning:"Commissioning inspection of newly installed solar PV system in accordance with MCS MIS 3002 and IET Code of Practice.",diagnostic:"Diagnostic investigation of reported fault or performance issue with solar PV installation.",postfault:"Post-fault inspection following reported system failure or damage."};
+  addSection("PURPOSE OF INSPECTION", purposeMap[job?.mode||"inspection"]||purposeMap.inspection);
+
+  // Scope - auto from mode
+  const scopeMap={inspection:"This inspection comprised: visual inspection of all accessible solar PV array components, inverter, isolation devices, AC supply, labelling and documentation; electrical testing including open circuit voltage (Voc), short circuit current (Isc), insulation resistance, earth fault loop impedance (Zs) and RCD testing; review of system documentation and certification.",service:"This inspection comprised: visual inspection of key components, operational check of inverter and generation meter, verification of isolation devices.",commissioning:"This inspection comprised: full commissioning checks in accordance with MCS MIS 3002 including electrical testing, documentation review, labelling verification and system performance assessment.",diagnostic:"This inspection comprised: targeted diagnostic testing and visual inspection focused on the reported fault or performance issue."};
+  addSection("SCOPE OF WORKS", scopeMap[job?.mode||"inspection"]||scopeMap.inspection);
+
+  // Standards
+  addSection("APPLICABLE STANDARDS & GUIDANCE", "This inspection has been carried out with reference to the following standards and guidance documents:\n\u2022 BS 7671:2018+A2:2022 Requirements for Electrical Installations (IET Wiring Regulations 18th Edition)\n\u2022 IEC 60364-7-712 Solar Photovoltaic (PV) Power Supply Systems\n\u2022 IET Code of Practice for Grid Connected Solar Photovoltaic Systems (2nd Edition)\n\u2022 MCS MIS 3002 Requirements for Contractors Undertaking the Supply, Design, Installation, Set to Work, Commissioning and Handover of Microgeneration Systems\n\u2022 BS 5839-6 Fire Detection and Fire Alarm Systems for Buildings");
+
+  // Limitations
+  const limitText = job?.limitations || "No specific limitations were recorded for this inspection. All areas of the installation were accessible and available for inspection at the time of visit.";
+  addSection("LIMITATIONS & EXCLUSIONS", limitText, [180,30,30]);
+
+  // Manufacturer recs
+  const sysAge = parseInt(asset?.system_age||"0")||0;
+  const mfgRecs = sysAge >= 10
+    ? "Based on the system age of "+sysAge+" years, the following manufacturer and industry recommendations apply: Inverter manufacturers typically recommend full service or replacement assessment at 10-15 years. Panel manufacturers recommend periodic inspection every 2-5 years to check for cell degradation, delamination and soiling. MCS recommends annual visual inspection with full electrical testing every 5 years or following any fault or adverse weather event."
+    : "Manufacturer recommendations vary by component. As a general guide: inverter manufacturers recommend annual inspection; panel manufacturers recommend inspection every 2-5 years; isolation devices should be exercised annually. Refer to specific manufacturer documentation for this installation.";
+  addSection("MANUFACTURER RECOMMENDATIONS", mfgRecs);
 
   // AI Summary
-  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
-  doc.text("Inspection Summary", margin, y+6); y+=10;
-  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
+  doc.text("INSPECTION FINDINGS SUMMARY", margin, y); y+=5;
+  doc.setDrawColor(...navy); doc.setLineWidth(0.3);
+  doc.line(margin, y, margin+contentW, y); y+=4;
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(50,70,90);
   const summaryLines = doc.splitTextToSize(review?.summary||"No summary available.", contentW);
-  doc.text(summaryLines, margin, y); y+=summaryLines.length*5+8;
+  doc.text(summaryLines, margin, y); y+=summaryLines.length*4.5+8;
 
   // Engineer notes
   if(review?.engineer_notes){
-    doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
-    doc.text("Engineer's Installation Notes", margin, y+6); y+=10;
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...navy);
+    doc.text("ENGINEER'S INSTALLATION NOTES", margin, y); y+=5;
+    doc.line(margin, y, margin+contentW, y); y+=4;
     doc.setFillColor(248,250,252);
-    const noteLines=doc.splitTextToSize(review.engineer_notes,contentW-8);
-    doc.roundedRect(margin,y,contentW,noteLines.length*5+8,2,2,"F");
-    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(50,70,90);
-    doc.text(noteLines, margin+4, y+6); y+=noteLines.length*5+14;
+    const noteLines=doc.splitTextToSize(review.engineer_notes,contentW-4);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(50,70,90);
+    doc.text(noteLines, margin, y); y+=noteLines.length*4.5+8;
   }
 
   // Risk summary table
@@ -2660,6 +2695,7 @@ status:        "open",
 engineer_name: jobData.engineer,
 date:          jobData.date,
 flagged:       false,
+limitations:   jobData.limitations || null,
 };
 const result = await sb.insert("jobs", token, payload);
 if (result && result[0] && result[0].id) {
