@@ -4066,23 +4066,12 @@ function EICRSummaryScreen({ job, eicrInstall, eicrSupply, eicrCircuits, eicrIns
 // ============================================================
 // EICR PDF GENERATOR
 // ============================================================
-function generateEICRPDF(job, eicrInstall, eicrSupply, eicrCircuits, eicrInspection, eicrObservations, profile) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const W = 210, H = 297;
-  const margin = 14;
-  const contentW = W - margin * 2;
-
-  const NAVY = [30, 58, 95];
-  const TEAL = [15, 118, 110];
-  const GREEN = [5, 150, 105];
-  const RED = [220, 38, 38];
-  const AMBER = [217, 119, 6];
-  const PURPLE = [124, 58, 237];
-  const LGREY = [248, 250, 252];
-  const MGREY = [226, 232, 240];
-  const TEXT = [30, 41, 59];
-  const MUTED = [100, 116, 139];
-
+// ============================================================
+// EICR HTML CERTIFICATE GENERATOR
+// Opens in new tab - engineer prints/saves as PDF
+// ============================================================
+function generateEICRHTML(job, eicrInstall, eicrSupply, eicrCircuits, eicrInspection, eicrObservations, profile) {
+  try {
   const front = eicrInstall || {};
   const supply = eicrSupply || {};
   const circuits = eicrCircuits || [];
@@ -4090,585 +4079,524 @@ function generateEICRPDF(job, eicrInstall, eicrSupply, eicrCircuits, eicrInspect
   const inspection = eicrInspection || {};
   const overall = front.overall_assessment || "SATISFACTORY";
 
-  // Get template limitations
   const RIVERSIDE_AGREED = [
-    "100% of electrical accessories to be visually checked externally. As a minimum, 20% of electrical accessories to be opened for inspection. Sample size may be increased dependent upon findings.",
-    "The main heating system for the property shall be tested with circuit protective conductor continuity confirmed at all relevant points. Insulation resistance tests will also be carried out.",
+    "100% of electrical accessories to be visually checked externally. As a minimum, 20% of electrical accessories to be opened for inspection. The sample size may be increased dependent upon findings.",
+    "The main heating system for the property shall be tested with circuit protective conductor continuity confirmed at all relevant points. Insulation resistance tests will also be carried out. It is acceptable to measure insulation resistance between the live conductors connected together and the earthing arrangement, or to perform the insulation resistance test at 250V DC, where connected equipment may cause a misleading reading to be obtained, or where components are likely to be damaged if the test is performed at 500V DC.",
     "The fixed wiring (AC) of photovoltaic systems (PV) is to form part of the inspection and testing process. The fixed wiring is to be tested to the furthest point of isolation (AC) with a visual inspection undertaken beyond the point of isolation to verify the system is safe for continued use.",
-    "In communal areas, specialist installations inclusive of lifts and fire alarms shall not be considered as part of the electrical fixed wiring of the property and shall be tested up to the point of local isolation only.",
+    "In communal areas, specialist installations inclusive of lifts and fire alarms shall not be considered as part of the electrical fixed wiring of the property and shall be tested up to the point of local isolation only. A visual inspection beyond the point of isolation will be required, so to ensure that no immediate dangers exist, and that where required, cables are adequately supported from premature collapse in the event of fire.",
     "Where storage heaters provide the source of heating, the circuit shall be tested to the point of isolation only, with the circuit protective conductor continuity confirmed at the appliance by the R2 testing method. A visual inspection of the appliance shall also be undertaken to confirm adequacy."
   ];
   const RIVERSIDE_OP = [
-    "DNO supply fuse information not obtainable in every case where practically possible. Where the distribution network operator cannot provide the required information, the fuse characteristics shall be recorded as 'LIM' on the report.",
-    "For circuits supplying very large or integrated appliances, the final point of testing shall be considered as the control switch or spur and not the socket outlet behind the appliance, to minimise damage to floor areas by moving of appliances and prevent damage to appliances during testing.",
-    "Live insulation resistance testing may be omitted as part of the testing carried out, in order to minimise risk of damage to sensitive equipment (tenanted properties only).",
-    "Some accessories may be inaccessible. Each individual case shall be recorded as an operational limitation along with the reason as to why this is the case (tenanted properties only).",
+    "Required distribution network operator supply fuse information shall be obtained in every case where practically possible. If the distribution network operator cannot provide the required information, the fuse characteristics shall be recorded as 'LIM' on the report.",
+    "For circuits supplying very large or integrated appliances, the final point of testing shall be considered as the control switch or spur and not the socket outlet behind the appliance. This shall be to minimise damage to floor areas by moving of appliances and prevent damage to appliances during testing. In this instance an R2 test shall be undertaken to verify that an appliance is adequately earthed, and a visual check of the relevant outlet made if possible (tenanted properties only).",
+    "As described in IET Guidance Note 3, if required, live to live insulation resistance testing may be omitted as part of the testing carried out, in order to minimise risk of damage to sensitive equipment (tenanted properties only).",
+    "Some accessories may be inaccessible, and each individual case should be recorded as an operational limitation along with the reason as to why this is the case (tenanted properties only).",
     "'Off-peak' systems which have not had live testing undertaken due to the installation not being energised at the time of the inspection, are to be subject to a thorough visual inspection, with all circuits subject to the relevant 'dead' tests as detailed in BS 7671 and Guidance Note 3."
   ];
 
   const agreedIds = front.agreed_limitation_ids || [];
   const opIds = front.operational_limitation_ids || [];
-  const selectedAgreed = agreedIds.map(i => ({ letter: String.fromCharCode(97 + i), text: RIVERSIDE_AGREED[i] }));
-  const selectedOp = opIds.map(i => ({ num: i + 1, text: RIVERSIDE_OP[i] }));
+  const selectedAgreed = agreedIds.map(i => ({ letter: String.fromCharCode(97 + i).toUpperCase(), text: RIVERSIDE_AGREED[i] })).filter(x => x.text);
+  const selectedOp = opIds.map(i => ({ num: i + 1, text: RIVERSIDE_OP[i] })).filter(x => x.text);
 
-  let page = 0;
-
-  const addPage = () => {
-    if (page > 0) doc.addPage();
-    page++;
-    // Header bar
-    doc.setFillColor(...NAVY);
-    doc.rect(0, 0, W, 12, "F");
-    doc.setFontSize(7);
-    doc.setTextColor(255, 255, 255);
-    doc.text("ELECTRICAL INSTALLATION CONDITION REPORT", margin, 8);
-    doc.text(`${job?.jobNumber || ""} · ${job?.client || ""} · ${job?.address || ""}`, W - margin, 8, { align: "right" });
-    // Footer
-    doc.setFillColor(...MGREY);
-    doc.rect(0, H - 10, W, 10, "F");
-    doc.setFontSize(7);
-    doc.setTextColor(...MUTED);
-    doc.text("Themis Diagnostics — Powered by Themis Technology Ltd", margin, H - 4);
-    doc.text(`Page ${page}`, W - margin, H - 4, { align: "right" });
-    doc.text("BS 7671:2018+A2:2022 Requirements for Electrical Installations", W / 2, H - 4, { align: "center" });
-    return 16; // starting Y
-  };
-
-  const sectionHeader = (y, text) => {
-    doc.setFillColor(...NAVY);
-    doc.rect(margin, y, contentW, 7, "F");
-    doc.setFontSize(8);
-    doc.setTextColor(255, 255, 255);
-    doc.text(text, margin + 3, y + 5);
-    return y + 7;
-  };
-
-  const field = (doc, x, y, w, h, label, value, opts = {}) => {
-    doc.setFillColor(...(opts.bg || LGREY));
-    doc.rect(x, y, w, h, "F");
-    doc.setDrawColor(...MGREY);
-    doc.rect(x, y, w, h, "S");
-    doc.setFontSize(6);
-    doc.setTextColor(...MUTED);
-    doc.text(label, x + 2, y + 4);
-    doc.setFontSize(8.5);
-    doc.setTextColor(...TEXT);
-    const val = String(value || "");
-    doc.text(val.substring(0, Math.floor(w / 2.2)), x + 2, y + 9);
-    return y + h;
-  };
-
-  const wrappedText = (y, text, fontSize, color, lineHeight, maxW) => {
-    doc.setFontSize(fontSize);
-    doc.setTextColor(...color);
-    const lines = doc.splitTextToSize(text || "", maxW || contentW);
-    doc.text(lines, margin, y);
-    return y + lines.length * lineHeight;
-  };
-
-  // ── PAGE 1: COVER ──────────────────────────────────────────
-  let y = addPage();
-
-  // Elect logo area / cert title
-  doc.setFillColor(...NAVY);
-  doc.roundedRect(margin, y, contentW, 28, 2, 2, "F");
-  doc.setFontSize(16);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Electrical Installation", margin + 6, y + 10);
-  doc.text("Condition Report", margin + 6, y + 18);
-  doc.setFontSize(8);
-  doc.setTextColor(255, 255, 255, 0.7);
-  doc.text("BS 7671:2018+A2:2022 · IET Wiring Regulations 18th Edition", margin + 6, y + 24);
-  // Overall status badge
-  doc.setFillColor(...(overall === "SATISFACTORY" ? GREEN : RED));
-  doc.roundedRect(W - margin - 48, y + 6, 46, 16, 2, 2, "F");
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text(overall, W - margin - 25, y + 14, { align: "center" });
-  y += 32;
-
-  // Property & client details
-  y = sectionHeader(y, "1  DETAILS OF CLIENT");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2.5, lineColor: MGREY, lineWidth: 0.3 },
-    headStyles: { fillColor: LGREY, textColor: MUTED, fontSize: 6.5, fontStyle: "bold" },
-    columnStyles: { 0: { cellWidth: contentW * 0.5 }, 1: { cellWidth: contentW * 0.5 } },
-    body: [
-      [{ content: "Client", styles: { textColor: MUTED, fontSize: 6 } }, { content: "Address of Installation", styles: { textColor: MUTED, fontSize: 6 } }],
-      [front.occupier_title || job?.client || "", job?.address || ""],
-      [{ content: "UPRN", styles: { textColor: MUTED, fontSize: 6 } }, { content: "Postcode", styles: { textColor: MUTED, fontSize: 6 } }],
-      [job?.uprn || "—", job?.postcode || "—"],
-    ],
-  });
-  y = doc.lastAutoTable.finalY + 4;
-
-  y = sectionHeader(y, "2  REASON FOR PRODUCING THIS REPORT");
-  y = wrappedText(y + 5, front.reason || "Periodic inspection and testing of the electrical installation.", 8, TEXT, 4.5, contentW) + 4;
-
-  y = sectionHeader(y, "3  DETAILS OF THE INSTALLATION");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2.5, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      ["Estimated age of wiring (years)", front.wiring_age || "—", "Evidence of additions/alterations", front.evidence_additions ? "Yes" : "No"],
-      ["Date of last inspection", front.last_inspection || "—", "Age of additions (years)", front.additions_age || "N/A"],
-      ["Installation records available", front.records_available || "N/A", "", ""],
-    ],
-    columnStyles: { 0: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 45 }, 2: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 27 } }
-  });
-  y = doc.lastAutoTable.finalY + 4;
-
-  y = sectionHeader(y, "4  EXTENT AND LIMITATIONS");
-  y += 4;
-  doc.setFontSize(7);
-  doc.setTextColor(...MUTED);
-  doc.text("Purpose:", margin, y);
-  y = wrappedText(y + 4, front.purpose || "Periodic inspection and testing of the fixed electrical installation.", 7.5, TEXT, 4, contentW) + 3;
-  doc.setFontSize(7);
-  doc.setTextColor(...MUTED);
-  doc.text("Extent:", margin, y);
-  y = wrappedText(y + 4, front.extent || "This report covers the inspection and testing of the fixed electrical wiring system within the named property, with the exception of any agreed or operational limitations as documented.", 7.5, TEXT, 4, contentW) + 3;
-
-  // Limitations summary
-  if (agreedIds.length > 0 || opIds.length > 0) {
-    doc.setFillColor(240, 249, 255);
-    doc.roundedRect(margin, y, contentW, 14, 2, 2, "F");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...NAVY);
-    if (agreedIds.length > 0) {
-      doc.text(`Agreed limitations: ${agreedIds.map(i => String.fromCharCode(97 + i)).join(", ")} — please refer to continuation sheet`, margin + 3, y + 5);
-    }
-    if (opIds.length > 0) {
-      doc.text(`Operational limitations: ${opIds.map(i => i + 1).join(", ")} — please refer to continuation sheet`, margin + 3, y + (agreedIds.length > 0 ? 10 : 5));
-    }
-    y += 16;
-  } else {
-    y += 2;
-  }
-
-  doc.setFontSize(7);
-  doc.setTextColor(...MUTED);
-  doc.text("Agreed with:", margin, y + 3);
-  doc.setTextColor(...TEXT);
-  doc.text(front.agreed_with || "—", margin + 25, y + 3);
-  y += 8;
-
-  y = sectionHeader(y, "5  OVERALL CONDITION OF THE INSTALLATION");
-  doc.setFillColor(...(overall === "SATISFACTORY" ? [240, 253, 244] : [254, 242, 242]));
-  doc.roundedRect(margin, y, contentW, 14, 2, 2, "F");
-  doc.setFontSize(11);
-  doc.setTextColor(...(overall === "SATISFACTORY" ? GREEN : RED));
-  doc.text(overall, W / 2, y + 9, { align: "center" });
-  y += 16;
-
-  doc.setFontSize(7.5);
-  doc.setTextColor(...MUTED);
-  doc.text("Next inspection due:", margin, y + 3);
-  doc.setTextColor(...TEXT);
-  doc.text(front.next_inspection || "—", margin + 35, y + 3);
-  y += 8;
-
-  y = sectionHeader(y, "6  SUMMARY OF FINDINGS");
   const c1s = obs.filter(o => o.code === "C1");
   const c2s = obs.filter(o => o.code === "C2");
   const c3s = obs.filter(o => o.code === "C3");
   const fis = obs.filter(o => o.code === "FI");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 3, lineColor: MGREY, lineWidth: 0.3, halign: "center" },
-    body: [
-      [
-        { content: "C1
-Danger Present", styles: { textColor: RED, fontStyle: "bold", fontSize: 7 } },
-        { content: "C2
-Potentially Dangerous", styles: { textColor: [234, 88, 12], fontStyle: "bold", fontSize: 7 } },
-        { content: "C3
-Improvement Recommended", styles: { textColor: AMBER, fontStyle: "bold", fontSize: 7 } },
-        { content: "FI
-Further Investigation", styles: { textColor: PURPLE, fontStyle: "bold", fontSize: 7 } },
-      ],
-      [
-        { content: String(c1s.length), styles: { textColor: RED, fontSize: 14, fontStyle: "bold" } },
-        { content: String(c2s.length), styles: { textColor: [234, 88, 12], fontSize: 14, fontStyle: "bold" } },
-        { content: String(c3s.length), styles: { textColor: AMBER, fontSize: 14, fontStyle: "bold" } },
-        { content: String(fis.length), styles: { textColor: PURPLE, fontSize: 14, fontStyle: "bold" } },
-      ],
-    ],
-  });
-  y = doc.lastAutoTable.finalY + 4;
 
-  // Engineer sign-off on cover
-  y = sectionHeader(y, "INSPECTED BY");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2.5, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      ["Engineer", profile?.full_name || job?.engineer || "—", "Qualification", profile?.qualification || "—"],
-      ["Reg. Number", profile?.reg_number || "—", "Company", profile?.company || "Elect Building & Maintenance Ltd"],
-      ["Date of inspection", job?.date || "—", "Report date", new Date().toLocaleDateString("en-GB"), ],
-    ],
-    columnStyles: { 0: { cellWidth: 35, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 65 }, 2: { cellWidth: 35, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 47 } }
-  });
-
-  // ── PAGE 2: SUPPLY CHARACTERISTICS (Sections 10-11) ───────
-  y = addPage();
-  y = sectionHeader(y, "10  SUPPLY CHARACTERISTICS AND EARTHING ARRANGEMENTS");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2.5, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      ["Earthing arrangement", [supply.earthing_tncs && "TN-C-S", supply.earthing_tns && "TN-S", supply.earthing_tt && "TT"].filter(Boolean).join(", ") || "—",
-       "Number of live conductors", [supply.phases_1 && "1-phase (2-wire)", supply.phases_3_4w && "3-phase (4-wire)"].filter(Boolean).join(", ") || "—"],
-      ["Nominal voltage UO (V)", supply.voltage_uo || "230", "Frequency (Hz)", supply.frequency || "50"],
-      ["Prospective fault current Ipf", supply.prospective_fault_current || "—", "External Ze (Ω)", supply.external_ze || "—"],
-    ],
-    columnStyles: { 0: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 45 }, 2: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 27 } }
-  });
-  y = doc.lastAutoTable.finalY + 4;
-
-  y = sectionHeader(y, "11  PARTICULARS OF INSTALLATION REFERRED TO IN THE REPORT");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2.5, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      [{ content: "MEANS OF EARTHING", colSpan: 4, styles: { fillColor: LGREY, textColor: MUTED, fontSize: 7, fontStyle: "bold" } }],
-      ["Distributor facility", supply.distributor_facility ? "Yes" : "No", "Installation earth electrode", supply.installation_electrode ? "Yes" : "No"],
-      ["Earth conductor material", supply.earth_conductor_material || "Copper", "Earth conductor CSA (mm²)", supply.earth_conductor_csa || "—"],
-      [{ content: "MAIN PROTECTIVE BONDING", colSpan: 4, styles: { fillColor: LGREY, textColor: MUTED, fontSize: 7, fontStyle: "bold" } }],
-      ["Bonding conductor material", supply.bonding_conductor_material || "Copper", "Bonding conductor CSA (mm²)", supply.bonding_conductor_csa || "—"],
-      ["Services bonded", [supply.bond_water && "Water", supply.bond_gas && "Gas", supply.bond_oil && "Oil", supply.bond_lightning && "Lightning protection", supply.bond_steel && "Structural steel"].filter(Boolean).join(", ") || "None", "", ""],
-      [{ content: "MAIN SWITCH / CIRCUIT BREAKER", colSpan: 4, styles: { fillColor: LGREY, textColor: MUTED, fontSize: 7, fontStyle: "bold" } }],
-      ["Location", supply.main_switch_location || "—", "BS number", supply.main_switch_bs || "—"],
-      ["Number of poles", supply.main_switch_poles || "—", "Current rating (A)", supply.main_switch_rating || "—"],
-      ["Voltage rating (V)", supply.main_switch_voltage || "—", "RCD main switch", supply.rcd_main ? "Yes" : "No"],
-    ],
-    columnStyles: { 0: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 45 }, 2: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 27 } }
-  });
-  y = doc.lastAutoTable.finalY + 4;
-
-  y = sectionHeader(y, "TEST INSTRUMENTS");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 2.5, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      ["Multifunction tester", supply.test_mft || "—", "IR tester", supply.test_ir || "—"],
-      ["Continuity tester", supply.test_continuity || "—", "Loop impedance", supply.test_loop || "—"],
-      ["RCD tester", supply.test_rcd || "—", "Earth electrode", supply.test_electrode || "—"],
-    ],
-    columnStyles: { 0: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 45 }, 2: { cellWidth: 55, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 27 } }
-  });
-
-  // ── PAGE 3: CIRCUIT SCHEDULE ─────────────────────────────
-  // Landscape page for circuits
-  doc.addPage("a4", "landscape");
-  page++;
-  const LW = 297, LH = 210;
-  const lMargin = 10;
-  const lContentW = LW - lMargin * 2;
-
-  doc.setFillColor(...NAVY);
-  doc.rect(0, 0, LW, 10, "F");
-  doc.setFontSize(7);
-  doc.setTextColor(255, 255, 255);
-  doc.text("ELECTRICAL INSTALLATION CONDITION REPORT — SCHEDULE OF TEST RESULTS", lMargin, 7);
-  doc.text(`Page ${page} · ${job?.jobNumber || ""} · ${job?.client || ""} · ${job?.address || ""}`, LW - lMargin, 7, { align: "right" });
-
-  doc.setFillColor(...MGREY);
-  doc.rect(0, LH - 8, LW, 8, "F");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...MUTED);
-  doc.text("Themis Diagnostics — Powered by Themis Technology Ltd", lMargin, LH - 3);
-  doc.text(`BS 7671:2018+A2:2022`, LW / 2, LH - 3, { align: "center" });
-
-  const circY = 14;
-  const headers = [
-    "Circuit
-Ref",
-    "Circuit
-Designation",
-    "Type of
-Wiring",
-    "Ref
-Method",
-    "No. of
-Points",
-    "CB
-Rating (A)",
-    "CB
-Type",
-    "CB
-BS No.",
-    "RCD
-Type",
-    "RCD
-Rating (mA)",
-    "Max Zs
-(Ω)",
-    "R1+R2
-(Ω)",
-    "R2
-(Ω)",
-    "Rn
-(Ω)",
-    "IR
-L-L (MΩ)",
-    "IR
-L-E (MΩ)",
-    "Polarity",
-    "Max Zs
-Measured",
-    "RCD Op.
-Time (ms)",
-    "AFD
-Test",
+  // Build inspection lookup
+  const inspLookup = {};
+  const EICR_ITEMS = [
+    {id:"1.1.1",q:"Service cable"},{id:"1.1.2",q:"Service head"},{id:"1.1.3",q:"Earthing arrangement"},
+    {id:"1.1.4",q:"Meter tails"},{id:"1.1.5",q:"Metering equipment"},{id:"1.1.6",q:"Isolator (where present)"},
+    {id:"1.2",q:"Consumer's isolator (where present)"},{id:"1.3",q:"Consumer's meter tails"},
+    {id:"2.1",q:"Adequate arrangements for microgenerators/other sources (551.6; 551.7)"},
+    {id:"3.1",q:"Presence and condition of distributor's earthing arrangement (542.1.2.1; 542.1.2.2)"},
+    {id:"3.2",q:"Presence and condition of earth electrode connection where applicable (542.1.2.3)"},
+    {id:"3.3",q:"Provision of earthing/bonding labels at all appropriate locations (514.13.1)"},
+    {id:"3.4",q:"Confirmation of earthing conductor size (542.3; 543.1.1)"},
+    {id:"3.5",q:"Accessibility and condition of earthing conductor at MET (543.3.2)"},
+    {id:"3.6",q:"Confirmation of main protective bonding conductor sizes (544.1)"},
+    {id:"3.7",q:"Condition and accessibility of main protective bonding conductor connections (543.3.2; 544.1.2)"},
+    {id:"3.8",q:"Accessibility and condition of other protective bonding connections (543.3.1; 543.3.2)"},
+    {id:"4.1",q:"Adequacy of working space/accessibility to consumer unit/distribution board (132.12; 513.1)"},
+    {id:"4.2",q:"Security of fixing (134.1.1)"},{id:"4.3",q:"Condition of enclosure(s) in terms of IP rating etc (416.2)"},
+    {id:"4.4",q:"Condition of enclosure(s) in terms of fire rating etc (421.1.201; 526.5)"},
+    {id:"4.5",q:"Enclosure not damaged/deteriorated so as to impair safety (651.2)"},
+    {id:"4.6",q:"Presence of main linked switch (as required by 462.1.201)"},
+    {id:"4.7",q:"Operation of main switch (functional check) (643.10)"},
+    {id:"4.8",q:"Manual operation of circuit-breakers and RCDs to prove disconnection (643.10)"},
+    {id:"4.9",q:"Correct identification of circuit details and protective devices (514.8.1; 514.9.1)"},
+    {id:"4.10",q:"Presence of RCD six-monthly test notice, where required (514.12.2)"},
+    {id:"4.11",q:"Presence of alternative supply warning notice at or near consumer unit/distribution board (514.15)"},
+    {id:"4.12",q:"Presence of other required labelling (please specify) (Section 514)"},
+    {id:"4.13",q:"Compatibility of protective devices, bases and other components; correct type and rating — no signs of unacceptable thermal damage, arcing or overheating (411.3.2; 411.4; 411.5; 411.6; Sections 432, 433)"},
+    {id:"4.14",q:"Single-pole switching or protective devices in line conductor only (132.14.1; 530.3.3)"},
+    {id:"4.15",q:"Protection against mechanical damage where cables enter consumer unit/distribution board (522.8.1; 522.8.5; 522.8.11)"},
+    {id:"4.16",q:"Protection against electromagnetic effects where cables enter consumer unit/distribution board/enclosures (521.5.1)"},
+    {id:"4.17",q:"RCD(s) provided for fault protection — includes RCBOs (411.4.204; 411.5.2; 531.2)"},
+    {id:"4.18",q:"RCD(s) provided for additional protection/requirements — includes RCBOs (411.3.3; 415.1)"},
+    {id:"4.19",q:"Confirmation of indication that SPD is functional (651.4)"},
+    {id:"4.20",q:"Confirmation that ALL conductor connections, including connections to busbars, are correctly located in terminals and are tight and secure (526.1)"},
+    {id:"4.21",q:"Adequate arrangements where a generating set operates as a switched alternative to the public supply (551.6)"},
+    {id:"4.22",q:"Adequate arrangements where a generating set operates in parallel with the public supply (551.7)"},
+    {id:"5.1",q:"Identification of conductors (514.3.1)"},{id:"5.2",q:"Cables correctly supported throughout their run (521.10.202; 522.8.5)"},
+    {id:"5.3",q:"Condition of insulation of live parts (416.1)"},{id:"5.4",q:"Non-sheathed cables protected by enclosure in conduit, ducting or trunking (521.10.1)"},
+    {id:"5.4.1",q:"Integrity of conduit and trunking systems (metallic and plastic)"},
+    {id:"5.5",q:"Adequacy of cables for current-carrying capacity with regard for the type and nature of installation (Section 523)"},
+    {id:"5.6",q:"Coordination between conductors and overload protective devices (433.1; 533.2.1)"},
+    {id:"5.7",q:"Adequacy of protective devices: type and rated current for fault protection (411.3)"},
+    {id:"5.8",q:"Presence and adequacy of circuit protective conductors (411.3.1; Section 543)"},
+    {id:"5.9",q:"Wiring system(s) appropriate for the type and nature of the installation and external influences (Section 522)"},
+    {id:"5.10",q:"Concealed cables installed in prescribed zones — see Section 4 Extent and Limitations (522.6.202)"},
+    {id:"5.11",q:"Cables concealed under floors, above ceilings or in walls/partitions, adequately protected against damage — see Section 4 (522.6.204)"},
+    {id:"5.12.1",q:"Additional protection RCD ≤30mA — all socket-outlets of rating 32A or less (411.3.3)"},
+    {id:"5.12.2",q:"Additional protection RCD ≤30mA — supply of mobile equipment not exceeding 32A for use outdoors (411.3.3)"},
+    {id:"5.12.3",q:"Additional protection RCD ≤30mA — cables concealed in walls at depth less than 50mm (522.6.202; 522.6.203)"},
+    {id:"5.12.4",q:"Additional protection RCD ≤30mA — cables in walls/partitions containing metal parts regardless of depth (522.6.203)"},
+    {id:"5.12.5",q:"Additional protection RCD ≤30mA — final circuits supplying luminaires within domestic premises (411.3.4)"},
+    {id:"5.13",q:"Provision of fire barriers, sealing arrangements and protection against thermal effects (Section 527)"},
+    {id:"5.14",q:"Band II cables segregated/separated from Band I cables (528.1)"},
+    {id:"5.15",q:"Cables segregated/separated from communications cabling (528.2)"},
+    {id:"5.16",q:"Cables segregated/separated from non-electrical services (528.3)"},
+    {id:"5.17.1",q:"Termination of cables — connections soundly made and under no undue strain (526.6)"},
+    {id:"5.17.2",q:"Termination of cables — no basic insulation of a conductor visible outside enclosure (526.8)"},
+    {id:"5.17.3",q:"Termination of cables — connections of live conductors adequately enclosed (526.5)"},
+    {id:"5.17.4",q:"Termination of cables — adequately connected at point of entry to enclosure, glands, bushes etc. (522.8.5)"},
+    {id:"5.18",q:"Condition of accessories including socket-outlets, switches and joint boxes (651.2(v))"},
+    {id:"5.19",q:"Suitability of accessories for external influences (512.2)"},
+    {id:"5.20",q:"Adequacy of working space/accessibility to equipment (132.12; 513.1)"},
+    {id:"5.21",q:"Single-pole switching or protective devices in line conductors only (132.14.1; 530.3.3)"},
+    {id:"6.1",q:"Additional protection for all LV circuits by RCD not exceeding 30mA (701.411.3.3)"},
+    {id:"6.2",q:"Where used as protective measure, requirements for SELV or PELV met (701.414.4.5)"},
+    {id:"6.3",q:"Shaver supply units comply with BS EN 61558-2-5 formerly BS 3535 (701.512.3)"},
+    {id:"6.4",q:"Presence of supplementary bonding conductors, unless not required by BS 7671:2018 (701.415.2)"},
+    {id:"6.5",q:"Low voltage (e.g. 230V) socket-outlets sited at least 2.5m from zone 1 (701.512.3)"},
+    {id:"6.6",q:"Suitability of equipment for external influences for installed location in terms of IP rating (701.512.2)"},
+    {id:"6.7",q:"Suitability of accessories and controlgear etc. for a particular zone (701.512.3)"},
+    {id:"6.8",q:"Suitability of current-using equipment for particular position within the location (701.55)"},
+    {id:"7.1",q:"Special installation or location 1 (specify if applicable)"},
+    {id:"7.2",q:"Special installation or location 2 (specify if applicable)"},
+    {id:"8.1",q:"Additional requirements relating to Chapter 82 — item 1"},
+    {id:"8.2",q:"Additional requirements relating to Chapter 82 — item 2"},
   ];
+  EICR_ITEMS.forEach(item => { inspLookup[item.id] = item.q; });
 
-  autoTable(doc, {
-    startY: circY,
-    margin: { left: lMargin, right: lMargin },
-    tableWidth: lContentW,
-    theme: "striped",
-    styles: { fontSize: 5.5, cellPadding: 1.5, lineColor: MGREY, lineWidth: 0.2, overflow: "ellipsize", halign: "center" },
-    headStyles: { fillColor: NAVY, textColor: [255, 255, 255], fontSize: 5.5, fontStyle: "bold", halign: "center" },
-    head: [headers],
-    body: circuits.length > 0 ? circuits.map(c => [
-      c.circuit_ref || "",
-      c.designation || "",
-      c.wiring_type || "",
-      c.ref_method || "",
-      c.points || "",
-      c.cb_rating || "",
-      c.cb_type || "",
-      c.cb_bs || "",
-      c.rcd_type || "",
-      c.rcd_rating || "",
-      c.max_zs || "",
-      c.r1_r2 || "",
-      c.r2 || "",
-      c.rn || "",
-      c.ir_ll || "",
-      c.ir_le || "",
-      c.polarity || "",
-      c.zs_measured || "",
-      c.rcd_op_time || "",
-      c.afd_test || "",
-    ]) : [["—", "No circuits recorded", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]],
-  });
+  const outcomeLabel = (a) => ({pass:"✓",c1:"C1",c2:"C2",c3:"C3",fi:"FI",lim:"LIM",nv:"N/V",na:"N/A"}[a] || a || "");
+  const outcomeColor = (a) => ({pass:"#059669",c1:"#dc2626",c2:"#ea580c",c3:"#d97706",fi:"#7c3aed",lim:"#0284c7",nv:"#64748b",na:"#94a3b8"}[a] || "#334155");
 
-  // ── PAGE 4: SECTION 12 INSPECTION SCHEDULE ───────────────
-  // Back to portrait
-  doc.addPage();
-  page++;
-  y = addPage() - 16 + 16; // reset Y after addPage
-
-  // Re-draw header/footer for this page since addPage already drew them - just recalc y
-  y = 16;
-  y = sectionHeader(y, "12  SCHEDULE OF ITEMS INSPECTED");
-
-  const EICR_SECTIONS_SUMMARY = [
-    { id: "1.1", label: "External Condition of Armouring or Sheath of Cables" },
-    { id: "2.1", label: "Identification of Conductors" },
-    { id: "3.1", label: "Routing of Cables in Safe Zones" },
-    { id: "4.1", label: "Adequacy of Access to Equipment" },
-    { id: "5.1", label: "Presence of Fire Barriers and Protection" },
-    { id: "6.1", label: "Protection Against Electric Shock" },
-    { id: "7.1", label: "Connection of Conductors" },
-    { id: "8.1", label: "Presence and Condition of Appropriate Devices" },
-  ];
-
-  const answerLabel = (ans) => {
-    const m = { pass: "✓", c1: "C1", c2: "C2", c3: "C3", fi: "FI", lim: "LIM", nv: "N/V", na: "N/A" };
-    return m[ans] || ans || "—";
-  };
-  const answerColor = (ans) => {
-    if (ans === "pass") return GREEN;
-    if (ans === "c1") return RED;
-    if (ans === "c2") return [234, 88, 12];
-    if (ans === "c3") return AMBER;
-    if (ans === "fi") return PURPLE;
-    if (ans === "lim") return [2, 132, 199];
-    return MUTED;
+  const inspRow = (id) => {
+    const v = inspection[id];
+    const ans = v?.answer || "";
+    const note = v?.note || "";
+    const col = outcomeColor(ans);
+    const lbl = outcomeLabel(ans);
+    const q = inspLookup[id] || id;
+    return `<tr>
+      <td style="width:60px;padding:3px 6px;font-size:9px;color:#64748b;border:1px solid #e2e8f0">${id}</td>
+      <td style="padding:3px 6px;font-size:9px;border:1px solid #e2e8f0">${q}${note ? ` <em style="color:#64748b">— ${note}</em>` : ""}</td>
+      <td style="width:50px;padding:3px 6px;font-size:9px;font-weight:700;color:${col};text-align:center;border:1px solid #e2e8f0">${lbl}</td>
+    </tr>`;
   };
 
-  // Get all inspection items grouped
-  const inspItems = Object.entries(inspection).map(([id, v]) => ({ id, answer: v.answer, note: v.note }));
+  const sectionHeader = (label) => `
+    <tr><td colspan="3" style="background:#1e3a5f;color:#fff;padding:5px 8px;font-size:10px;font-weight:700;border:1px solid #1e3a5f">${label}</td></tr>`;
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 7, cellPadding: 2, lineColor: MGREY, lineWidth: 0.2 },
-    headStyles: { fillColor: NAVY, textColor: [255, 255, 255], fontSize: 7 },
-    head: [["Item", "Description", "Outcome", "Notes"]],
-    body: inspItems.slice(0, 60).map(item => [
-      item.id,
-      item.id,
-      { content: answerLabel(item.answer), styles: { textColor: answerColor(item.answer), fontStyle: "bold" } },
-      item.note || "",
-    ]),
-    columnStyles: { 0: { cellWidth: 15 }, 1: { cellWidth: 110 }, 2: { cellWidth: 20, halign: "center" }, 3: { cellWidth: 37 } },
-    didParseCell: (data) => {
-      if (data.column.index === 1 && data.row.index >= 0 && data.section === "body") {
-        const item = inspItems[data.row.index];
-        if (item) data.cell.text = [item.id]; // placeholder — real labels in EICR_SECTIONS array
-      }
-    }
-  });
+  // Sections for inspection schedule
+  const inspSections = [
+    {label:"1.0 Intake Equipment (Visual Inspection Only)", ids:["1.1.1","1.1.2","1.1.3","1.1.4","1.1.5","1.1.6","1.2","1.3"]},
+    {label:"2.0 Adequate Arrangements for Other Sources (Microgenerators)", ids:["2.1"]},
+    {label:"3.0 Earthing / Bonding Arrangements (411.3; Chap 54)", ids:["3.1","3.2","3.3","3.4","3.5","3.6","3.7","3.8"]},
+    {label:"4.0 Consumer Unit(s) / Distribution Board(s)", ids:["4.1","4.2","4.3","4.4","4.5","4.6","4.7","4.8","4.9","4.10","4.11","4.12","4.13","4.14","4.15","4.16","4.17","4.18","4.19","4.20","4.21","4.22"]},
+    {label:"5.0 Final Circuits", ids:["5.1","5.2","5.3","5.4","5.4.1","5.5","5.6","5.7","5.8","5.9","5.10","5.11","5.12.1","5.12.2","5.12.3","5.12.4","5.12.5","5.13","5.14","5.15","5.16","5.17.1","5.17.2","5.17.3","5.17.4","5.18","5.19","5.20","5.21"]},
+    {label:"6.0 Location(s) Containing a Bath or Shower", ids:["6.1","6.2","6.3","6.4","6.5","6.6","6.7","6.8"]},
+    {label:"7.0 Other Part 7 Special Installations or Locations", ids:["7.1","7.2"]},
+    {label:"8.0 Prosumer's Low Voltage Electrical Installation(s)", ids:["8.1","8.2"]},
+  ];
 
-  // ── PAGE 5: OBSERVATIONS ─────────────────────────────────
-  doc.addPage();
-  page++;
-  y = 16;
-  y = sectionHeader(y, "7  OBSERVATIONS (Section 7 of BS 7671 EICR)");
+  const inspHTML = inspSections.map(s =>
+    sectionHeader(s.label) + s.ids.map(id => inspRow(id)).join("")
+  ).join("");
 
-  if (obs.length === 0) {
-    y += 6;
-    doc.setFontSize(9);
-    doc.setTextColor(...MUTED);
-    doc.text("No formal observations recorded.", margin, y);
-    y += 10;
+  // Circuit table rows
+  const circuitRows = circuits.length > 0 ? circuits.map(c => `
+    <tr style="font-size:7.5px">
+      <td>${c.circuit_ref||""}</td><td>${c.designation||""}</td>
+      <td>${c.wiring_type||""}</td><td>${c.ref_method||""}</td>
+      <td>${c.points||""}</td><td>${c.cb_rating||""}</td>
+      <td>${c.cb_type||""}</td><td>${c.cb_bs||""}</td>
+      <td>${c.rcd_type||""}</td><td>${c.rcd_rating||""}</td>
+      <td>${c.max_zs||""}</td><td>${c.r1_r2||""}</td>
+      <td>${c.r2||""}</td><td>${c.rn||""}</td>
+      <td>${c.ir_ll||""}</td><td>${c.ir_le||""}</td>
+      <td>${c.polarity?"✓":""}</td>
+      <td>${c.zs_measured||""}</td><td>${c.rcd_op_time||""}</td>
+      <td>${c.afd_test||""}</td>
+    </tr>`).join("") : `<tr><td colspan="20" style="text-align:center;color:#94a3b8;padding:10px;font-size:9px">No circuits recorded</td></tr>`;
+
+  // Observation rows with photos
+  const obsRows = obs.length > 0 ? obs.map((o, i) => {
+    const codeColors = {C1:"#dc2626",C2:"#ea580c",C3:"#d97706",FI:"#7c3aed"};
+    const col = codeColors[o.code] || "#334155";
+    const photoHTML = o.photo ? `<br><img src="${o.photo}" style="max-width:180px;max-height:120px;margin-top:6px;border-radius:4px;border:1px solid #e2e8f0">` : "";
+    return `<tr>
+      <td style="padding:6px;font-size:9px;color:#64748b;border:1px solid #e2e8f0;vertical-align:top">${i+1}</td>
+      <td style="padding:6px;font-size:9px;border:1px solid #e2e8f0;vertical-align:top">${o.description||""}${photoHTML}</td>
+      <td style="padding:6px;font-size:9px;font-weight:700;color:${col};text-align:center;border:1px solid #e2e8f0;vertical-align:top">${o.code||""}</td>
+      <td style="padding:6px;font-size:9px;border:1px solid #e2e8f0;vertical-align:top">${o.location||""}</td>
+      <td style="padding:6px;font-size:9px;border:1px solid #e2e8f0;vertical-align:top">${o.regulation||""}</td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="5" style="padding:10px;text-align:center;color:#94a3b8;font-size:9px;border:1px solid #e2e8f0">No formal observations recorded</td></tr>`;
+
+  const agreedLimText = agreedIds.length > 0
+    ? selectedAgreed.map(({letter,text}) => `<p><strong>${letter}.</strong> ${text}</p>`).join("")
+    : (front.agreed_limitations || "None");
+
+  const opLimText = opIds.length > 0
+    ? selectedOp.map(({num,text}) => `<p><strong>${num}.</strong> ${text}</p>`).join("")
+    : (front.operational_limitations || "None");
+
+  const sigHTML = profile?.signature_data
+    ? `<img src="${profile.signature_data}" style="height:30px;margin-top:4px">`
+    : "";
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>EICR — ${job?.jobNumber || ""} — ${job?.address || ""}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; font-size:10px; color:#1e293b; background:#fff; }
+  .page { width:210mm; min-height:297mm; padding:10mm 12mm; margin:0 auto; page-break-after:always; }
+  .page:last-child { page-break-after:auto; }
+  h1 { font-size:16px; font-weight:700; color:#1e3a5f; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:2px solid #1e3a5f; }
+  .header-left h1 { font-size:14px; }
+  .header-left p { font-size:8px; color:#64748b; margin-top:2px; }
+  .cert-num { font-size:9px; font-weight:700; color:#1e3a5f; border:1px solid #1e3a5f; padding:4px 8px; border-radius:4px; }
+  .section-title { background:#1e3a5f; color:#fff; padding:5px 8px; font-size:10px; font-weight:700; margin:8px 0 0 0; }
+  .grid { display:grid; border:1px solid #e2e8f0; }
+  .grid-2 { grid-template-columns:1fr 1fr; }
+  .grid-3 { grid-template-columns:1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+  .cell { padding:4px 6px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
+  .cell:last-child { border-right:none; }
+  .cell-label { font-size:7.5px; color:#64748b; display:block; margin-bottom:2px; }
+  .cell-value { font-size:9.5px; font-weight:600; }
+  table { width:100%; border-collapse:collapse; }
+  th { background:#1e3a5f; color:#fff; padding:4px 6px; font-size:8px; text-align:left; border:1px solid #1e3a5f; }
+  td { padding:3px 6px; font-size:9px; border:1px solid #e2e8f0; vertical-align:top; }
+  .sat { color:#059669; font-weight:700; }
+  .unsat { color:#dc2626; font-weight:700; }
+  .badge { display:inline-block; padding:4px 12px; border-radius:4px; font-weight:700; font-size:11px; }
+  .badge-sat { background:#f0fdf4; color:#059669; border:2px solid #059669; }
+  .badge-unsat { background:#fef2f2; color:#dc2626; border:2px solid #dc2626; }
+  .code-c1 { color:#dc2626; font-weight:700; }
+  .code-c2 { color:#ea580c; font-weight:700; }
+  .code-c3 { color:#d97706; font-weight:700; }
+  .code-fi { color:#7c3aed; font-weight:700; }
+  .counts { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; margin:6px 0; }
+  .count-box { border:1px solid #e2e8f0; border-radius:6px; padding:6px; text-align:center; }
+  .count-num { font-size:22px; font-weight:700; }
+  .count-label { font-size:8px; color:#64748b; }
+  .lim-text { font-size:8.5px; line-height:1.6; color:#334155; margin:4px 0; }
+  .lim-text p { margin-bottom:6px; }
+  .sig-box { border:1px solid #e2e8f0; height:35px; width:120px; display:inline-block; vertical-align:middle; }
+  @media print {
+    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .page { page-break-after:always; margin:0; }
+    .no-print { display:none; }
+  }
+  .landscape-page { width:297mm; min-height:210mm; padding:8mm 10mm; margin:0 auto; page-break-after:always; overflow-x:auto; }
+  @page { size:A4 portrait; margin:0; }
+  @page landscape { size:A4 landscape; }
+</style>
+</head>
+<body>
+
+<!-- PRINT BUTTON -->
+<div class="no-print" style="position:fixed;top:10px;right:10px;z-index:999;display:flex;gap:8px">
+  <button onclick="window.print()" style="background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button>
+  <button onclick="window.close()" style="background:#e2e8f0;color:#334155;border:none;padding:10px 16px;border-radius:6px;font-size:13px;cursor:pointer">✕ Close</button>
+</div>
+
+<!-- PAGE 1: FRONT SHEET -->
+<div class="page">
+  <div class="header">
+    <div class="header-left">
+      <h1>ELECTRICAL INSTALLATION CONDITION REPORT</h1>
+      <p>Issued in accordance with BS 7671:2018+A2:2022 — Requirements for Electrical Installations<br>For small installations not exceeding 100A</p>
+    </div>
+    <div class="cert-num">${job?.jobNumber || "—"}</div>
+  </div>
+
+  <div class="section-title">PART 1: DETAILS OF THE CONTRACTOR, CLIENT AND INSTALLATION</div>
+  <div class="grid grid-3" style="border:1px solid #e2e8f0">
+    <div style="padding:6px 8px">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">DETAILS OF THE CONTRACTOR</div>
+      <div class="cell-label">Trading Title</div><div class="cell-value">Elect Building &amp; Maintenance Ltd</div>
+      <div class="cell-label" style="margin-top:4px">Address</div><div class="cell-value">603 Princess Drive, Page Moss, Liverpool, L14 9ND</div>
+      <div class="cell-label" style="margin-top:4px">Registration No.</div><div class="cell-value">610265000</div>
+      <div class="cell-label" style="margin-top:4px">Telephone</div><div class="cell-value">0151 792 6856</div>
+    </div>
+    <div style="padding:6px 8px;border-left:1px solid #e2e8f0">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">DETAILS OF THE CLIENT</div>
+      <div class="cell-label">Name</div><div class="cell-value">${front.agreed_with || job?.client || "—"}</div>
+      <div class="cell-label" style="margin-top:4px">Address</div>
+      <div class="cell-value" style="white-space:pre-line">${front.template_id === "riverside" ? "2 Estuary Boulevard\nLiverpool\nL24 8RF" : "—"}</div>
+      <div class="cell-label" style="margin-top:4px">Telephone</div><div class="cell-value">—</div>
+    </div>
+    <div style="padding:6px 8px;border-left:1px solid #e2e8f0">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">DETAILS OF THE INSTALLATION</div>
+      <div class="cell-label">Occupier / Reference</div><div class="cell-value">${front.occupier_title || job?.client || "—"}</div>
+      <div class="cell-label" style="margin-top:4px">Address</div><div class="cell-value">${job?.address || "—"}</div>
+      <div class="cell-label" style="margin-top:4px">UPRN</div><div class="cell-value">${job?.uprn || "—"}</div>
+    </div>
+  </div>
+
+  <div class="section-title">PART 2: PURPOSE OF THE REPORT</div>
+  <div style="border:1px solid #e2e8f0;padding:6px 8px">
+    <div class="cell-label">Purpose for which this report is required</div>
+    <div style="font-size:9px;line-height:1.6;margin-top:2px">${front.purpose || "Periodic inspection and testing of the fixed electrical installation."}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:8px">
+      <div><div class="cell-label">Date of inspection</div><div class="cell-value">${job?.date || "—"}</div></div>
+      <div><div class="cell-label">Records available (651.1)</div><div class="cell-value">${front.records_available || "N/A"}</div></div>
+      <div><div class="cell-label">Date of last inspection</div><div class="cell-value">${front.last_inspection || "N/A"}</div></div>
+      <div><div class="cell-label">Estimated age of wiring</div><div class="cell-value">${front.wiring_age || "—"} years</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">PART 3: SUMMARY OF THE CONDITION OF THE INSTALLATION</div>
+  <div style="border:1px solid #e2e8f0;padding:8px">
+    <div class="cell-label">General condition of the installation (in terms of electrical safety)</div>
+    <div style="font-size:9px;line-height:1.6;margin:4px 0 8px">${front.reason || "Periodic inspection and testing carried out."}</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div><div class="cell-label">Overall assessment</div>
+        <div class="badge ${overall === "SATISFACTORY" ? "badge-sat" : "badge-unsat"}">${overall}</div>
+      </div>
+      <div><div class="cell-label">Next inspection recommended by</div><div class="cell-value">${front.next_inspection || "—"}</div></div>
+      <div><div class="cell-label">Evidence of additions/alterations</div><div class="cell-value">${front.evidence_additions ? "Yes — approx. " + (front.additions_age || "?") + " years" : "No"}</div></div>
+    </div>
+    <div class="counts" style="margin-top:10px">
+      <div class="count-box"><div class="count-num code-c1">${c1s.length}</div><div class="count-label">C1 — Danger Present</div></div>
+      <div class="count-box"><div class="count-num code-c2">${c2s.length}</div><div class="count-label">C2 — Potentially Dangerous</div></div>
+      <div class="count-box"><div class="count-num code-c3">${c3s.length}</div><div class="count-label">C3 — Improvement Recommended</div></div>
+      <div class="count-box"><div class="count-num code-fi">${fis.length}</div><div class="count-label">FI — Further Investigation</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">PART 4: DECLARATION</div>
+  <div style="border:1px solid #e2e8f0;padding:8px">
+    <div style="font-size:8.5px;line-height:1.6;margin-bottom:8px">I/We, being the person(s) responsible for the inspection and testing of the electrical installation (as indicated by my/our signatures below), particulars of which are described above, having exercised reasonable skill and care when carrying out the inspection and testing, hereby declare that the information in this report, including the observations and the attached schedules, provides an accurate assessment of the condition of the electrical installation taking into account the stated extent and limitations.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:6px">
+      <div><div class="cell-label">Engineer name</div><div class="cell-value">${profile?.full_name || job?.engineer || "—"}</div></div>
+      <div><div class="cell-label">Qualification</div><div class="cell-value">${profile?.qualification || "—"}</div></div>
+      <div><div class="cell-label">Reg. Number</div><div class="cell-value">${profile?.reg_number || "—"}</div></div>
+      <div><div class="cell-label">Date</div><div class="cell-value">${job?.date || "—"}</div></div>
+    </div>
+    <div style="margin-top:6px"><div class="cell-label">Signature</div>${sigHTML || '<div class="sig-box"></div>'}</div>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0">
+      <div style="font-size:8px;color:#64748b;font-weight:700;margin-bottom:4px">REVIEWED BY QUALIFIED SUPERVISOR</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div class="cell-label">Name</div><div class="cell-value">${profile?.company || "—"}</div></div>
+        <div><div class="cell-label">Signature</div><div class="sig-box"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: OBSERVATIONS -->
+<div class="page">
+  <div class="header">
+    <div class="header-left"><h1>ELECTRICAL INSTALLATION CONDITION REPORT</h1><p>BS 7671:2018+A2:2022 · ${job?.jobNumber || ""} · ${job?.address || ""}</p></div>
+  </div>
+  <div class="section-title">PART 5: OBSERVATIONS AND RECOMMENDATIONS</div>
+  <div style="background:#fef9ec;border:1px solid #fde68a;padding:6px 8px;margin-bottom:6px;font-size:8px;line-height:1.5">
+    <strong>CODES:</strong>
+    <span class="code-c1"> C1 — Danger Present: Risk of injury, immediate remedial action required.</span>
+    <span class="code-c2"> C2 — Potentially Dangerous: Urgent remedial action required.</span>
+    <span class="code-c3"> C3 — Improvement Recommended.</span>
+    <span class="code-fi"> FI — Further Investigation Required without delay.</span>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:35px">Item No.</th>
+      <th>Observation(s)</th>
+      <th style="width:45px">Code</th>
+      <th style="width:80px">Location</th>
+      <th style="width:60px">Regulation</th>
+    </tr></thead>
+    <tbody>${obsRows}</tbody>
+  </table>
+  <div class="counts" style="margin-top:10px">
+    <div class="count-box"><div class="count-num code-c1">${c1s.length}</div><div class="count-label">Number of C1</div></div>
+    <div class="count-box"><div class="count-num code-c2">${c2s.length}</div><div class="count-label">Number of C2</div></div>
+    <div class="count-box"><div class="count-num code-c3">${c3s.length}</div><div class="count-label">Number of C3</div></div>
+    <div class="count-box"><div class="count-num code-fi">${fis.length}</div><div class="count-label">Number of FI</div></div>
+  </div>
+</div>
+
+<!-- PAGE 3: EXTENT & LIMITATIONS + SUPPLY -->
+<div class="page">
+  <div class="header">
+    <div class="header-left"><h1>ELECTRICAL INSTALLATION CONDITION REPORT</h1><p>BS 7671:2018+A2:2022 · ${job?.jobNumber || ""} · ${job?.address || ""}</p></div>
+  </div>
+  <div class="section-title">PART 6: DETAILS AND LIMITATIONS ON INSPECTION AND TESTING</div>
+  <div style="border:1px solid #e2e8f0">
+    <div style="padding:5px 8px;border-bottom:1px solid #e2e8f0">
+      <div class="cell-label">Extent of the electrical installation covered by this report</div>
+      <div style="font-size:9px;line-height:1.5;margin-top:2px">${front.extent || "—"}</div>
+    </div>
+    <div style="padding:5px 8px;border-bottom:1px solid #e2e8f0">
+      <div class="cell-label">Agreed limitations including the reasons (Regulation 653.2)</div>
+      <div style="font-size:9px;line-height:1.5;margin-top:2px">${agreedIds.length > 0 ? agreedIds.map(i => String.fromCharCode(97+i).toUpperCase()).join(", ") + " — see continuation sheet" : (front.agreed_limitations || "None")}</div>
+    </div>
+    <div style="padding:5px 8px;border-bottom:1px solid #e2e8f0">
+      <div class="cell-label">Operational limitations including the reasons</div>
+      <div style="font-size:9px;line-height:1.5;margin-top:2px">${opIds.length > 0 ? opIds.map(i => i+1).join(", ") + " — see continuation sheet" : (front.operational_limitations || "None")}</div>
+    </div>
+    <div style="padding:5px 8px;display:flex;gap:24px">
+      <div><div class="cell-label">Agreed with (print name)</div><div class="cell-value">${front.agreed_with || "—"}</div></div>
+      <div><div class="cell-label">Client representative</div><div class="cell-value">${front.template_id === "riverside" ? "Iain Hardman" : "—"}</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">PART 7: SUPPLY CHARACTERISTICS AND EARTHING ARRANGEMENTS</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid #e2e8f0">
+    <div style="padding:6px 8px;border-right:1px solid #e2e8f0">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">System type and earthing arrangements</div>
+      ${[["TN-C",supply.earthing_tnc],["TN-S",supply.earthing_tns],["TN-C-S",supply.earthing_tncs],["TT",supply.earthing_tt],["IT",false]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:8.5px"><span>${l}</span><span style="font-weight:700">${v?"✓":"N/A"}</span></div>`).join("")}
+      <div style="margin-top:6px">
+        <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:2px">Supply protective device</div>
+        <div style="font-size:8.5px">BS(EN): ${supply.supply_bs || "—"} | Type: ${supply.supply_type || "—"} | Rating: ${supply.main_switch_rating || "LIM"} A</div>
+      </div>
+    </div>
+    <div style="padding:6px 8px;border-right:1px solid #e2e8f0">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Number and type of live conductors</div>
+      ${[["AC 1-phase (2-wire)",supply.phases_1],["AC 2-phase (3-wire)",supply.phases_2],["AC 3-phase (3-wire)",supply.phases_3w],["AC 3-phase (4-wire)",supply.phases_3_4w]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:8.5px"><span>${l}</span><span style="font-weight:700">${v?"✓":"N/A"}</span></div>`).join("")}
+      <div style="margin-top:4px;font-size:8.5px">Confirmation of supply polarity: <strong>${supply.polarity_confirmed ? "✓" : "—"}</strong></div>
+    </div>
+    <div style="padding:6px 8px">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Nature of supply parameters</div>
+      ${[["Nominal voltage Uo (V)",supply.voltage_uo||"230"],["Nominal frequency f (Hz)",supply.frequency||"50"],["Prospective fault current Ipf (kA)",supply.prospective_fault_current||"—"],["External earth fault loop Ze (Ω)",supply.external_ze||"—"]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:8.5px"><span>${l}</span><span style="font-weight:700">${v}</span></div>`).join("")}
+    </div>
+  </div>
+
+  <div class="section-title">PART 8: PARTICULARS OF INSTALLATION</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #e2e8f0">
+    <div style="padding:6px 8px;border-right:1px solid #e2e8f0">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Means of Earthing</div>
+      <div style="font-size:8.5px">Distributor's facility: <strong>${supply.distributor_facility ? "✓" : "N/A"}</strong></div>
+      <div style="font-size:8.5px;margin-top:2px">Installation earth electrode: <strong>${supply.installation_electrode ? "✓" : "N/A"}</strong></div>
+      <div style="margin-top:6px;font-size:8px;font-weight:700;color:#1e3a5f">Earthing Conductor</div>
+      <div style="font-size:8.5px">Material: ${supply.earth_conductor_material||"Copper"} | CSA: ${supply.earth_conductor_csa||"—"} mm²</div>
+      <div style="font-size:8.5px">Connection verified: ${supply.earth_conductor_verified?"✓":"—"}</div>
+      <div style="margin-top:6px;font-size:8px;font-weight:700;color:#1e3a5f">Main Protective Bonding Conductors</div>
+      <div style="font-size:8.5px">Material: ${supply.bonding_conductor_material||"Copper"} | CSA: ${supply.bonding_conductor_csa||"—"} mm²</div>
+      <div style="font-size:8.5px">Water: ${supply.bond_water?"✓":"N/A"} | Gas: ${supply.bond_gas?"✓":"N/A"} | Oil: ${supply.bond_oil?"✓":"N/A"}</div>
+    </div>
+    <div style="padding:6px 8px;border-right:1px solid #e2e8f0">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Main Switch / Circuit-Breaker / RCD</div>
+      ${[["Location",supply.main_switch_location||"—"],["BS(EN)",supply.main_switch_bs||"—"],["Type",supply.main_switch_type||"—"],["No. of poles",supply.main_switch_poles||"—"],["Current rating (A)",supply.main_switch_rating||"—"],["Voltage rating (V)",supply.main_switch_voltage||"230"]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:8.5px"><span>${l}</span><span style="font-weight:700">${v}</span></div>`).join("")}
+      ${supply.rcd_main ? `<div style="margin-top:4px;font-size:8px;font-weight:700;color:#1e3a5f">RCD Main Switch</div>
+      <div style="font-size:8.5px">Type: ${supply.rcd_type||"—"} | IΔn: ${supply.rcd_idelta||"—"} mA | Time delay: ${supply.rcd_delay||"N/A"} ms</div>` : ""}
+    </div>
+    <div style="padding:6px 8px">
+      <div style="font-size:8px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Test Instruments Used</div>
+      ${[["Multifunction tester",supply.test_mft||"—"],["IR tester",supply.test_ir||"—"],["Continuity",supply.test_continuity||"—"],["Loop impedance",supply.test_loop||"—"],["RCD tester",supply.test_rcd||"—"],["Earth electrode",supply.test_electrode||"—"]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:8.5px"><span>${l}</span><span style="font-weight:700;font-size:8px">${v}</span></div>`).join("")}
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: INSPECTION SCHEDULE -->
+<div class="page">
+  <div class="header">
+    <div class="header-left"><h1>ELECTRICAL INSTALLATION CONDITION REPORT</h1><p>BS 7671:2018+A2:2022 · ${job?.jobNumber || ""} · ${job?.address || ""}</p></div>
+  </div>
+  <div class="section-title">PART 9: SCHEDULE OF ITEMS INSPECTED</div>
+  <div style="font-size:7.5px;color:#64748b;margin-bottom:4px;padding:4px 6px;background:#f8fafc;border:1px solid #e2e8f0">
+    All fields must be completed. Enter: ✓ if acceptable condition; N/A if not applicable; LIM if a limitation exists; or code appropriately — C1, C2, C3 or FI
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:60px">Item Ref</th>
+      <th>Description</th>
+      <th style="width:50px;text-align:center">Outcome</th>
+    </tr></thead>
+    <tbody>${inspHTML}</tbody>
+  </table>
+  <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e2e8f0;padding-top:6px">
+    <div style="font-size:8px"><strong>Inspected by:</strong> ${profile?.full_name || job?.engineer || "—"} | ${job?.date || "—"}</div>
+    ${sigHTML ? `<div>${sigHTML}</div>` : '<div class="sig-box"></div>'}
+  </div>
+</div>
+
+<!-- PAGE 5: CIRCUIT SCHEDULE (landscape note) -->
+<div class="page" style="overflow-x:auto">
+  <div class="header">
+    <div class="header-left"><h1>SCHEDULE OF CIRCUIT DETAILS AND TEST RESULTS</h1><p>BS 7671:2018+A2:2022 · ${job?.jobNumber || ""} · ${job?.address || ""}</p></div>
+  </div>
+  <div style="font-size:8px;color:#64748b;margin-bottom:6px">Note: Print this page in landscape orientation for best results.</div>
+  <div style="overflow-x:auto">
+  <table style="min-width:900px;font-size:7.5px">
+    <thead>
+      <tr style="background:#1e3a5f;color:#fff">
+        <th style="min-width:35px">Ref</th><th style="min-width:80px">Designation</th>
+        <th>Wiring<br>Type</th><th>Ref<br>Method</th><th>Points</th>
+        <th>CB<br>Rating(A)</th><th>CB<br>Type</th><th>CB BS<br>No.</th>
+        <th>RCD<br>Type</th><th>RCD<br>mA</th>
+        <th>Max Zs<br>Ω</th><th>R1+R2<br>Ω</th><th>R2<br>Ω</th><th>Rn<br>Ω</th>
+        <th>IR L-L<br>MΩ</th><th>IR L-E<br>MΩ</th>
+        <th>Polarity</th><th>Zs Meas.<br>Ω</th><th>RCD<br>ms</th><th>AFDD</th>
+      </tr>
+    </thead>
+    <tbody>${circuitRows}</tbody>
+  </table>
+  </div>
+  <div style="margin-top:10px">
+    <div style="font-size:8px;font-weight:700;margin-bottom:4px">CODES FOR TYPE OF WIRING:</div>
+    <div style="font-size:7.5px;color:#64748b">(A) Thermoplastic insulated/sheathed cables &nbsp; (B) Thermoplastic cables in metallic conduit &nbsp; (C) Thermoplastic cables in non-metallic conduit &nbsp; (D) Thermoplastic cables in metallic trunking &nbsp; (E) Non-metallic trunking &nbsp; (F) Thermoplastic/SWA cables &nbsp; (G) Thermosetting/SWA cables &nbsp; (H) Mineral insulated cables</div>
+  </div>
+  <div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px;font-size:8px">
+    <strong>Tested by:</strong> ${profile?.full_name || job?.engineer || "—"} &nbsp;|&nbsp; <strong>Date:</strong> ${job?.date || "—"}
+  </div>
+</div>
+
+${selectedAgreed.length > 0 || selectedOp.length > 0 ? `
+<!-- PAGE 6: CONTINUATION SHEET -->
+<div class="page">
+  <div class="header">
+    <div class="header-left"><h1>ELECTRICAL INSTALLATION CONDITION REPORT</h1><p>BS 7671:2018+A2:2022 · ${job?.jobNumber || ""} · ${job?.address || ""}</p></div>
+  </div>
+  ${selectedAgreed.length > 0 ? `
+  <div class="section-title">AGREED LIMITATIONS</div>
+  <div style="border:1px solid #e2e8f0;padding:8px">
+    <div class="lim-text">${selectedAgreed.map(({letter,text})=>`<p><strong>${letter}.</strong> ${text}</p>`).join("")}</div>
+  </div>` : ""}
+  ${selectedOp.length > 0 ? `
+  <div class="section-title" style="margin-top:10px">OPERATIONAL LIMITATIONS</div>
+  <div style="border:1px solid #e2e8f0;padding:8px">
+    <div class="lim-text">${selectedOp.map(({num,text})=>`<p><strong>${num}.</strong> ${text}</p>`).join("")}</div>
+  </div>` : ""}
+</div>` : ""}
+
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
   } else {
-    const CODE_COLORS = { C1: RED, C2: [234, 88, 12], C3: AMBER, FI: PURPLE };
-    autoTable(doc, {
-      startY: y,
-      margin: { left: margin, right: margin },
-      tableWidth: contentW,
-      theme: "plain",
-      styles: { fontSize: 7.5, cellPadding: 3, lineColor: MGREY, lineWidth: 0.3 },
-      headStyles: { fillColor: NAVY, textColor: [255, 255, 255], fontSize: 7.5 },
-      head: [["Code", "Description", "Regulation", "Location", "Recommendation"]],
-      body: obs.map(o => [
-        { content: o.code || "—", styles: { textColor: CODE_COLORS[o.code] || TEXT, fontStyle: "bold", halign: "center" } },
-        o.description || "—",
-        o.regulation || "—",
-        o.location || "—",
-        o.recommendation || "—",
-      ]),
-      columnStyles: { 0: { cellWidth: 14 }, 1: { cellWidth: 58 }, 2: { cellWidth: 28 }, 3: { cellWidth: 30 }, 4: { cellWidth: 52 } }
-    });
-    y = doc.lastAutoTable.finalY + 4;
+    alert("Pop-up blocked. Please allow pop-ups for this site and try again.");
   }
-
-  // ── PAGE 6: CONTINUATION SHEET (Limitations) ─────────────
-  if (selectedAgreed.length > 0 || selectedOp.length > 0) {
-    doc.addPage();
-    page++;
-    y = 16;
-    doc.setFontSize(13);
-    doc.setTextColor(...NAVY);
-    doc.text("Continuation Sheet — Limitations", margin, y + 5);
-    y += 14;
-
-    if (selectedAgreed.length > 0) {
-      y = sectionHeader(y, "AGREED LIMITATIONS");
-      y += 5;
-      selectedAgreed.forEach(({ letter, text }) => {
-        doc.setFillColor(...LGREY);
-        doc.roundedRect(margin, y, contentW, 5, 1, 1, "F");
-        doc.setFontSize(8);
-        doc.setTextColor(...NAVY);
-        doc.text(`${letter})`, margin + 3, y + 3.5);
-        y += 5;
-        y = wrappedText(y + 1, text, 8, TEXT, 4.5, contentW - 10) + 4;
-      });
-      y += 4;
-    }
-
-    if (selectedOp.length > 0) {
-      y = sectionHeader(y, "OPERATIONAL LIMITATIONS");
-      y += 5;
-      selectedOp.forEach(({ num, text }) => {
-        doc.setFillColor(...LGREY);
-        doc.roundedRect(margin, y, contentW, 5, 1, 1, "F");
-        doc.setFontSize(8);
-        doc.setTextColor(...NAVY);
-        doc.text(`${num})`, margin + 3, y + 3.5);
-        y += 5;
-        y = wrappedText(y + 1, text, 8, TEXT, 4.5, contentW - 10) + 4;
-      });
-    }
+  } catch(err) {
+    alert("Certificate error: " + err.message);
+    console.error("EICR HTML error:", err);
   }
-
-  // ── PAGE 7: DECLARATION ───────────────────────────────────
-  doc.addPage();
-  page++;
-  y = 16;
-  y = sectionHeader(y, "DECLARATION");
-  y += 6;
-
-  doc.setFontSize(8.5);
-  doc.setTextColor(...TEXT);
-  const decText = "I/We, being the person(s) responsible for the inspection and testing of the electrical installation (as indicated by my/our signatures below), particulars of which are described above, having exercised reasonable skill and care when carrying out the inspection and testing, hereby declare that the information in this report, including the observations and the attached schedules, provides an accurate assessment of the condition of the electrical installation taking into account the agreed limitations detailed in section 4.";
-  y = wrappedText(y, decText, 8.5, TEXT, 4.5, contentW) + 8;
-
-  y = sectionHeader(y, "ENGINEER SIGNATURE");
-  y += 6;
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 3, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      ["Name", profile?.full_name || job?.engineer || "—", "Qualification", profile?.qualification || "—"],
-      ["Reg. Number", profile?.reg_number || "—", "Company", profile?.company || "Elect Building & Maintenance Ltd"],
-      ["Date", job?.date || "—", "Signature", ""],
-    ],
-    columnStyles: { 0: { cellWidth: 35, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 65 }, 2: { cellWidth: 35, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 47 } }
-  });
-  y = doc.lastAutoTable.finalY + 4;
-
-  // Signature box
-  if (profile?.signature_data) {
-    try {
-      doc.addImage(profile.signature_data, "PNG", margin + 102, y - 16, 50, 12);
-    } catch(e) {}
-  }
-
-  // Signature box outline
-  doc.setDrawColor(...MGREY);
-  doc.rect(margin + 102, doc.lastAutoTable.finalY - 12, 74, 14, "S");
-
-  y = doc.lastAutoTable.finalY + 10;
-  y = sectionHeader(y, "FOR AND ON BEHALF OF CLIENT — RECEIVED BY");
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    tableWidth: contentW,
-    theme: "plain",
-    styles: { fontSize: 8, cellPadding: 3, lineColor: MGREY, lineWidth: 0.3 },
-    body: [
-      ["Name", "", "Position", ""],
-      ["Date received", "", "Signature", ""],
-    ],
-    columnStyles: { 0: { cellWidth: 35, textColor: MUTED, fontSize: 7 }, 1: { cellWidth: 65 }, 2: { cellWidth: 35, textColor: MUTED, fontSize: 7 }, 3: { cellWidth: 47 } }
-  });
-
-  doc.save(`EICR_${job?.jobNumber || "report"}_${job?.client || ""}.pdf`.replace(/\s+/g, "_"));
 }
+
 // - PROFILE SCREEN ----------------------
 
 // - ROOT APP -----------------
@@ -5335,7 +5263,7 @@ return (
         eicrObservations={eicrObservations}
         profile={profile}
         onBack={()=>setScreen("eicr_observations")}
-        onGeneratePDF={()=>generateEICRPDF(job, eicrInstall, eicrSupply, eicrCircuits, eicrInspection, eicrObservations, profile)}
+        onGeneratePDF={()=>generateEICRHTML(job, eicrInstall, eicrSupply, eicrCircuits, eicrInspection, eicrObservations, profile)}
       />
     )}
     {screen==="profile" && (
