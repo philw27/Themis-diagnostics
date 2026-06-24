@@ -4181,8 +4181,8 @@ function generateEICRHTML(job, eicrInstall, eicrSupply, eicrCircuits, eicrInspec
 <title>EICR — ${job?.jobNumber||""} — ${job?.address||""}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;font-size:9px;color:#1e293b;background:#f1f5f9}
-.page{width:210mm;background:#fff;margin:0 auto 12px;padding:10mm 12mm;position:relative}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#1e293b;background:#f1f5f9}
+.page{width:297mm;background:#fff;margin:0 auto 12px;padding:8mm 12mm;position:relative}
 table{width:100%;border-collapse:collapse}
 th{background:#1e3a5f;color:#fff;padding:4px 6px;font-size:8px;border:1px solid #1e3a5f;text-align:left}
 td{padding:3px 6px;font-size:8.5px;border:1px solid #e2e8f0;vertical-align:top}
@@ -4223,7 +4223,7 @@ td{padding:3px 6px;font-size:8.5px;border:1px solid #e2e8f0;vertical-align:top}
   .page{margin:0;box-shadow:none;page-break-after:always}
   .page:last-child{page-break-after:auto}
   .print-btn{display:none}
-  @page{size:A4 portrait;margin:8mm 10mm}
+  @page{size:A4 landscape;margin:7mm 10mm}
 }
 </style>
 </head>
@@ -4505,13 +4505,13 @@ td{padding:3px 6px;font-size:8.5px;border:1px solid #e2e8f0;vertical-align:top}
 <!-- ═══════════════════════════════════════════════════════════
      PAGE 5 — CIRCUIT SCHEDULE
 ════════════════════════════════════════════════════════════ -->
-<div class="page" style="overflow-x:auto">
+<div class="page">
   <div class="pg-header">
     <div><div class="pg-title">PART 11: SCHEDULE OF CIRCUIT DETAILS AND TEST RESULTS</div><div class="pg-sub">BS 7671:2018+A2:2022 &nbsp;·&nbsp; ${job?.jobNumber||""} &nbsp;·&nbsp; ${job?.address||""}</div></div>
     <div class="cert-box">Cert No.<br>${job?.jobNumber||"—"}</div>
   </div>
-  <div style="overflow-x:auto">
-    <table style="min-width:860px;font-size:7px">
+  <div>
+    <table style="width:100%;font-size:8px">
       <thead>
         <tr>
           <th rowspan="2" style="min-width:30px;text-align:center">Ref</th>
