@@ -2803,89 +2803,408 @@ const EICR_OUTCOMES = [
 ];
 
 // ---- SCREEN 1: SECTIONS 1-4 (Front Sheet) ----
-function EICRFrontSheetScreen({ job, initialData, onBack, onNext }) {
-const [d, setD] = useState(initialData || {
-  reason:"",
-  wiring_age:"",
-  evidence_additions:false,
-  additions_age:"",
-  records_available:"N/A",
-  last_inspection:"",
-  extent:"",
-  agreed_limitations:"",
-  operational_limitations:"",
-  agreed_with:"",
-  overall_assessment:"SATISFACTORY",
-  next_inspection:"",
-});
-const set = (k,v) => setD(x=>({...x,[k]:v}));
 
-return (
-<div style={{padding:16}}>
-  <div style={{fontSize:11,color:"#64748b",fontWeight:700,letterSpacing:"0.05em",marginBottom:4}}>ELECTRICAL INSTALLATION CONDITION REPORT</div>
-  <div style={{fontSize:18,fontWeight:700,color:"#1e3a5f",marginBottom:16}}>Front Sheet — Sections 1–6</div>
+// ============================================================
+// RIVERSIDE GROUP - DEFAULT TEMPLATE DATA
+// ============================================================
+const RIVERSIDE_TEMPLATE = {
+  id: "riverside",
+  name: "Riverside Group",
+  client_address: "The Riverside Group
+2 Estuary Boulevard
+Liverpool
+L24 8RF",
+  client_rep: "Iain Hardman",
+  purpose: "To check the electrical fixed wiring within the property for safety of continued use, and to highlight any non-compliances with the current BS 7671 regulations that may give rise to danger. Fixed electrical equipment is to be also verified as fit for purpose and safe for continued use.",
+  extent: "This report covers the inspection and testing of the fixed electrical wiring system within the named property, with the exception of any agreed or operational limitations as documented.",
+  occupier_titles: [
+    "Riverside - Void",
+    "Riverside - Responsive Repairs",
+    "Riverside - Mutual Exchange",
+    "Riverside - Planned",
+    "Riverside - Testing Programme"
+  ],
+  next_inspection_options: [
+    "1 Year or change of tenancy",
+    "2 Years or change of tenancy",
+    "3 Years or change of tenancy",
+    "5 Years or change of tenancy",
+    "10 Years or change of tenancy"
+  ],
+  agreed_limitations: [
+    "100% of electrical accessories to be visually checked externally. As a minimum, 20% of electrical accessories to be opened for inspection. Sample size may be increased dependent upon findings.",
+    "The main heating system for the property shall be tested with circuit protective conductor continuity confirmed at all relevant points. Insulation resistance tests will also be carried out.",
+    "The fixed wiring (AC) of photovoltaic systems (PV) is to form part of the inspection and testing process. The fixed wiring is to be tested to the furthest point of isolation (AC) with a visual inspection undertaken beyond the point of isolation to verify the system is safe for continued use.",
+    "In communal areas, specialist installations inclusive of lifts and fire alarms shall not be considered as part of the electrical fixed wiring of the property and shall be tested up to the point of local isolation only.",
+    "Where storage heaters provide the source of heating, the circuit shall be tested to the point of isolation only, with the circuit protective conductor continuity confirmed at the appliance by the R2 testing method. A visual inspection of the appliance shall also be undertaken to confirm adequacy."
+  ],
+  operational_limitations: [
+    "DNO supply fuse information not obtainable in every case where practically possible. Where the distribution network operator cannot provide the required information, the fuse characteristics shall be recorded as 'LIM' on the report.",
+    "For circuits supplying very large or integrated appliances, the final point of testing shall be considered as the control switch or spur and not the socket outlet behind the appliance, to minimise damage to floor areas by moving of appliances and prevent damage to appliances during testing.",
+    "Live insulation resistance testing may be omitted as part of the testing carried out, in order to minimise risk of damage to sensitive equipment (tenanted properties only).",
+    "Some accessories may be inaccessible. Each individual case shall be recorded as an operational limitation along with the reason as to why this is the case (tenanted properties only).",
+    "'Off-peak' systems which have not had live testing undertaken due to the installation not being energised at the time of the inspection, are to be subject to a thorough visual inspection, with all circuits subject to the relevant 'dead' tests as detailed in BS 7671 and Guidance Note 3."
+  ]
+};
 
-  {/* Section 2 - Reason */}
-  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>2 REASON FOR PRODUCING THIS REPORT</div>
-  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
-    <label style={S.label}>Reason for producing this report</label>
-    <textarea style={{...S.input,minHeight:70}} value={d.reason} onChange={e=>set("reason",e.target.value)} placeholder="e.g. To ensure safe continued use of the electrical installation in line with cyclical programme."/>
-  </div>
+// ============================================================
+// TEMPLATE MANAGER SCREEN
+// ============================================================
+function TemplateManagerScreen({ onBack }) {
+  const [templates, setTemplates] = useState([RIVERSIDE_TEMPLATE]);
+  const [editingId, setEditingId] = useState(null);
+  const [view, setView] = useState("list"); // list | edit | new_limit
+  const [newAgreed, setNewAgreed] = useState("");
+  const [newOp, setNewOp] = useState("");
+  const [addingTo, setAddingTo] = useState(null); // "agreed" | "operational"
 
-  {/* Section 3 - Installation Details */}
-  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>3 DETAILS OF THE INSTALLATION</div>
-  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-      <div><label style={S.label}>Estimated Age of Wiring (years)</label><input style={S.input} type="number" value={d.wiring_age} onChange={e=>set("wiring_age",e.target.value)}/></div>
-      <div><label style={S.label}>Date of Last Inspection</label><input style={S.input} type="date" value={d.last_inspection} onChange={e=>set("last_inspection",e.target.value)}/></div>
-    </div>
-    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,padding:"10px 12px",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:8}}>
-      <span style={{fontSize:13,color:"#334155",flex:1}}>Evidence of additions/alterations?</span>
-      <button onClick={()=>set("evidence_additions",!d.evidence_additions)} style={{padding:"6px 14px",borderRadius:6,border:"1.5px solid",borderColor:d.evidence_additions?"#1e3a5f":"#e2e8f0",background:d.evidence_additions?"#1e3a5f":"#fff",color:d.evidence_additions?"#fff":"#94a3b8",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{d.evidence_additions?"YES":"NO"}</button>
-    </div>
-    {d.evidence_additions && <div><label style={S.label}>If yes, estimated age of additions (years)</label><input style={S.input} type="number" value={d.additions_age} onChange={e=>set("additions_age",e.target.value)}/></div>}
-    <div><label style={S.label}>Installation records available? (Regulation 651.1)</label>
-      <select style={{...S.input,background:"#f8fafc"}} value={d.records_available} onChange={e=>set("records_available",e.target.value)}>
-        {["Yes","No","N/A"].map(o=><option key={o}>{o}</option>)}
-      </select>
-    </div>
-  </div>
+  const editing = templates.find(t => t.id === editingId);
 
-  {/* Section 4 - Extent & Limitations */}
-  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>4 EXTENT AND LIMITATIONS OF INSPECTION AND TESTING</div>
-  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
-    <div><label style={S.label}>Extent of the electrical installation covered by this report</label>
-      <textarea style={{...S.input,minHeight:70}} value={d.extent} onChange={e=>set("extent",e.target.value)} placeholder="e.g. Inspection and testing of the complete electrical installation..."/>
-    </div>
-    <div><label style={S.label}>Agreed limitations including the reasons (Regulation 653.2)</label>
-      <textarea style={{...S.input,minHeight:70}} value={d.agreed_limitations} onChange={e=>set("agreed_limitations",e.target.value)} placeholder="e.g. Entering roof voids shall only be carried out if safe to do so..."/>
-    </div>
-    <div><label style={S.label}>Agreed with</label>
-      <input style={S.input} value={d.agreed_with} onChange={e=>set("agreed_with",e.target.value)} placeholder="e.g. Liberty Group"/>
-    </div>
-    <div><label style={S.label}>Operational limitations including the reasons</label>
-      <textarea style={{...S.input,minHeight:70}} value={d.operational_limitations} onChange={e=>set("operational_limitations",e.target.value)} placeholder="e.g. Various equipment obstructing accessories throughout..."/>
-    </div>
-  </div>
+  const updateTemplate = (id, key, val) => {
+    setTemplates(ts => ts.map(t => t.id === id ? { ...t, [key]: val } : t));
+  };
 
-  {/* Section 5 - Overall Assessment */}
-  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>5 SUMMARY OF THE CONDITION OF THE INSTALLATION</div>
-  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
-    <label style={S.label}>Overall assessment of the installation in terms of suitability for continued use</label>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-      {["SATISFACTORY","UNSATISFACTORY"].map(v=>(
-        <button key={v} onClick={()=>set("overall_assessment",v)} style={{padding:"14px 8px",borderRadius:8,border:"2px solid",borderColor:d.overall_assessment===v?(v==="SATISFACTORY"?"#059669":"#dc2626"):"#e2e8f0",background:d.overall_assessment===v?(v==="SATISFACTORY"?"#f0fdf4":"#fef2f2"):"#f8fafc",color:d.overall_assessment===v?(v==="SATISFACTORY"?"#059669":"#dc2626"):"#94a3b8",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{v}</button>
+  const addLimitation = (type) => {
+    const text = type === "agreed" ? newAgreed.trim() : newOp.trim();
+    if (!text) return;
+    const key = type === "agreed" ? "agreed_limitations" : "operational_limitations";
+    updateTemplate(editingId, key, [...(editing[key] || []), text]);
+    if (type === "agreed") setNewAgreed("");
+    else setNewOp("");
+    setAddingTo(null);
+  };
+
+  const removeLimitation = (type, idx) => {
+    const key = type === "agreed" ? "agreed_limitations" : "operational_limitations";
+    updateTemplate(editingId, key, editing[key].filter((_, i) => i !== idx));
+  };
+
+  const addTemplate = () => {
+    const id = "tmpl_" + Date.now();
+    setTemplates(ts => [...ts, {
+      id, name: "New Template",
+      client_address: "", client_rep: "", purpose: "", extent: "",
+      occupier_titles: [], next_inspection_options: ["5 Years or change of tenancy"],
+      agreed_limitations: [], operational_limitations: []
+    }]);
+    setEditingId(id);
+    setView("edit");
+  };
+
+  const LimitItem = ({ text, letter, onRemove }) => (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", background: "#f8fafc", borderRadius: 6, border: "1px solid #e2e8f0", marginBottom: 6 }}>
+      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#1e3a5f", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{letter}</div>
+      <div style={{ flex: 1, fontSize: 12, color: "#334155", lineHeight: 1.5 }}>{text}</div>
+      <button onClick={onRemove} style={{ background: "none", border: "none", color: "#dc2626", fontSize: 16, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+    </div>
+  );
+
+  if (view === "edit" && editing) return (
+    <div style={{ padding: 16 }}>
+      <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: "0.05em", marginBottom: 4 }}>TEMPLATE MANAGER</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 16 }}>{editing.name}</div>
+
+      {/* Basic Info */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>CLIENT DETAILS</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        <label style={S.label}>Template Name</label>
+        <input style={S.input} value={editing.name} onChange={e => updateTemplate(editingId, "name", e.target.value)} />
+        <label style={S.label}>Client Address</label>
+        <textarea style={{ ...S.input, minHeight: 70 }} value={editing.client_address} onChange={e => updateTemplate(editingId, "client_address", e.target.value)} />
+        <label style={S.label}>Client Representative</label>
+        <input style={S.input} value={editing.client_rep} onChange={e => updateTemplate(editingId, "client_rep", e.target.value)} />
+      </div>
+
+      {/* Purpose & Extent */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>PURPOSE & EXTENT</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        <label style={S.label}>Purpose (Section 5.9)</label>
+        <textarea style={{ ...S.input, minHeight: 80 }} value={editing.purpose} onChange={e => updateTemplate(editingId, "purpose", e.target.value)} />
+        <label style={S.label}>Extent (Section 5.10)</label>
+        <textarea style={{ ...S.input, minHeight: 80 }} value={editing.extent} onChange={e => updateTemplate(editingId, "extent", e.target.value)} />
+      </div>
+
+      {/* Agreed Limitations */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>AGREED LIMITATIONS (a, b, c...)</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        {(editing.agreed_limitations || []).map((lim, i) => (
+          <LimitItem key={i} text={lim} letter={String.fromCharCode(97 + i)} onRemove={() => removeLimitation("agreed", i)} />
+        ))}
+        {addingTo === "agreed" ? (
+          <div style={{ marginTop: 8 }}>
+            <textarea style={{ ...S.input, minHeight: 60 }} value={newAgreed} onChange={e => setNewAgreed(e.target.value)} placeholder="Enter limitation text..." autoFocus />
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <button style={S.btn("primary")} onClick={() => addLimitation("agreed")}>Add</button>
+              <button style={S.btn("ghost")} onClick={() => { setAddingTo(null); setNewAgreed(""); }}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <button style={{ ...S.btn("ghost"), marginTop: 8 }} onClick={() => setAddingTo("agreed")}>+ Add Agreed Limitation</button>
+        )}
+      </div>
+
+      {/* Operational Limitations */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>OPERATIONAL LIMITATIONS (1, 2, 3...)</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        {(editing.operational_limitations || []).map((lim, i) => (
+          <LimitItem key={i} text={lim} letter={i + 1} onRemove={() => removeLimitation("operational", i)} />
+        ))}
+        {addingTo === "operational" ? (
+          <div style={{ marginTop: 8 }}>
+            <textarea style={{ ...S.input, minHeight: 60 }} value={newOp} onChange={e => setNewOp(e.target.value)} placeholder="Enter limitation text..." autoFocus />
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <button style={S.btn("primary")} onClick={() => addLimitation("operational")}>Add</button>
+              <button style={S.btn("ghost")} onClick={() => { setAddingTo(null); setNewOp(""); }}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <button style={{ ...S.btn("ghost"), marginTop: 8 }} onClick={() => setAddingTo("operational")}>+ Add Operational Limitation</button>
+        )}
+      </div>
+
+      <button style={S.btn("primary")} onClick={() => setView("list")}>← Save & Back to Templates</button>
+    </div>
+  );
+
+  // Template List
+  return (
+    <div style={{ padding: 16 }}>
+      <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: "0.05em", marginBottom: 4 }}>SETTINGS</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 16 }}>Client Templates</div>
+      <div style={{ fontSize: 12, color: "#64748b", marginBottom: 16 }}>Templates pre-populate purpose, extent, and limitations on EICR reports. Engineers select the template on the front sheet.</div>
+
+      {templates.map(t => (
+        <div key={t.id} style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: 14, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#1e3a5f" }}>{t.name}</div>
+            <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{t.agreed_limitations?.length || 0} agreed · {t.operational_limitations?.length || 0} operational limitations</div>
+          </div>
+          <button onClick={() => { setEditingId(t.id); setView("edit"); }} style={{ padding: "8px 16px", borderRadius: 8, border: "1.5px solid #1e3a5f", background: "#fff", color: "#1e3a5f", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Edit</button>
+        </div>
       ))}
-    </div>
-    <div><label style={S.label}>Recommended date for next inspection</label>
-      <input style={S.input} value={d.next_inspection} onChange={e=>set("next_inspection",e.target.value)} placeholder="e.g. 5 Years or change of tenant/owner"/>
-    </div>
-  </div>
 
-  <button style={S.btn("primary")} onClick={()=>onNext(d)}>Continue to Supply Details -></button>
-  <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
-</div>
-);
+      <button style={S.btn("primary")} onClick={addTemplate}>+ New Template</button>
+      <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
+    </div>
+  );
+}
+
+// ============================================================
+// UPDATED EICRFrontSheetScreen WITH TEMPLATE SUPPORT
+// ============================================================
+function EICRFrontSheetScreen({ job, initialData, onBack, onNext }) {
+  const BUILT_IN_TEMPLATES = [RIVERSIDE_TEMPLATE];
+
+  const [d, setD] = useState(initialData || {
+    template_id: "",
+    reason: "",
+    wiring_age: "",
+    evidence_additions: false,
+    additions_age: "",
+    records_available: "N/A",
+    last_inspection: "",
+    purpose: "",
+    extent: "",
+    agreed_limitation_ids: [],   // indices into template agreed list
+    operational_limitation_ids: [], // indices into template operational list
+    agreed_with: "",
+    overall_assessment: "SATISFACTORY",
+    next_inspection: "",
+    occupier_title: "",
+  });
+  const set = (k, v) => setD(x => ({ ...x, [k]: v }));
+
+  const selectedTemplate = BUILT_IN_TEMPLATES.find(t => t.id === d.template_id) || null;
+
+  const applyTemplate = (tmplId) => {
+    const tmpl = BUILT_IN_TEMPLATES.find(t => t.id === tmplId);
+    if (!tmpl) { set("template_id", ""); return; }
+    setD(x => ({
+      ...x,
+      template_id: tmplId,
+      purpose: tmpl.purpose,
+      extent: tmpl.extent,
+      agreed_with: tmpl.client_rep,
+      agreed_limitation_ids: [],
+      operational_limitation_ids: [],
+      occupier_title: "",
+      next_inspection: "",
+    }));
+  };
+
+  const toggleAgreed = (idx) => {
+    const ids = d.agreed_limitation_ids || [];
+    set("agreed_limitation_ids", ids.includes(idx) ? ids.filter(i => i !== idx) : [...ids, idx].sort((a, b) => a - b));
+  };
+
+  const toggleOp = (idx) => {
+    const ids = d.operational_limitation_ids || [];
+    set("operational_limitation_ids", ids.includes(idx) ? ids.filter(i => i !== idx) : [...ids, idx].sort((a, b) => a - b));
+  };
+
+  // Build summary strings for display
+  const agreedSummary = () => {
+    const ids = d.agreed_limitation_ids || [];
+    if (!ids.length) return "None";
+    return ids.map(i => String.fromCharCode(97 + i)).join(", ") + " — please refer to continuation sheet";
+  };
+
+  const opSummary = () => {
+    const ids = d.operational_limitation_ids || [];
+    if (!ids.length) return "None";
+    return ids.map(i => i + 1).join(", ") + " — please refer to continuation sheet";
+  };
+
+  return (
+    <div style={{ padding: 16 }}>
+      <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: "0.05em", marginBottom: 4 }}>ELECTRICAL INSTALLATION CONDITION REPORT</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 16 }}>Front Sheet — Sections 1–6</div>
+
+      {/* Template Selector */}
+      <div style={{ background: "#0f766e", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>CLIENT TEMPLATE</div>
+      <div style={{ border: "1.5px solid #0f766e", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        <label style={S.label}>Select client template</label>
+        <select style={{ ...S.input, background: "#f8fafc" }} value={d.template_id} onChange={e => applyTemplate(e.target.value)}>
+          <option value="">-- No template (manual entry) --</option>
+          {BUILT_IN_TEMPLATES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        {selectedTemplate && (
+          <div style={{ marginTop: 8 }}>
+            <label style={S.label}>Occupier title</label>
+            <select style={{ ...S.input, background: "#f8fafc" }} value={d.occupier_title} onChange={e => set("occupier_title", e.target.value)}>
+              <option value="">-- Select --</option>
+              {selectedTemplate.occupier_titles.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Section 2 - Reason */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>2 REASON FOR PRODUCING THIS REPORT</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        <label style={S.label}>Reason for producing this report</label>
+        <textarea style={{ ...S.input, minHeight: 70 }} value={d.reason} onChange={e => set("reason", e.target.value)} placeholder="e.g. To ensure safe continued use of the electrical installation in line with cyclical programme." />
+      </div>
+
+      {/* Section 3 - Installation Details */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>3 DETAILS OF THE INSTALLATION</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div><label style={S.label}>Estimated Age of Wiring (years)</label><input style={S.input} type="number" value={d.wiring_age} onChange={e => set("wiring_age", e.target.value)} /></div>
+          <div><label style={S.label}>Date of Last Inspection</label><input style={S.input} type="date" value={d.last_inspection} onChange={e => set("last_inspection", e.target.value)} /></div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8, padding: "10px 12px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 8 }}>
+          <span style={{ fontSize: 13, color: "#334155", flex: 1 }}>Evidence of additions/alterations?</span>
+          <button onClick={() => set("evidence_additions", !d.evidence_additions)} style={{ padding: "6px 14px", borderRadius: 6, border: "1.5px solid", borderColor: d.evidence_additions ? "#1e3a5f" : "#e2e8f0", background: d.evidence_additions ? "#1e3a5f" : "#fff", color: d.evidence_additions ? "#fff" : "#94a3b8", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{d.evidence_additions ? "YES" : "NO"}</button>
+        </div>
+        {d.evidence_additions && <div><label style={S.label}>If yes, estimated age of additions (years)</label><input style={S.input} type="number" value={d.additions_age} onChange={e => set("additions_age", e.target.value)} /></div>}
+        <div><label style={S.label}>Installation records available? (Regulation 651.1)</label>
+          <select style={{ ...S.input, background: "#f8fafc" }} value={d.records_available} onChange={e => set("records_available", e.target.value)}>
+            {["Yes", "No", "N/A"].map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Section 4 - Extent & Limitations */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>4 EXTENT AND LIMITATIONS OF INSPECTION AND TESTING</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+
+        {/* Purpose */}
+        <label style={S.label}>Purpose of the report</label>
+        {selectedTemplate ? (
+          <div style={{ fontSize: 12, color: "#334155", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 8, padding: "10px 12px", marginBottom: 10, lineHeight: 1.6 }}>{d.purpose}</div>
+        ) : (
+          <textarea style={{ ...S.input, minHeight: 70 }} value={d.purpose} onChange={e => set("purpose", e.target.value)} placeholder="Enter purpose of report..." />
+        )}
+
+        {/* Extent */}
+        <label style={S.label}>Extent of the electrical installation covered by this report</label>
+        {selectedTemplate ? (
+          <div style={{ fontSize: 12, color: "#334155", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 8, padding: "10px 12px", marginBottom: 10, lineHeight: 1.6 }}>{d.extent}</div>
+        ) : (
+          <textarea style={{ ...S.input, minHeight: 70 }} value={d.extent} onChange={e => set("extent", e.target.value)} placeholder="e.g. Inspection and testing of the complete electrical installation..." />
+        )}
+
+        {/* Agreed Limitations */}
+        <label style={S.label}>Agreed limitations (Regulation 653.2)</label>
+        {selectedTemplate ? (
+          <div>
+            <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Select limitations that apply to this job:</div>
+            {(selectedTemplate.agreed_limitations || []).map((lim, i) => {
+              const selected = (d.agreed_limitation_ids || []).includes(i);
+              return (
+                <button key={i} onClick={() => toggleAgreed(i)} style={{ display: "flex", alignItems: "flex-start", gap: 10, width: "100%", textAlign: "left", padding: "10px 12px", borderRadius: 8, border: "1.5px solid", borderColor: selected ? "#1e3a5f" : "#e2e8f0", background: selected ? "#eef2ff" : "#f8fafc", marginBottom: 6, cursor: "pointer", fontFamily: "inherit" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid", borderColor: selected ? "#1e3a5f" : "#cbd5e1", background: selected ? "#1e3a5f" : "#fff", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{selected ? String.fromCharCode(97 + i) : String.fromCharCode(97 + i)}</div>
+                  <span style={{ fontSize: 12, color: "#334155", lineHeight: 1.5 }}>{lim}</span>
+                </button>
+              );
+            })}
+            {(d.agreed_limitation_ids || []).length > 0 && (
+              <div style={{ marginTop: 8, padding: "8px 12px", background: "#1e3a5f", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 600 }}>
+                📋 Certificate will show: Agreed limitations {agreedSummary()}
+              </div>
+            )}
+          </div>
+        ) : (
+          <textarea style={{ ...S.input, minHeight: 70 }} value={d.agreed_limitations || ""} onChange={e => set("agreed_limitations", e.target.value)} placeholder="e.g. Entering roof voids shall only be carried out if safe to do so..." />
+        )}
+
+        <div style={{ marginTop: 10 }}>
+          <label style={S.label}>Agreed with</label>
+          <input style={S.input} value={d.agreed_with} onChange={e => set("agreed_with", e.target.value)} placeholder="e.g. Riverside Group" />
+        </div>
+
+        {/* Operational Limitations */}
+        <label style={{ ...S.label, marginTop: 10 }}>Operational limitations</label>
+        {selectedTemplate ? (
+          <div>
+            <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Select operational limitations that apply to this job:</div>
+            {(selectedTemplate.operational_limitations || []).map((lim, i) => {
+              const selected = (d.operational_limitation_ids || []).includes(i);
+              return (
+                <button key={i} onClick={() => toggleOp(i)} style={{ display: "flex", alignItems: "flex-start", gap: 10, width: "100%", textAlign: "left", padding: "10px 12px", borderRadius: 8, border: "1.5px solid", borderColor: selected ? "#0f766e" : "#e2e8f0", background: selected ? "#f0fdfa" : "#f8fafc", marginBottom: 6, cursor: "pointer", fontFamily: "inherit" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid", borderColor: selected ? "#0f766e" : "#cbd5e1", background: selected ? "#0f766e" : "#fff", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                  <span style={{ fontSize: 12, color: "#334155", lineHeight: 1.5 }}>{lim}</span>
+                </button>
+              );
+            })}
+            {(d.operational_limitation_ids || []).length > 0 && (
+              <div style={{ marginTop: 8, padding: "8px 12px", background: "#0f766e", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 600 }}>
+                📋 Certificate will show: Operational limitations {opSummary()}
+              </div>
+            )}
+          </div>
+        ) : (
+          <textarea style={{ ...S.input, minHeight: 70 }} value={d.operational_limitations || ""} onChange={e => set("operational_limitations", e.target.value)} placeholder="e.g. Various equipment obstructing accessories throughout..." />
+        )}
+      </div>
+
+      {/* Section 5 - Overall Assessment */}
+      <div style={{ background: "#1e3a5f", color: "#fff", borderRadius: "8px 8px 0 0", padding: "8px 12px", fontSize: 12, fontWeight: 700 }}>5 SUMMARY OF THE CONDITION OF THE INSTALLATION</div>
+      <div style={{ border: "1.5px solid #1e3a5f", borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, marginBottom: 12 }}>
+        <label style={S.label}>Overall assessment of the installation in terms of suitability for continued use</label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+          {["SATISFACTORY", "UNSATISFACTORY"].map(v => (
+            <button key={v} onClick={() => set("overall_assessment", v)} style={{ padding: "14px 8px", borderRadius: 8, border: "2px solid", borderColor: d.overall_assessment === v ? (v === "SATISFACTORY" ? "#059669" : "#dc2626") : "#e2e8f0", background: d.overall_assessment === v ? (v === "SATISFACTORY" ? "#f0fdf4" : "#fef2f2") : "#f8fafc", color: d.overall_assessment === v ? (v === "SATISFACTORY" ? "#059669" : "#dc2626") : "#94a3b8", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>{v}</button>
+          ))}
+        </div>
+        <div>
+          <label style={S.label}>Recommended date for next inspection</label>
+          {selectedTemplate ? (
+            <select style={{ ...S.input, background: "#f8fafc" }} value={d.next_inspection} onChange={e => set("next_inspection", e.target.value)}>
+              <option value="">-- Select --</option>
+              {selectedTemplate.next_inspection_options.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          ) : (
+            <input style={S.input} value={d.next_inspection} onChange={e => set("next_inspection", e.target.value)} placeholder="e.g. 5 Years or change of tenancy" />
+          )}
+        </div>
+      </div>
+
+      <button style={S.btn("primary")} onClick={() => onNext(d)}>Continue to Supply Details -></button>
+      <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
+    </div>
+  );
 }
 
 // ---- SCREEN 2: SECTIONS 10-11 (Supply Characteristics & Particulars) ----
@@ -4175,6 +4494,7 @@ return (
       <div style={{display:"flex",gap:10,alignItems:"center"}}>
         {saving && <span style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>saving...</span>}
         {labels[screen] && <span style={{fontSize:10,color:"rgba(255,255,255,0.6)",letterSpacing:"0.1em"}}>{labels[screen].toUpperCase()}</span>}
+        <button onClick={()=>setScreen("template_manager")} style={{background:"none",border:"1px solid rgba(255,255,255,0.3)",color:"rgba(255,255,255,0.7)",borderRadius:6,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>⚙️</button>
         <button onClick={()=>setScreen("profile")} style={{background:"none",border:"1px solid rgba(255,255,255,0.3)",color:"rgba(255,255,255,0.7)",borderRadius:6,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>👤</button>
         <button onClick={handleLogout} style={{background:"none",border:"1px solid rgba(255,255,255,0.3)",color:"rgba(255,255,255,0.7)",borderRadius:6,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>OUT</button>
       </div>
@@ -4337,7 +4657,12 @@ return (
         onBack={()=>setScreen("dashboard")}
       />
     )}
-    {!["login","loading","dashboard","create_job","asset","checklist","test_results","ai_review","conditionality","summary","report"].includes(screen) && (
+    {screen==="template_manager" && (
+      <TemplateManagerScreen
+        onBack={()=>setScreen("dashboard")}
+      />
+    )}
+    {!["login","loading","dashboard","create_job","asset","checklist","test_results","ai_review","conditionality","summary","report","profile","template_manager","eicr_install","eicr_supply","eicr_circuits","eicr_inspection","eicr_observations"].includes(screen) && (
       <div style={{padding:32,textAlign:"center"}}>
         <div style={{color:"#00e887",fontSize:14,marginBottom:16}}>Unknown screen: {screen}</div>
         <button style={{...S.btn("primary")}} onClick={()=>setScreen("dashboard")}>Go to Dashboard</button>
