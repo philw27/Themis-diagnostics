@@ -2687,258 +2687,403 @@ return (
 
 
 // ============================================================
-// EICR MODULE
+// ============================================================
+// EICR MODULE v2 - Matches BS 7671 Certificate Exactly
 // ============================================================
 
-// - EICR VISUAL INSPECTION CHECKLIST (BS 7671 / GN3 Section 5)
+// SECTION 12 - Exact inspection items from BS 7671
 const EICR_SECTIONS = [
-  { id:"intake", label:"1.0 Intake Equipment (Visual Inspection Only)", items:[
-    {id:"1.1.1", q:"Service cable", reg:""},
-    {id:"1.1.2", q:"Service head", reg:""},
-    {id:"1.1.3", q:"Earthing arrangement", reg:""},
-    {id:"1.1.4", q:"Meter tails", reg:""},
-    {id:"1.1.5", q:"Metering equipment", reg:""},
-    {id:"1.1.6", q:"Isolator (where present)", reg:""},
-    {id:"1.2",   q:"Consumer's isolator (where present)", reg:""},
-    {id:"1.3",   q:"Consumer's meter tails", reg:""},
+  { id:"intake", label:"1.0 Intake Equipment (Visual Inspection Only)", note:"An outcome against an item in this section, other than access to live parts, should not be used to determine the overall outcome.", items:[
+    {id:"1.1.1", q:"Service cable"},
+    {id:"1.1.2", q:"Service head"},
+    {id:"1.1.3", q:"Earthing arrangement"},
+    {id:"1.1.4", q:"Meter tails"},
+    {id:"1.1.5", q:"Metering equipment"},
+    {id:"1.1.6", q:"Isolator (where present)"},
+    {id:"1.2",   q:"Consumer's isolator (where present)"},
+    {id:"1.3",   q:"Consumer's meter tails"},
   ]},
-  { id:"microgen", label:"2.0 Presence of Adequate Arrangements for Other Sources (Microgenerators)", items:[
-    {id:"2.1", q:"Adequate arrangements for microgenerators/other sources (551.6; 551.7)", reg:"551.6; 551.7"},
+  { id:"microgen", label:"2.0 Adequate Arrangements for Other Sources (Microgenerators)", items:[
+    {id:"2.1", q:"Adequate arrangements for microgenerators/other sources (551.6; 551.7)"},
   ]},
-  { id:"earthing", label:"3.0 Earthing / Bonding Arrangements", items:[
-    {id:"3.1", q:"Presence and condition of distributor's earthing arrangement (542.1.2.1; 542.1.2.2)", reg:"542.1.2.1; 542.1.2.2"},
-    {id:"3.2", q:"Presence and condition of earth electrode connection where applicable (542.1.2.3)", reg:"542.1.2.3"},
-    {id:"3.3", q:"Provision of earthing/bonding labels at all appropriate locations (514.13.1)", reg:"514.13.1"},
-    {id:"3.4", q:"Confirmation of earthing conductor size (542.3; 543.1.1)", reg:"542.3; 543.1.1"},
-    {id:"3.5", q:"Accessibility and condition of earthing conductor at MET (543.3.2)", reg:"543.3.2"},
-    {id:"3.6", q:"Confirmation of main protective bonding conductor sizes (544.1)", reg:"544.1"},
-    {id:"3.7", q:"Condition and accessibility of main protective bonding conductor connections (543.3.2; 544.1.2)", reg:"543.3.2; 544.1.2"},
-    {id:"3.8", q:"Accessibility and condition of other protective bonding connections (543.3.1; 543.3.2)", reg:"543.3.1; 543.3.2"},
+  { id:"earthing", label:"3.0 Earthing / Bonding Arrangements (411.3; Chap 54)", items:[
+    {id:"3.1", q:"Presence and condition of distributor's earthing arrangement (542.1.2.1; 542.1.2.2)"},
+    {id:"3.2", q:"Presence and condition of earth electrode connection where applicable (542.1.2.3)"},
+    {id:"3.3", q:"Provision of earthing/bonding labels at all appropriate locations (514.13.1)"},
+    {id:"3.4", q:"Confirmation of earthing conductor size (542.3; 543.1.1)"},
+    {id:"3.5", q:"Accessibility and condition of earthing conductor at MET (543.3.2)"},
+    {id:"3.6", q:"Confirmation of main protective bonding conductor sizes (544.1)"},
+    {id:"3.7", q:"Condition and accessibility of main protective bonding conductor connections (543.3.2; 544.1.2)"},
+    {id:"3.8", q:"Accessibility and condition of other protective bonding connections (543.3.1; 543.3.2)"},
   ]},
-  { id:"consumer_unit", label:"4.0 Consumer Unit(s) / Distribution Board(s)", items:[
-    {id:"4.1",  q:"Adequacy of working space/accessibility to consumer unit/distribution board (132.12; 513.1)", reg:"132.12; 513.1"},
-    {id:"4.2",  q:"Security of fixing (134.1.1)", reg:"134.1.1"},
-    {id:"4.3",  q:"Condition of enclosure(s) in terms of IP rating etc (416.2)", reg:"416.2"},
-    {id:"4.4",  q:"Condition of enclosure(s) in terms of fire rating etc (421.1.201; 526.5)", reg:"421.1.201; 526.5"},
-    {id:"4.5",  q:"Enclosure not damaged/deteriorated so as to impair safety (651.2)", reg:"651.2"},
-    {id:"4.6",  q:"Presence of main linked switch (as required by 462.1.201)", reg:"462.1.201"},
-    {id:"4.7",  q:"Operation of main switch (functional check) (643.10)", reg:"643.10"},
-    {id:"4.8",  q:"Manual operation of circuit-breakers and RCDs to prove disconnection (643.10)", reg:"643.10"},
-    {id:"4.9",  q:"Correct identification of circuit details and protective devices (514.8.1; 514.9.1)", reg:"514.8.1; 514.9.1"},
-    {id:"4.10", q:"Presence of RCD six-monthly test notice, where required (514.12.2)", reg:"514.12.2"},
-    {id:"4.11", q:"Presence of alternative supply warning notice at or near consumer unit/distribution board (514.15)", reg:"514.15"},
-    {id:"4.12", q:"Presence of other required labelling (please specify) (Section 514)", reg:"Section 514"},
-    {id:"4.13", q:"Compatibility of protective devices, bases and other components; correct type and rating (411.3.2; 411.4; 411.5; 411.6; Sections 432, 433)", reg:"411.3.2; 411.4; 411.5; 411.6"},
-    {id:"4.14", q:"Single-pole switching or protective devices in line conductor only (132.14.1; 530.3.3)", reg:"132.14.1; 530.3.3"},
-    {id:"4.15", q:"Protection against mechanical damage where cables enter consumer unit/distribution board (132.14.1; 522.8.1; 522.8.5; 522.8.11)", reg:"522.8.1; 522.8.5"},
-    {id:"4.16", q:"Protection against electromagnetic effects where cables enter consumer unit/distribution board/enclosures (521.5.1)", reg:"521.5.1"},
-    {id:"4.17", q:"RCD(s) provided for fault protection - includes RCBOs (411.4.204; 411.5.2; 531.2)", reg:"411.4.204; 411.5.2; 531.2"},
-    {id:"4.18", q:"RCD(s) provided for additional protection/requirements - includes RCBOs (411.3.3; 415.1)", reg:"411.3.3; 415.1"},
-    {id:"4.19", q:"Confirmation of indication that SPD is functional (651.4)", reg:"651.4"},
-    {id:"4.20", q:"Confirmation that ALL conductor connections, including connections to busbars, are correctly located in terminals and are tight and secure (526.1)", reg:"526.1"},
-    {id:"4.21", q:"Adequate arrangements where a generating set operates as a switched alternative to the public supply (551.6)", reg:"551.6"},
-    {id:"4.22", q:"Adequate arrangements where a generating set operates in parallel with the public supply (551.7)", reg:"551.7"},
+  { id:"cu", label:"4.0 Consumer Unit(s) / Distribution Board(s)", items:[
+    {id:"4.1",  q:"Adequacy of working space/accessibility to consumer unit/distribution board (132.12; 513.1)"},
+    {id:"4.2",  q:"Security of fixing (134.1.1)"},
+    {id:"4.3",  q:"Condition of enclosure(s) in terms of IP rating etc (416.2)"},
+    {id:"4.4",  q:"Condition of enclosure(s) in terms of fire rating etc (421.1.201; 526.5)"},
+    {id:"4.5",  q:"Enclosure not damaged/deteriorated so as to impair safety (651.2)"},
+    {id:"4.6",  q:"Presence of main linked switch (as required by 462.1.201)"},
+    {id:"4.7",  q:"Operation of main switch (functional check) (643.10)"},
+    {id:"4.8",  q:"Manual operation of circuit-breakers and RCDs to prove disconnection (643.10)"},
+    {id:"4.9",  q:"Correct identification of circuit details and protective devices (514.8.1; 514.9.1)"},
+    {id:"4.10", q:"Presence of RCD six-monthly test notice, where required (514.12.2)"},
+    {id:"4.11", q:"Presence of alternative supply warning notice at or near consumer unit/distribution board (514.15)"},
+    {id:"4.12", q:"Presence of other required labelling (please specify) (Section 514)"},
+    {id:"4.13", q:"Compatibility of protective devices, bases and other components; correct type and rating — no signs of unacceptable thermal damage, arcing or overheating (411.3.2; 411.4; 411.5; 411.6; Sections 432, 433)"},
+    {id:"4.14", q:"Single-pole switching or protective devices in line conductor only (132.14.1; 530.3.3)"},
+    {id:"4.15", q:"Protection against mechanical damage where cables enter consumer unit/distribution board (132.14.1; 522.8.1; 522.8.5; 522.8.11)"},
+    {id:"4.16", q:"Protection against electromagnetic effects where cables enter consumer unit/distribution board/enclosures (521.5.1)"},
+    {id:"4.17", q:"RCD(s) provided for fault protection — includes RCBOs (411.4.204; 411.5.2; 531.2)"},
+    {id:"4.18", q:"RCD(s) provided for additional protection/requirements — includes RCBOs (411.3.3; 415.1)"},
+    {id:"4.19", q:"Confirmation of indication that SPD is functional (651.4)"},
+    {id:"4.20", q:"Confirmation that ALL conductor connections, including connections to busbars, are correctly located in terminals and are tight and secure (526.1)"},
+    {id:"4.21", q:"Adequate arrangements where a generating set operates as a switched alternative to the public supply (551.6)"},
+    {id:"4.22", q:"Adequate arrangements where a generating set operates in parallel with the public supply (551.7)"},
   ]},
-  { id:"final_circuits", label:"5.0 Final Circuits", items:[
-    {id:"5.1",    q:"Identification of conductors (514.3.1)", reg:"514.3.1"},
-    {id:"5.2",    q:"Cables correctly supported throughout their run (521.10.202; 522.8.5)", reg:"521.10.202; 522.8.5"},
-    {id:"5.3",    q:"Condition of insulation of live parts (416.1)", reg:"416.1"},
-    {id:"5.4",    q:"Non-sheathed cables protected by enclosure in conduit, ducting or trunking (521.10.1)", reg:"521.10.1"},
-    {id:"5.4.1",  q:"To include the integrity of conduit and trunking systems (metallic and plastic)", reg:""},
-    {id:"5.5",    q:"Adequacy of cables for current-carrying capacity with regard for the type and nature of installation (Section 523)", reg:"Section 523"},
-    {id:"5.6",    q:"Coordination between conductors and overload protective devices (433.1; 533.2.1)", reg:"433.1; 533.2.1"},
-    {id:"5.7",    q:"Adequacy of protective devices: type and rated current for fault protection (411.3)", reg:"411.3"},
-    {id:"5.8",    q:"Presence and adequacy of circuit protective conductors (411.3.1; Section 543)", reg:"411.3.1; Section 543"},
-    {id:"5.9",    q:"Wiring system(s) appropriate for the type and nature of the installation and external influences (Section 522)", reg:"Section 522"},
-    {id:"5.10",   q:"Concealed cables installed in prescribed zones (522.6.202)", reg:"522.6.202"},
-    {id:"5.11",   q:"Cables concealed under floors, above ceilings or in walls/partitions, adequately protected against damage (522.6.204)", reg:"522.6.204"},
-    {id:"5.12.1", q:"Additional protection by RCD ≤30mA — for all socket-outlets of rating 32A or less, unless an exception is permitted (411.3.3)", reg:"411.3.3"},
-    {id:"5.12.2", q:"Additional protection by RCD ≤30mA — for supply of mobile equipment not exceeding 32A rating for use outdoors (411.3.3)", reg:"411.3.3"},
-    {id:"5.12.3", q:"Additional protection by RCD ≤30mA — for cables concealed in walls at depth less than 50mm (522.6.202; 522.6.203)", reg:"522.6.202; 522.6.203"},
-    {id:"5.12.4", q:"Additional protection by RCD ≤30mA — for cables in walls/partitions containing metal parts regardless of depth (522.6.203)", reg:"522.6.203"},
-    {id:"5.12.5", q:"Additional protection by RCD ≤30mA — final circuits supplying luminaires within domestic premises (411.3.4)", reg:"411.3.4"},
-    {id:"5.13",   q:"Provision of fire barriers, sealing arrangements and protection against thermal effects (Section 527)", reg:"Section 527"},
-    {id:"5.14",   q:"Band II cables segregated/separated from Band I cables (528.1)", reg:"528.1"},
-    {id:"5.15",   q:"Cables segregated/separated from communications cabling (528.2)", reg:"528.2"},
-    {id:"5.16",   q:"Cables segregated/separated from non-electrical services (528.3)", reg:"528.3"},
-    {id:"5.17.1", q:"Termination of cables at enclosures — connections soundly made and under no undue strain (526.6)", reg:"526.6"},
-    {id:"5.17.2", q:"Termination of cables at enclosures — no basic insulation of a conductor visible outside enclosure (526.8)", reg:"526.8"},
-    {id:"5.17.3", q:"Termination of cables at enclosures — connections of live conductors adequately enclosed (526.5)", reg:"526.5"},
-    {id:"5.17.4", q:"Termination of cables at enclosures — adequately connected at point of entry to enclosure (glands, bushes etc.) (522.8.5)", reg:"522.8.5"},
-    {id:"5.18",   q:"Condition of accessories including socket-outlets, switches and joint boxes (651.2(v))", reg:"651.2"},
-    {id:"5.19",   q:"Suitability of accessories for external influences (512.2)", reg:"512.2"},
-    {id:"5.20",   q:"Adequacy of working space/accessibility to equipment (132.12; 513.1)", reg:"132.12; 513.1"},
-    {id:"5.21",   q:"Single-pole switching or protective devices in line conductors only (132.14.1, 530.3.3)", reg:"132.14.1; 530.3.3"},
+  { id:"final", label:"5.0 Final Circuits", items:[
+    {id:"5.1",    q:"Identification of conductors (514.3.1)"},
+    {id:"5.2",    q:"Cables correctly supported throughout their run (521.10.202; 522.8.5)"},
+    {id:"5.3",    q:"Condition of insulation of live parts (416.1)"},
+    {id:"5.4",    q:"Non-sheathed cables protected by enclosure in conduit, ducting or trunking (521.10.1)"},
+    {id:"5.4.1",  q:"Integrity of conduit and trunking systems (metallic and plastic)"},
+    {id:"5.5",    q:"Adequacy of cables for current-carrying capacity with regard for the type and nature of installation (Section 523)"},
+    {id:"5.6",    q:"Coordination between conductors and overload protective devices (433.1; 533.2.1)"},
+    {id:"5.7",    q:"Adequacy of protective devices: type and rated current for fault protection (411.3)"},
+    {id:"5.8",    q:"Presence and adequacy of circuit protective conductors (411.3.1; Section 543)"},
+    {id:"5.9",    q:"Wiring system(s) appropriate for the type and nature of the installation and external influences (Section 522)"},
+    {id:"5.10",   q:"Concealed cables installed in prescribed zones — see Section 4 Extent and Limitations (522.6.202)"},
+    {id:"5.11",   q:"Cables concealed under floors, above ceilings or in walls/partitions, adequately protected against damage — see Section 4 (522.6.204)"},
+    {id:"5.12.1", q:"Additional protection RCD ≤30mA — for all socket-outlets of rating 32A or less, unless exception permitted (411.3.3)"},
+    {id:"5.12.2", q:"Additional protection RCD ≤30mA — for supply of mobile equipment not exceeding 32A rating for use outdoors (411.3.3)"},
+    {id:"5.12.3", q:"Additional protection RCD ≤30mA — for cables concealed in walls at depth less than 50mm (522.6.202; 522.6.203)"},
+    {id:"5.12.4", q:"Additional protection RCD ≤30mA — for cables in walls/partitions containing metal parts regardless of depth (522.6.203)"},
+    {id:"5.12.5", q:"Additional protection RCD ≤30mA — final circuits supplying luminaires within domestic premises (411.3.4)"},
+    {id:"5.13",   q:"Provision of fire barriers, sealing arrangements and protection against thermal effects (Section 527)"},
+    {id:"5.14",   q:"Band II cables segregated/separated from Band I cables (528.1)"},
+    {id:"5.15",   q:"Cables segregated/separated from communications cabling (528.2)"},
+    {id:"5.16",   q:"Cables segregated/separated from non-electrical services (528.3)"},
+    {id:"5.17.1", q:"Termination of cables — connections soundly made and under no undue strain (526.6)"},
+    {id:"5.17.2", q:"Termination of cables — no basic insulation of a conductor visible outside enclosure (526.8)"},
+    {id:"5.17.3", q:"Termination of cables — connections of live conductors adequately enclosed (526.5)"},
+    {id:"5.17.4", q:"Termination of cables — adequately connected at point of entry to enclosure, glands, bushes etc. (522.8.5)"},
+    {id:"5.18",   q:"Condition of accessories including socket-outlets, switches and joint boxes (651.2(v))"},
+    {id:"5.19",   q:"Suitability of accessories for external influences (512.2)"},
+    {id:"5.20",   q:"Adequacy of working space/accessibility to equipment (132.12; 513.1)"},
+    {id:"5.21",   q:"Single-pole switching or protective devices in line conductors only (132.14.1; 530.3.3)"},
   ]},
   { id:"bathroom", label:"6.0 Location(s) Containing a Bath or Shower", items:[
-    {id:"6.1", q:"Additional protection for all low voltage (LV) circuits by RCD not exceeding 30mA (701.411.3.3)", reg:"701.411.3.3"},
-    {id:"6.2", q:"Where used as a protective measure, requirements for SELV or PELV met (701.414.4.5)", reg:"701.414.4.5"},
-    {id:"6.3", q:"Shaver supply units comply with BS EN 61558-2-5 formerly BS 3535 (701.512.3)", reg:"701.512.3"},
-    {id:"6.4", q:"Presence of supplementary bonding conductors, unless not required by BS 7671:2018 (701.415.2)", reg:"701.415.2"},
-    {id:"6.5", q:"Low voltage (e.g. 230V) socket-outlets sited at least 2.5m from zone 1 (701.512.3)", reg:"701.512.3"},
-    {id:"6.6", q:"Suitability of equipment for external influences for installed location in terms of IP rating (701.512.2)", reg:"701.512.2"},
-    {id:"6.7", q:"Suitability of accessories and controlgear etc. for a particular zone (701.512.3)", reg:"701.512.3"},
-    {id:"6.8", q:"Suitability of current-using equipment for particular position within the location (701.55)", reg:"701.55"},
+    {id:"6.1", q:"Additional protection for all LV circuits by RCD not exceeding 30mA (701.411.3.3)"},
+    {id:"6.2", q:"Where used as a protective measure, requirements for SELV or PELV met (701.414.4.5)"},
+    {id:"6.3", q:"Shaver supply units comply with BS EN 61558-2-5 formerly BS 3535 (701.512.3)"},
+    {id:"6.4", q:"Presence of supplementary bonding conductors, unless not required by BS 7671:2018 (701.415.2)"},
+    {id:"6.5", q:"Low voltage (e.g. 230V) socket-outlets sited at least 2.5m from zone 1 (701.512.3)"},
+    {id:"6.6", q:"Suitability of equipment for external influences for installed location in terms of IP rating (701.512.2)"},
+    {id:"6.7", q:"Suitability of accessories and controlgear etc. for a particular zone (701.512.3)"},
+    {id:"6.8", q:"Suitability of current-using equipment for particular position within the location (701.55)"},
   ]},
   { id:"special", label:"7.0 Other Part 7 Special Installations or Locations", items:[
-    {id:"7.1", q:"Special installation or location 1 (list if applicable)", reg:"Part 7"},
-    {id:"7.2", q:"Special installation or location 2 (list if applicable)", reg:"Part 7"},
+    {id:"7.1", q:"Special installation or location 1 (specify if applicable)"},
+    {id:"7.2", q:"Special installation or location 2 (specify if applicable)"},
   ]},
   { id:"prosumer", label:"8.0 Prosumer's Low Voltage Electrical Installation(s)", items:[
-    {id:"8.1", q:"Additional requirements relating to Chapter 82 — item 1", reg:"Chapter 82"},
-    {id:"8.2", q:"Additional requirements relating to Chapter 82 — item 2", reg:"Chapter 82"},
+    {id:"8.1", q:"Additional requirements relating to Chapter 82 — item 1"},
+    {id:"8.2", q:"Additional requirements relating to Chapter 82 — item 2"},
   ]},
 ];
 
+const EICR_OUTCOMES = [
+  {v:"pass", l:"PASS", col:"#059669", bg:"#f0fdf4"},
+  {v:"c1",   l:"C1",   col:"#dc2626", bg:"#fef2f2"},
+  {v:"c2",   l:"C2",   col:"#ea580c", bg:"#fff7ed"},
+  {v:"c3",   l:"C3",   col:"#d97706", bg:"#fffbeb"},
+  {v:"fi",   l:"FI",   col:"#7c3aed", bg:"#faf5ff"},
+  {v:"lim",  l:"LIM",  col:"#0284c7", bg:"#f0f9ff"},
+  {v:"nv",   l:"N/V",  col:"#64748b", bg:"#f8fafc"},
+  {v:"na",   l:"N/A",  col:"#94a3b8", bg:"#f8fafc"},
+];
 
-// - EICR INSTALLATION DETAILS SCREEN ----
-function EICRInstallationScreen({ job, initialData, onBack, onNext }) {
+// ---- SCREEN 1: SECTIONS 1-4 (Front Sheet) ----
+function EICRFrontSheetScreen({ job, initialData, onBack, onNext }) {
 const [d, setD] = useState(initialData || {
-  supply_type:"TN-C-S",
-  earthing_arrangement:"MET",
-  number_of_phases:1,
-  frequency:50,
-  voltage_ue:400,
-  voltage_uo:230,
-  prospective_fault_current:"",
-  external_ze:"",
-  max_demand:"",
-  supply_protective_device_type:"BS 1361",
-  supply_protective_device_rating:100,
-  main_switch_type:"",
-  main_switch_rating:"",
-  main_switch_location:"",
-  spd_present:false,
-  afdd_present:false,
-  smoke_alarm_present:false,
-  smoke_alarm_type:"",
-  consumer_unit_make:"",
-  consumer_unit_location:"",
-  bonding_confirmed:false,
-  water_pipe_bonded:false,
-  gas_pipe_bonded:false,
+  reason:"",
+  wiring_age:"",
+  evidence_additions:false,
+  additions_age:"",
+  records_available:"N/A",
+  last_inspection:"",
+  extent:"",
+  agreed_limitations:"",
+  operational_limitations:"",
+  agreed_with:"",
+  overall_assessment:"SATISFACTORY",
+  next_inspection:"",
 });
 const set = (k,v) => setD(x=>({...x,[k]:v}));
 
-const Field = ({label, k, type="text", placeholder=""}) => (
-  <div style={{marginBottom:12}}>
-    <label style={S.label}>{label}</label>
-    <input style={S.input} type={type} value={d[k]||""} placeholder={placeholder}
-      onChange={e=>set(k, type==="number"?parseFloat(e.target.value)||"":e.target.value)}/>
-  </div>
-);
-
-const Toggle = ({label, k}) => (
-  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,padding:"12px 14px",background:d[k]?"#f0f9ff":"#f8fafc",border:"1.5px solid",borderColor:d[k]?"#1e3a5f":"#e2e8f0",borderRadius:10}}>
-    <span style={{fontSize:14,color:d[k]?"#1e3a5f":"#64748b",fontWeight:d[k]?600:400}}>{label}</span>
-    <button onClick={()=>set(k,!d[k])} style={{width:44,height:24,borderRadius:12,border:"none",background:d[k]?"#1e3a5f":"#cbd5e1",cursor:"pointer",position:"relative",transition:"background 0.2s"}}>
-      <span style={{position:"absolute",top:2,left:d[k]?22:2,width:20,height:20,borderRadius:10,background:"#fff",transition:"left 0.2s"}}/>
-    </button>
-  </div>
-);
-
-const Select = ({label, k, options}) => (
-  <div style={{marginBottom:12}}>
-    <label style={S.label}>{label}</label>
-    <select style={{...S.input,background:"#f8fafc"}} value={d[k]||""} onChange={e=>set(k,e.target.value)}>
-      {options.map(o=><option key={o.v||o} value={o.v||o}>{o.l||o}</option>)}
-    </select>
-  </div>
-);
-
 return (
 <div style={{padding:16}}>
-  <div style={S.secTitle}>Installation Details</div>
+  <div style={{fontSize:11,color:"#64748b",fontWeight:700,letterSpacing:"0.05em",marginBottom:4}}>ELECTRICAL INSTALLATION CONDITION REPORT</div>
+  <div style={{fontSize:18,fontWeight:700,color:"#1e3a5f",marginBottom:16}}>Front Sheet — Sections 1–6</div>
 
-  <div style={{background:"#1e3a5f",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-    <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:"0.05em",marginBottom:8}}>SUPPLY CHARACTERISTICS</div>
-    <Select label="Supply System Type" k="supply_type" options={["TN-C-S","TN-S","TN-C","TT","IT"]}/>
-    <Select label="Earthing Arrangement" k="earthing_arrangement" options={[{v:"MET",l:"Main Earthing Terminal"},{v:"electrode",l:"Earth Electrode"},{v:"CNE",l:"Combined Neutral & Earth"}]}/>
-    <Select label="Number of Phases" k="number_of_phases" options={[{v:1,l:"Single Phase"},{v:3,l:"Three Phase"}]}/>
+  {/* Section 2 - Reason */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>2 REASON FOR PRODUCING THIS REPORT</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <label style={S.label}>Reason for producing this report</label>
+    <textarea style={{...S.input,minHeight:70}} value={d.reason} onChange={e=>set("reason",e.target.value)} placeholder="e.g. To ensure safe continued use of the electrical installation in line with cyclical programme."/>
+  </div>
+
+  {/* Section 3 - Installation Details */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>3 DETAILS OF THE INSTALLATION</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-      <Field label="Frequency (Hz)" k="frequency" type="number"/>
-      <Field label="Voltage UE (V)" k="voltage_ue" type="number"/>
-      <Field label="Voltage UO (V)" k="voltage_uo" type="number"/>
-      <Field label="Ze External (Ω)" k="external_ze" type="number" placeholder="0.00"/>
-      <Field label="Ipf (kA)" k="prospective_fault_current" type="number" placeholder="kA"/>
-      <Field label="Max Demand (A)" k="max_demand" type="number"/>
+      <div><label style={S.label}>Estimated Age of Wiring (years)</label><input style={S.input} type="number" value={d.wiring_age} onChange={e=>set("wiring_age",e.target.value)}/></div>
+      <div><label style={S.label}>Date of Last Inspection</label><input style={S.input} type="date" value={d.last_inspection} onChange={e=>set("last_inspection",e.target.value)}/></div>
+    </div>
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,padding:"10px 12px",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:8}}>
+      <span style={{fontSize:13,color:"#334155",flex:1}}>Evidence of additions/alterations?</span>
+      <button onClick={()=>set("evidence_additions",!d.evidence_additions)} style={{padding:"6px 14px",borderRadius:6,border:"1.5px solid",borderColor:d.evidence_additions?"#1e3a5f":"#e2e8f0",background:d.evidence_additions?"#1e3a5f":"#fff",color:d.evidence_additions?"#fff":"#94a3b8",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{d.evidence_additions?"YES":"NO"}</button>
+    </div>
+    {d.evidence_additions && <div><label style={S.label}>If yes, estimated age of additions (years)</label><input style={S.input} type="number" value={d.additions_age} onChange={e=>set("additions_age",e.target.value)}/></div>}
+    <div><label style={S.label}>Installation records available? (Regulation 651.1)</label>
+      <select style={{...S.input,background:"#f8fafc"}} value={d.records_available} onChange={e=>set("records_available",e.target.value)}>
+        {["Yes","No","N/A"].map(o=><option key={o}>{o}</option>)}
+      </select>
     </div>
   </div>
 
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-    <div style={{fontSize:11,color:"#1e3a5f",fontWeight:700,letterSpacing:"0.05em",marginBottom:8}}>SUPPLY PROTECTIVE DEVICE</div>
-    <Select label="Type" k="supply_protective_device_type" options={["BS 1361","BS 88-3","BS 1362","Other"]}/>
-    <Field label="Rating (A)" k="supply_protective_device_rating" type="number"/>
-  </div>
-
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-    <div style={{fontSize:11,color:"#1e3a5f",fontWeight:700,letterSpacing:"0.05em",marginBottom:8}}>CONSUMER UNIT / MAIN SWITCH</div>
-    <Field label="Consumer Unit Make/Model" k="consumer_unit_make" placeholder="e.g. Wylex, Hager, Schneider"/>
-    <Field label="Consumer Unit Location" k="consumer_unit_location" placeholder="e.g. Hallway, Kitchen"/>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-      <Field label="Main Switch Type" k="main_switch_type" placeholder="e.g. DP"/>
-      <Field label="Main Switch Rating (A)" k="main_switch_rating" type="number"/>
+  {/* Section 4 - Extent & Limitations */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>4 EXTENT AND LIMITATIONS OF INSPECTION AND TESTING</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <div><label style={S.label}>Extent of the electrical installation covered by this report</label>
+      <textarea style={{...S.input,minHeight:70}} value={d.extent} onChange={e=>set("extent",e.target.value)} placeholder="e.g. Inspection and testing of the complete electrical installation..."/>
     </div>
-    <Field label="Main Switch Location" k="main_switch_location" placeholder="e.g. Consumer unit"/>
+    <div><label style={S.label}>Agreed limitations including the reasons (Regulation 653.2)</label>
+      <textarea style={{...S.input,minHeight:70}} value={d.agreed_limitations} onChange={e=>set("agreed_limitations",e.target.value)} placeholder="e.g. Entering roof voids shall only be carried out if safe to do so..."/>
+    </div>
+    <div><label style={S.label}>Agreed with</label>
+      <input style={S.input} value={d.agreed_with} onChange={e=>set("agreed_with",e.target.value)} placeholder="e.g. Liberty Group"/>
+    </div>
+    <div><label style={S.label}>Operational limitations including the reasons</label>
+      <textarea style={{...S.input,minHeight:70}} value={d.operational_limitations} onChange={e=>set("operational_limitations",e.target.value)} placeholder="e.g. Various equipment obstructing accessories throughout..."/>
+    </div>
   </div>
 
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-    <div style={{fontSize:11,color:"#1e3a5f",fontWeight:700,letterSpacing:"0.05em",marginBottom:8}}>BONDING</div>
-    <Toggle label="Main Bonding Confirmed" k="bonding_confirmed"/>
-    <Toggle label="Water Installation Pipes Bonded" k="water_pipe_bonded"/>
-    <Toggle label="Gas Installation Pipes Bonded" k="gas_pipe_bonded"/>
+  {/* Section 5 - Overall Assessment */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>5 SUMMARY OF THE CONDITION OF THE INSTALLATION</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <label style={S.label}>Overall assessment of the installation in terms of suitability for continued use</label>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+      {["SATISFACTORY","UNSATISFACTORY"].map(v=>(
+        <button key={v} onClick={()=>set("overall_assessment",v)} style={{padding:"14px 8px",borderRadius:8,border:"2px solid",borderColor:d.overall_assessment===v?(v==="SATISFACTORY"?"#059669":"#dc2626"):"#e2e8f0",background:d.overall_assessment===v?(v==="SATISFACTORY"?"#f0fdf4":"#fef2f2"):"#f8fafc",color:d.overall_assessment===v?(v==="SATISFACTORY"?"#059669":"#dc2626"):"#94a3b8",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{v}</button>
+      ))}
+    </div>
+    <div><label style={S.label}>Recommended date for next inspection</label>
+      <input style={S.input} value={d.next_inspection} onChange={e=>set("next_inspection",e.target.value)} placeholder="e.g. 5 Years or change of tenant/owner"/>
+    </div>
   </div>
 
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-    <div style={{fontSize:11,color:"#1e3a5f",fontWeight:700,letterSpacing:"0.05em",marginBottom:8}}>ADDITIONAL PROTECTION</div>
-    <Toggle label="SPD (Surge Protection) Present" k="spd_present"/>
-    <Toggle label="AFDD Present" k="afdd_present"/>
-    <Toggle label="Smoke/Heat Alarms Present" k="smoke_alarm_present"/>
-    {d.smoke_alarm_present && <Field label="Smoke Alarm Type/Grade" k="smoke_alarm_type" placeholder="e.g. Grade D Cat LD2"/>}
-  </div>
-
-  <button style={S.btn("primary")} onClick={()=>onNext(d)}>Continue to Circuits -></button>
+  <button style={S.btn("primary")} onClick={()=>onNext(d)}>Continue to Supply Details -></button>
   <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
 </div>
 );
 }
 
-// - EICR CIRCUIT SCREEN ------------------
-function EICRCircuitScreen({ job, initialData, onBack, onNext }) {
-const [circuits, setCircuits] = useState(initialData || []);
-const [editing, setEditing] = useState(null); // index or "new"
-const [form, setForm] = useState(null);
+// ---- SCREEN 2: SECTIONS 10-11 (Supply Characteristics & Particulars) ----
+function EICRSupplyScreen({ job, initialData, onBack, onNext }) {
+const [d, setD] = useState(initialData || {
+  earthing_tncs:false, earthing_tns:false, earthing_tt:false,
+  phases_1:true, phases_2:false, phases_3w:false, phases_3_4w:false,
+  polarity_confirmed:false, phase_sequence_confirmed:false,
+  voltage_uo:230, frequency:50,
+  prospective_fault_current:"", external_ze:"",
+  spd_bs:"", spd_type:"", spd_rating:"",
+  main_switch_location:"", main_switch_bs:"", main_switch_poles:"",
+  main_switch_rating:"", main_switch_fuse_setting:"", main_switch_voltage:"",
+  rcd_main:false, rcd_type:"", rcd_idelta:"", rcd_delay:"", rcd_measured:"",
+  earth_conductor_material:"Copper", earth_conductor_csa:"",earth_conductor_verified:false,
+  bonding_conductor_material:"Copper", bonding_conductor_csa:"", bonding_conductor_verified:false,
+  bond_water:false, bond_gas:false, bond_oil:false, bond_lightning:false, bond_steel:false,
+  distributor_facility:false, installation_electrode:false,
+  electrode_type:"", electrode_resistance:"", electrode_location:"", electrode_method:"",
+  general_condition:"",
+  test_mft:"", test_ir:"", test_continuity:"", test_electrode:"", test_loop:"", test_rcd:"",
+});
+const set = (k,v) => setD(x=>({...x,[k]:v}));
 
-const blankCircuit = (ref) => ({
-  circuit_ref: ref || String(circuits.length+1),
-  designation:"",
-  wiring_type:"T&E",
-  live_size:2.5,
-  cpc_size:1.5,
+const Check = ({label,k}) => (
+  <button onClick={()=>set(k,!d[k])} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",padding:"4px 0",fontFamily:"inherit"}}>
+    <span style={{width:20,height:20,borderRadius:4,border:"2px solid",borderColor:d[k]?"#1e3a5f":"#cbd5e1",background:d[k]?"#1e3a5f":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      {d[k] && <span style={{color:"#fff",fontSize:12}}>✓</span>}
+    </span>
+    <span style={{fontSize:13,color:"#334155"}}>{label}</span>
+  </button>
+);
+
+const Field = ({label,k,type="text",placeholder=""}) => (
+  <div style={{marginBottom:10}}>
+    <label style={S.label}>{label}</label>
+    <input style={S.input} type={type} value={d[k]||""} placeholder={placeholder} onChange={e=>set(k,e.target.value)}/>
+  </div>
+);
+
+return (
+<div style={{padding:16}}>
+  <div style={{fontSize:18,fontWeight:700,color:"#1e3a5f",marginBottom:16}}>Sections 10–11: Supply & Installation</div>
+
+  {/* Section 10 */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>10 SUPPLY CHARACTERISTICS AND EARTHING ARRANGEMENTS</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div>
+        <div style={S.label}>Earthing Arrangement</div>
+        {[["earthing_tns","TN-S"],["earthing_tncs","TN-C-S"],["earthing_tt","TT"]].map(([k,l])=><Check key={k} label={l} k={k}/>)}
+      </div>
+      <div>
+        <div style={S.label}>Number & Type of Live Conductors</div>
+        {[["phases_1","1-phase (2-wire)"],["phases_2","2-phase (3-wire)"],["phases_3w","3-phase (3-wire)"],["phases_3_4w","3-phase (4-wire)"]].map(([k,l])=><Check key={k} label={l} k={k}/>)}
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+      <Field label="Nominal Voltage UO (V)" k="voltage_uo" type="number"/>
+      <Field label="Frequency (Hz)" k="frequency" type="number"/>
+      <Field label="Prospective Fault Current Ipf (kA)" k="prospective_fault_current" placeholder="kA"/>
+      <Field label="External Ze (Ω)" k="external_ze" placeholder="Ω"/>
+    </div>
+    <Check label="Confirmation of supply polarity" k="polarity_confirmed"/>
+    <div style={{marginTop:8}}><Check label="Confirmation of phase sequence" k="phase_sequence_confirmed"/></div>
+
+    <div style={{marginTop:12}}>
+      <div style={S.label}>Supply Protective Device (BS EN)</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+        <div><label style={S.label}>BS (EN)</label><input style={S.input} value={d.spd_bs||""} onChange={e=>set("spd_bs",e.target.value)} placeholder="e.g. BS 1361"/></div>
+        <div><label style={S.label}>Type</label><input style={S.input} value={d.spd_type||""} onChange={e=>set("spd_type",e.target.value)}/></div>
+        <div><label style={S.label}>Rated Current (A)</label><input style={S.input} value={d.spd_rating||""} onChange={e=>set("spd_rating",e.target.value)}/></div>
+      </div>
+    </div>
+  </div>
+
+  {/* Section 11 */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>11 PARTICULARS OF INSTALLATION REFERRED TO IN THE REPORT</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <div style={{fontSize:12,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>Means of Earthing</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+      <Check label="Distributor's facility" k="distributor_facility"/>
+      <Check label="Installation earth electrode" k="installation_electrode"/>
+    </div>
+    {d.installation_electrode && (
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>
+        <Field label="Electrode Type" k="electrode_type"/>
+        <Field label="Resistance to Earth (Ω)" k="electrode_resistance"/>
+        <Field label="Location" k="electrode_location"/>
+        <Field label="Method of Measurement" k="electrode_method"/>
+      </div>
+    )}
+
+    <div style={{fontSize:12,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>Main Switch / Switch-Fuse / Circuit-Breaker / RCD</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:8}}>
+      <Field label="Location" k="main_switch_location" placeholder="e.g. Hall cupboard"/>
+      <Field label="BS (EN)" k="main_switch_bs" placeholder="e.g. 60947-3"/>
+      <Field label="Number of Poles" k="main_switch_poles"/>
+      <Field label="Current Rating (A)" k="main_switch_rating" type="number"/>
+      <Field label="Fuse/Device Rating or Setting" k="main_switch_fuse_setting"/>
+      <Field label="Voltage Rating (V)" k="main_switch_voltage" type="number"/>
+    </div>
+    <Check label="RCD main switch" k="rcd_main"/>
+    {d.rcd_main && (
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:8}}>
+        <Field label="RCD Type" k="rcd_type"/>
+        <Field label="Rated Residual Operating Current IΔn (mA)" k="rcd_idelta"/>
+        <Field label="Rated Time Delay (ms)" k="rcd_delay"/>
+        <Field label="Measured Operating Time (ms)" k="rcd_measured"/>
+      </div>
+    )}
+
+    <div style={{fontSize:12,fontWeight:700,color:"#1e3a5f",margin:"12px 0 8px"}}>Earthing and Protective Bonding Conductors</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:8}}>
+      <div><label style={S.label}>Earthing Conductor Material</label><input style={S.input} value={d.earth_conductor_material||""} onChange={e=>set("earth_conductor_material",e.target.value)}/></div>
+      <div><label style={S.label}>CSA (mm²)</label><input style={S.input} type="number" value={d.earth_conductor_csa||""} onChange={e=>set("earth_conductor_csa",e.target.value)}/></div>
+      <div style={{display:"flex",flexDirection:"column",justifyContent:"flex-end"}}><Check label="Connection verified" k="earth_conductor_verified"/></div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:12}}>
+      <div><label style={S.label}>Bonding Conductor Material</label><input style={S.input} value={d.bonding_conductor_material||""} onChange={e=>set("bonding_conductor_material",e.target.value)}/></div>
+      <div><label style={S.label}>CSA (mm²)</label><input style={S.input} type="number" value={d.bonding_conductor_csa||""} onChange={e=>set("bonding_conductor_csa",e.target.value)}/></div>
+      <div style={{display:"flex",flexDirection:"column",justifyContent:"flex-end"}}><Check label="Connection verified" k="bonding_conductor_verified"/></div>
+    </div>
+
+    <div style={{fontSize:12,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>Bonding of Extraneous-Conductive Parts</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {[["bond_water","Water installation pipes"],["bond_gas","Gas installation pipes"],["bond_oil","Oil installation pipes"],["bond_lightning","Lightning protection"],["bond_steel","Structural steel"]].map(([k,l])=><Check key={k} label={l} k={k}/>)}
+    </div>
+  </div>
+
+  {/* Section 8 - General Condition */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>8 GENERAL CONDITION OF THE INSTALLATION</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <textarea style={{...S.input,minHeight:100}} value={d.general_condition||""} onChange={e=>set("general_condition",e.target.value)} placeholder="General condition of the installation in terms of electrical safety..."/>
+  </div>
+
+  {/* Test Instruments */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>DETAILS OF TEST INSTRUMENTS</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:16}}>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {[["Multi-functional","test_mft"],["Insulation resistance","test_ir"],["Continuity","test_continuity"],["Earth electrode resistance","test_electrode"],["Earth fault loop impedance","test_loop"],["RCD","test_rcd"]].map(([l,k])=>(
+        <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={d[k]||""} onChange={e=>set(k,e.target.value)} placeholder="Serial/Asset No."/></div>
+      ))}
+    </div>
+  </div>
+
+  <button style={S.btn("primary")} onClick={()=>onNext(d)}>Continue to DB & Circuits -></button>
+  <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
+</div>
+);
+}
+
+// ---- SCREEN 3: DISTRIBUTION BOARD & CIRCUITS ----
+function EICRCircuitScreen({ job, initialData, onBack, onNext }) {
+const [db, setDb] = useState(initialData?.db || {
+  reference:"DB 1", location:"", supplied_from:"Origin",
+  ocpd_bs:"", ocpd_type:"", ocpd_rating:"", ocpd_phases:1,
+  spd_t1:false, spd_t2:false, spd_t3:false, spd_status:false,
+  polarity_confirmed:false, phase_sequence_confirmed:false,
+  zs_at_db:"", ipf_at_db:"",
+});
+const [circuits, setCircuits] = useState(initialData?.circuits || []);
+const [editing, setEditing] = useState(null);
+const [form, setForm] = useState(null);
+const setDB = (k,v) => setDb(x=>({...x,[k]:v}));
+
+const blankCircuit = () => ({
+  number: String(circuits.length+1),
+  description:"",
+  wiring_type:"A",
+  reference_method:"C",
   points_served:"",
-  ocpd_type:"MCB Type B",
-  ocpd_rating:32,
-  ocpd_bs:"BS EN 60898",
-  breaking_capacity:6,
+  live_size:"2.5",
+  cpc_size:"1.5",
+  max_disconnect:"0.4",
+  ocpd_bs:"60898",
+  ocpd_type:"B",
+  ocpd_rating:"32",
+  breaking_cap:"6",
   max_permitted_zs:"",
-  rcd_type:"",
-  rcd_rating:"",
-  rcd_trip_time:"",
-  r1_r2:"",
-  r2:"",
-  ir_live_live:"",
-  ir_live_earth:"",
-  ir_neutral_earth:"",
-  polarity_ok:true,
+  rcd_bs:"61008",
+  rcd_type:"AC",
+  rcd_rating:"30",
+  rcd_rating_a:"",
+  r1_line:"", rn_neutral:"", r2_cpc:"", r1_r2:"", cont_r1r2_r2:"", cont_r2:"",
+  test_voltage:"500",
+  ir_live_live:"", ir_live_earth:"", ir_neutral_earth:"",
+  polarity:false,
   max_measured_zs:"",
-  rcd_test_ok:null,
-  afdd_ok:null,
+  disconnection_time:"",
+  rcd_test_ok:false,
+  afdd_ok:false,
   notes:"",
-  sort_order:circuits.length,
 });
 
 const openNew = () => { setForm(blankCircuit()); setEditing("new"); };
 const openEdit = (i) => { setForm({...circuits[i]}); setEditing(i); };
+const setF = (k,v) => setForm(f=>({...f,[k]:v}));
 
 const saveCircuit = () => {
   if(editing==="new") setCircuits(c=>[...c,form]);
@@ -2946,67 +3091,90 @@ const saveCircuit = () => {
   setEditing(null); setForm(null);
 };
 
-const deleteCircuit = (i) => setCircuits(c=>c.filter((_,idx)=>idx!==i));
-
-const setF = (k,v) => setForm(f=>({...f,[k]:v}));
+const WIRING_CODES = ["A","B","C","D","E","F","G","H"];
 
 if(form) return (
 <div style={{padding:16}}>
-  <div style={S.secTitle}>{editing==="new"?"Add Circuit":"Edit Circuit"}</div>
-  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-    {[["Ref","circuit_ref"],["Designation","designation"]].map(([l,k])=>(
-      <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={form[k]||""} onChange={e=>setF(k,e.target.value)} placeholder={l}/></div>
-    ))}
-  </div>
+  <div style={{fontSize:16,fontWeight:700,color:"#1e3a5f",marginBottom:12}}>Circuit {form.number} — {form.description||"New Circuit"}</div>
 
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:12}}>
-    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>CABLE DETAILS</div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-      {[["Wiring","wiring_type"],["Live mm²","live_size"],["CPC mm²","cpc_size"]].map(([l,k])=>(
-        <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={form[k]||""} onChange={e=>setF(k,e.target.value)}/></div>
-      ))}
-    </div>
-    <div><label style={S.label}>Points Served</label><input style={S.input} value={form.points_served||""} onChange={e=>setF("points_served",e.target.value)}/></div>
-  </div>
-
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:12}}>
-    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>OVERCURRENT PROTECTION</div>
+  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>CIRCUIT DETAILS</div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-      {[["Type","ocpd_type"],["Rating (A)","ocpd_rating"],["BS/EN","ocpd_bs"],["Breaking Cap (kA)","breaking_capacity"]].map(([l,k])=>(
+      {[["No.","number"],["Description","description"]].map(([l,k])=>(
         <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={form[k]||""} onChange={e=>setF(k,e.target.value)}/></div>
       ))}
     </div>
-    <div><label style={S.label}>Max Permitted Zs (Ω)</label><input style={S.input} value={form.max_permitted_zs||""} onChange={e=>setF("max_permitted_zs",e.target.value)} placeholder="From BS 7671 tables"/></div>
-  </div>
-
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:12}}>
-    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>RCD (if applicable)</div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-      {[["Type","rcd_type"],["Rating (mA)","rcd_rating"],["Trip (ms)","rcd_trip_time"]].map(([l,k])=>(
-        <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={form[k]||""} onChange={e=>setF(k,e.target.value)}/></div>
-      ))}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
+      <div><label style={S.label}>Wiring Type</label>
+        <select style={{...S.input,background:"#f8fafc"}} value={form.wiring_type} onChange={e=>setF("wiring_type",e.target.value)}>
+          {WIRING_CODES.map(c=><option key={c}>{c}</option>)}
+        </select>
+      </div>
+      <div><label style={S.label}>Ref Method</label><input style={S.input} value={form.reference_method||""} onChange={e=>setF("reference_method",e.target.value)}/></div>
+      <div><label style={S.label}>Points</label><input style={S.input} value={form.points_served||""} onChange={e=>setF("points_served",e.target.value)}/></div>
+      <div><label style={S.label}>Max disc (s)</label><input style={S.input} value={form.max_disconnect||""} onChange={e=>setF("max_disconnect",e.target.value)}/></div>
     </div>
-  </div>
-
-  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:12}}>
-    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>TEST RESULTS</div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-      {[["r1+r2 (Ω)","r1_r2"],["r2 (Ω)","r2"],["IR L-L (MΩ)","ir_live_live"],["IR L-E (MΩ)","ir_live_earth"],["IR N-E (MΩ)","ir_neutral_earth"],["Measured Zs (Ω)","max_measured_zs"]].map(([l,k])=>(
+      <div><label style={S.label}>Live (mm²)</label><input style={S.input} value={form.live_size||""} onChange={e=>setF("live_size",e.target.value)}/></div>
+      <div><label style={S.label}>CPC (mm²)</label><input style={S.input} value={form.cpc_size||""} onChange={e=>setF("cpc_size",e.target.value)}/></div>
+    </div>
+  </div>
+
+  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>OVERCURRENT PROTECTIVE DEVICE</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
+      <div><label style={S.label}>BS (EN)</label><input style={S.input} value={form.ocpd_bs||""} onChange={e=>setF("ocpd_bs",e.target.value)}/></div>
+      <div><label style={S.label}>Type</label><input style={S.input} value={form.ocpd_type||""} onChange={e=>setF("ocpd_type",e.target.value)}/></div>
+      <div><label style={S.label}>Rating (A)</label><input style={S.input} value={form.ocpd_rating||""} onChange={e=>setF("ocpd_rating",e.target.value)}/></div>
+      <div><label style={S.label}>Breaking (kA)</label><input style={S.input} value={form.breaking_cap||""} onChange={e=>setF("breaking_cap",e.target.value)}/></div>
+    </div>
+    <div><label style={S.label}>Maximum Permitted Zs (Ω)</label><input style={S.input} value={form.max_permitted_zs||""} onChange={e=>setF("max_permitted_zs",e.target.value)} placeholder="From BS 7671 tables"/></div>
+  </div>
+
+  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>RCD</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
+      <div><label style={S.label}>BS (EN)</label><input style={S.input} value={form.rcd_bs||""} onChange={e=>setF("rcd_bs",e.target.value)}/></div>
+      <div><label style={S.label}>Type</label><input style={S.input} value={form.rcd_type||""} onChange={e=>setF("rcd_type",e.target.value)}/></div>
+      <div><label style={S.label}>IΔn (mA)</label><input style={S.input} value={form.rcd_rating||""} onChange={e=>setF("rcd_rating",e.target.value)}/></div>
+      <div><label style={S.label}>Rating (A)</label><input style={S.input} value={form.rcd_rating_a||""} onChange={e=>setF("rcd_rating_a",e.target.value)}/></div>
+    </div>
+  </div>
+
+  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>CONTINUITY (Ω)</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+      {[["r1 line","r1_line"],["rn neutral","rn_neutral"],["r2 cpc","r2_cpc"],["R1+R2","r1_r2"],["R1+R2 or R2","cont_r1r2_r2"],["R2","cont_r2"]].map(([l,k])=>(
         <div key={k}><label style={S.label}>{l}</label><input style={S.input} type="number" step="0.01" value={form[k]||""} onChange={e=>setF(k,e.target.value)}/></div>
       ))}
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
-      {[["Polarity OK","polarity_ok"],["RCD Test OK","rcd_test_ok"]].map(([l,k])=>(
-        <div key={k} style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={()=>setF(k,true)} style={{flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",borderColor:form[k]===true?"#059669":"#e2e8f0",background:form[k]===true?"#f0fdf4":"#f8fafc",color:form[k]===true?"#059669":"#94a3b8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>✓ Pass</button>
-          <button onClick={()=>setF(k,false)} style={{flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",borderColor:form[k]===false?"#dc2626":"#e2e8f0",background:form[k]===false?"#fef2f2":"#f8fafc",color:form[k]===false?"#dc2626":"#94a3b8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>✗ Fail</button>
-          <span style={{fontSize:11,color:"#64748b",minWidth:60}}>{l}</span>
-        </div>
+  </div>
+
+  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>INSULATION RESISTANCE (MΩ)</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      <div><label style={S.label}>Test Voltage (V)</label><input style={S.input} value={form.test_voltage||""} onChange={e=>setF("test_voltage",e.target.value)}/></div>
+      <div></div>
+      {[["Live–Live","ir_live_live"],["Live–Earth","ir_live_earth"],["Neutral–Earth","ir_neutral_earth"]].map(([l,k])=>(
+        <div key={k}><label style={S.label}>{l} (MΩ)</label><input style={S.input} type="number" step="0.01" value={form[k]||""} onChange={e=>setF(k,e.target.value)}/></div>
       ))}
     </div>
   </div>
 
-  <div style={{marginBottom:16}}><label style={S.label}>Notes</label><textarea style={{...S.input,minHeight:60}} value={form.notes||""} onChange={e=>setF("notes",e.target.value)} placeholder="Any notes for this circuit"/></div>
+  <div style={{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+    <div style={{fontSize:11,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>ZS & RCD TEST</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      <div><label style={S.label}>Max Measured Zs (Ω)</label><input style={S.input} type="number" step="0.01" value={form.max_measured_zs||""} onChange={e=>setF("max_measured_zs",e.target.value)}/></div>
+      <div><label style={S.label}>Disconnection Time (ms)</label><input style={S.input} type="number" value={form.disconnection_time||""} onChange={e=>setF("disconnection_time",e.target.value)}/></div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:8}}>
+      {[["Polarity ✓","polarity"],["RCD Test ✓","rcd_test_ok"],["AFDD Test ✓","afdd_ok"]].map(([l,k])=>(
+        <button key={k} onClick={()=>setF(k,!form[k])} style={{padding:"10px 6px",borderRadius:8,border:"2px solid",borderColor:form[k]?"#059669":"#e2e8f0",background:form[k]?"#f0fdf4":"#f8fafc",color:form[k]?"#059669":"#94a3b8",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{form[k]?"✓ "+l:l}</button>
+      ))}
+    </div>
+  </div>
+
+  <div style={{marginBottom:12}}><label style={S.label}>Notes</label><textarea style={{...S.input,minHeight:50}} value={form.notes||""} onChange={e=>setF("notes",e.target.value)}/></div>
 
   <button style={S.btn("primary")} onClick={saveCircuit}>Save Circuit</button>
   <button style={S.btn("ghost")} onClick={()=>{setEditing(null);setForm(null);}}>Cancel</button>
@@ -3015,146 +3183,171 @@ if(form) return (
 
 return (
 <div style={{padding:16}}>
-  <div style={S.secTitle}>Circuit Schedule</div>
-  <div style={{fontSize:13,color:"#64748b",marginBottom:14}}>{circuits.length} circuit{circuits.length!==1?"s":""} recorded</div>
+  {/* DB Details */}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>DISTRIBUTION BOARD DETAILS</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+      {[["DB Reference","reference"],["Location","location"],["Supplied From","supplied_from"]].map(([l,k])=>(
+        <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={db[k]||""} onChange={e=>setDB(k,e.target.value)}/></div>
+      ))}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
+      {[["OCPD BS(EN)","ocpd_bs"],["Type","ocpd_type"],["Rating/Setting","ocpd_rating"],["No. Phases","ocpd_phases"]].map(([l,k])=>(
+        <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={db[k]||""} onChange={e=>setDB(k,e.target.value)}/></div>
+      ))}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {[["Zs at DB (Ω)","zs_at_db"],["Ipf at DB (kA)","ipf_at_db"]].map(([l,k])=>(
+        <div key={k}><label style={S.label}>{l}</label><input style={S.input} value={db[k]||""} onChange={e=>setDB(k,e.target.value)}/></div>
+      ))}
+    </div>
+  </div>
+
+  {/* Circuits */}
+  <div style={{fontSize:14,fontWeight:700,color:"#1e3a5f",marginBottom:8}}>Circuit Schedule — {circuits.length} circuit{circuits.length!==1?"s":""}</div>
   {circuits.map((c,i)=>(
-    <div key={i} onClick={()=>openEdit(i)} style={{background:"#fff",border:"1.5px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:"pointer"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+    <div key={i} onClick={()=>openEdit(i)} style={{background:"#fff",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:6,cursor:"pointer"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <span style={{fontSize:12,fontWeight:700,color:"#1e3a5f",background:"#f0f4ff",padding:"2px 8px",borderRadius:4,marginRight:8}}>L{c.circuit_ref}</span>
-          <span style={{fontSize:14,fontWeight:600,color:"#1e3a5f"}}>{c.designation||"Unnamed circuit"}</span>
+          <span style={{fontSize:11,fontWeight:700,color:"#fff",background:"#1e3a5f",padding:"2px 8px",borderRadius:4,marginRight:8}}>{c.number}</span>
+          <span style={{fontSize:13,fontWeight:600,color:"#1e3a5f"}}>{c.description||"Unnamed"}</span>
         </div>
-        <button onClick={e=>{e.stopPropagation();deleteCircuit(i);}} style={{background:"none",border:"none",color:"#94a3b8",fontSize:18,cursor:"pointer",padding:"0 4px"}}>×</button>
+        <button onClick={e=>{e.stopPropagation();setCircuits(c=>c.filter((_,idx)=>idx!==i));}} style={{background:"none",border:"none",color:"#94a3b8",fontSize:18,cursor:"pointer"}}>×</button>
       </div>
-      <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap"}}>
-        <span style={{fontSize:11,color:"#64748b"}}>{c.ocpd_type} {c.ocpd_rating}A</span>
+      <div style={{display:"flex",gap:10,marginTop:4,flexWrap:"wrap"}}>
+        <span style={{fontSize:11,color:"#64748b"}}>Type {c.wiring_type} | {c.ocpd_type} {c.ocpd_rating}A</span>
         {c.max_measured_zs && <span style={{fontSize:11,color:"#64748b"}}>Zs: {c.max_measured_zs}Ω</span>}
         {c.ir_live_earth && <span style={{fontSize:11,color:"#64748b"}}>IR L-E: {c.ir_live_earth}MΩ</span>}
-        {c.polarity_ok===false && <span style={{fontSize:11,color:"#dc2626",fontWeight:700}}>POLARITY FAIL</span>}
-        {c.rcd_test_ok===false && <span style={{fontSize:11,color:"#dc2626",fontWeight:700}}>RCD FAIL</span>}
+        {c.polarity && <span style={{fontSize:11,color:"#059669",fontWeight:700}}>✓ Polarity</span>}
+        {c.rcd_test_ok && <span style={{fontSize:11,color:"#059669",fontWeight:700}}>✓ RCD</span>}
       </div>
     </div>
   ))}
+
   <button style={{...S.btn("primary"),marginBottom:8}} onClick={openNew}>+ Add Circuit</button>
-  <button style={S.btn("primary")} onClick={()=>onNext(circuits)}>Continue to Inspection -></button>
+  <button style={S.btn("primary")} onClick={()=>onNext({db, circuits})}>Continue to Inspection Schedule -></button>
   <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
 </div>
 );
 }
 
-// - EICR VISUAL INSPECTION SCREEN --------
+// ---- SCREEN 4: SECTION 12 — INSPECTION SCHEDULE ----
 function EICRInspectionScreen({ job, initialData, onBack, onNext }) {
 const [answers, setAnswers] = useState(initialData || {});
-const [expanded, setExpanded] = useState("service_equipment");
+const [expanded, setExpanded] = useState("intake");
 const setAns = (id,v) => setAnswers(a=>({...a,[id]:{...a[id],answer:v}}));
 const setNote = (id,v) => setAnswers(a=>({...a,[id]:{...a[id],note:v}}));
 
 const totalItems = EICR_SECTIONS.reduce((n,s)=>n+s.items.length,0);
 const answered = Object.keys(answers).filter(k=>answers[k]?.answer).length;
 
+const outcomeColor = {pass:"#059669",c1:"#dc2626",c2:"#ea580c",c3:"#d97706",fi:"#7c3aed",lim:"#0284c7",nv:"#64748b",na:"#94a3b8"};
+
 return (
 <div style={{padding:16}}>
-  <div style={S.secTitle}>Visual Inspection</div>
-  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-    <span style={{fontSize:13,color:"#64748b"}}>{answered}/{totalItems} items completed</span>
-    <span style={{fontSize:12,fontWeight:700,color:answered===totalItems?"#059669":"#d97706"}}>{Math.round(answered/totalItems*100)}%</span>
-  </div>
-  <div style={{background:"#e2e8f0",borderRadius:4,height:6,marginBottom:16}}>
-    <div style={{background:answered===totalItems?"#059669":"#1e3a5f",height:6,borderRadius:4,width:`${answered/totalItems*100}%`,transition:"width 0.3s"}}/>
-  </div>
-
-  {EICR_SECTIONS.map(section=>(
-    <div key={section.id} style={{marginBottom:8,border:"1.5px solid #e2e8f0",borderRadius:12,overflow:"hidden"}}>
-      <button onClick={()=>setExpanded(expanded===section.id?null:section.id)}
-        style={{width:"100%",padding:"12px 14px",background:expanded===section.id?"#1e3a5f":"#f8fafc",border:"none",textAlign:"left",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",fontFamily:"inherit"}}>
-        <span style={{fontSize:13,fontWeight:700,color:expanded===section.id?"#fff":"#1e3a5f"}}>{section.label}</span>
-        <span style={{fontSize:11,color:expanded===section.id?"rgba(255,255,255,0.7)":"#94a3b8"}}>
-          {section.items.filter(i=>answers[i.id]?.answer).length}/{section.items.length} ▾
-        </span>
-      </button>
-      {expanded===section.id && (
-        <div style={{padding:"8px 14px 14px"}}>
-          {section.items.map(item=>{
-            const ans = answers[item.id]?.answer;
-            const note = answers[item.id]?.note||"";
-            return (
-              <div key={item.id} style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid #f1f5f9"}}>
-                <div style={{fontSize:13,color:"#334155",marginBottom:6,lineHeight:1.4}}>{item.q}</div>
-                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:ans&&ans!=="na"?6:0}}>
-                  {[{v:"pass",l:"PASS",col:"#059669",bg:"#f0fdf4"},{v:"c1",l:"C1",col:"#dc2626",bg:"#fef2f2"},{v:"c2",l:"C2",col:"#ea580c",bg:"#fff7ed"},{v:"c3",l:"C3",col:"#d97706",bg:"#fffbeb"},{v:"fi",l:"FI",col:"#7c3aed",bg:"#faf5ff"},{v:"lim",l:"LIM",col:"#0284c7",bg:"#f0f9ff"},{v:"nv",l:"N/V",col:"#64748b",bg:"#f8fafc"},{v:"na",l:"N/A",col:"#94a3b8",bg:"#f8fafc"}].map(opt=>(
-                    <button key={opt.v} onClick={()=>setAns(item.id,opt.v)}
-                      style={{padding:"6px 12px",borderRadius:20,border:"1.5px solid",borderColor:ans===opt.v?opt.col:"#e2e8f0",background:ans===opt.v?opt.bg:"#fff",color:ans===opt.v?opt.col:"#94a3b8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                      {opt.l}
-                    </button>
-                  ))}
-                </div>
-                {ans && ans!=="na" && ans!=="pass" && (
-                  <input style={{...S.input,marginBottom:0,fontSize:12}} value={note} onChange={e=>setNote(item.id,e.target.value)} placeholder="Add note or observation reference..."/>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>12 INSPECTION SCHEDULE FOR DOMESTIC & SIMILAR PREMISES WITH UP TO 100A SUPPLY</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+      <span style={{fontSize:12,color:"#64748b"}}>{answered}/{totalItems} items</span>
+      <span style={{fontSize:11,color:"#64748b"}}>PASS | C1 | C2 | C3 | FI | LIM | N/V | N/A</span>
     </div>
-  ))}
+    <div style={{background:"#e2e8f0",borderRadius:4,height:4,marginBottom:12}}>
+      <div style={{background:"#1e3a5f",height:4,borderRadius:4,width:`${answered/totalItems*100}%`,transition:"width 0.3s"}}/>
+    </div>
+
+    {EICR_SECTIONS.map(section=>(
+      <div key={section.id} style={{marginBottom:6,border:"1px solid #e2e8f0",borderRadius:8,overflow:"hidden"}}>
+        <button onClick={()=>setExpanded(expanded===section.id?null:section.id)}
+          style={{width:"100%",padding:"10px 12px",background:expanded===section.id?"#1e3a5f":"#f8fafc",border:"none",textAlign:"left",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",fontFamily:"inherit"}}>
+          <span style={{fontSize:12,fontWeight:700,color:expanded===section.id?"#fff":"#1e3a5f"}}>{section.label}</span>
+          <span style={{fontSize:10,color:expanded===section.id?"rgba(255,255,255,0.7)":"#94a3b8"}}>
+            {section.items.filter(i=>answers[i.id]?.answer).length}/{section.items.length}
+          </span>
+        </button>
+        {expanded===section.id && (
+          <div style={{padding:"8px 12px 12px"}}>
+            {section.note && <div style={{fontSize:11,color:"#d97706",background:"#fffbeb",border:"1px solid #fde68a",borderRadius:6,padding:"6px 10px",marginBottom:8}}>{section.note}</div>}
+            {section.items.map(item=>{
+              const ans = answers[item.id]?.answer;
+              const note = answers[item.id]?.note||"";
+              return (
+                <div key={item.id} style={{marginBottom:8,paddingBottom:8,borderBottom:"1px solid #f1f5f9"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+                    <span style={{fontSize:11,fontWeight:700,color:"#94a3b8",minWidth:32}}>{item.id}</span>
+                    <span style={{fontSize:12,color:"#334155",flex:1,lineHeight:1.4}}>{item.q}</span>
+                    {ans && <span style={{fontSize:11,fontWeight:700,color:outcomeColor[ans]||"#64748b",marginLeft:8,minWidth:32,textAlign:"right"}}>{ans.toUpperCase()}</span>}
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:4,marginLeft:32}}>
+                    {EICR_OUTCOMES.map(opt=>(
+                      <button key={opt.v} onClick={()=>setAns(item.id,opt.v)}
+                        style={{padding:"4px 8px",borderRadius:4,border:"1.5px solid",borderColor:ans===opt.v?opt.col:"#e2e8f0",background:ans===opt.v?opt.bg:"#fff",color:ans===opt.v?opt.col:"#94a3b8",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                        {opt.l}
+                      </button>
+                    ))}
+                  </div>
+                  {ans && ans!=="na" && ans!=="pass" && ans!=="nv" && (
+                    <input style={{...S.input,marginBottom:0,fontSize:11,marginTop:4,marginLeft:32}} value={note} onChange={e=>setNote(item.id,e.target.value)} placeholder="Note / observation reference..."/>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
   <button style={S.btn("primary")} onClick={()=>onNext(answers)}>Continue to Observations -></button>
   <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
 </div>
 );
 }
 
-// - EICR OBSERVATIONS SCREEN -------------
+// ---- SCREEN 5: SECTION 7 — OBSERVATIONS ----
 function EICRObservationsScreen({ job, initialData, onBack, onNext }) {
 const [observations, setObservations] = useState(initialData || []);
 const [editing, setEditing] = useState(null);
 const [form, setForm] = useState(null);
-
-const blankObs = () => ({code:"C3", description:"", regulation:"", location:"", recommendation:""});
+const blankObs = () => ({item_no: String(observations.length+1), code:"C3", description:"", regulation:"", location:"", recommendation:""});
 const openNew = () => { setForm(blankObs()); setEditing("new"); };
 const openEdit = (i) => { setForm({...observations[i]}); setEditing(i); };
 const setF = (k,v) => setForm(f=>({...f,[k]:v}));
-
 const saveObs = () => {
   if(editing==="new") setObservations(o=>[...o,form]);
   else setObservations(o=>o.map((x,i)=>i===editing?form:x));
   setEditing(null); setForm(null);
 };
-
 const codeCol = {C1:"#dc2626",C2:"#ea580c",C3:"#d97706",FI:"#7c3aed"};
 
 if(form) return (
 <div style={{padding:16}}>
-  <div style={S.secTitle}>{editing==="new"?"Add Observation":"Edit Observation"}</div>
+  <div style={{fontSize:16,fontWeight:700,color:"#1e3a5f",marginBottom:12}}>Section 7 — Observation {form.item_no}</div>
 
-  <div style={{marginBottom:14}}>
-    <label style={S.label}>Observation Code</label>
+  <div style={{marginBottom:12}}>
+    <label style={S.label}>Classification Code</label>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
       {["C1","C2","C3","FI"].map(c=>(
-        <button key={c} onClick={()=>setF("code",c)} style={{padding:"10px",borderRadius:8,border:"2px solid",borderColor:form.code===c?codeCol[c]:"#e2e8f0",background:form.code===c?codeCol[c]+"22":"#f8fafc",color:form.code===c?codeCol[c]:"#64748b",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
-          {c}
-        </button>
+        <button key={c} onClick={()=>setF("code",c)} style={{padding:"12px",borderRadius:8,border:"2px solid",borderColor:form.code===c?codeCol[c]:"#e2e8f0",background:form.code===c?codeCol[c]+"22":"#f8fafc",color:form.code===c?codeCol[c]:"#64748b",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{c}</button>
       ))}
     </div>
-    <div style={{fontSize:11,color:"#64748b",marginTop:6}}>
-      {form.code==="C1"&&"C1 — Danger present, risk of injury. Immediate action required."}
-      {form.code==="C2"&&"C2 — Potentially dangerous. Urgent remedial action required."}
-      {form.code==="C3"&&"C3 — Improvement recommended."}
-      {form.code==="FI"&&"FI — Further investigation required without delay."}
+    <div style={{fontSize:11,color:"#64748b",marginTop:6,padding:"6px 10px",background:"#f8fafc",borderRadius:6}}>
+      {form.code==="C1"&&"Danger Present — Risk of injury. Immediate remedial action required."}
+      {form.code==="C2"&&"Potentially Dangerous — Urgent remedial action required."}
+      {form.code==="C3"&&"Improvement Recommended."}
+      {form.code==="FI"&&"Further Investigation Required Without Delay."}
     </div>
   </div>
 
-  <div style={{marginBottom:12}}><label style={S.label}>Description of Observation</label>
-    <textarea style={{...S.input,minHeight:80}} value={form.description} onChange={e=>setF("description",e.target.value)} placeholder="Describe the defect or observation..."/>
+  <div style={{marginBottom:10}}><label style={S.label}>Observation</label>
+    <textarea style={{...S.input,minHeight:80}} value={form.description} onChange={e=>setF("description",e.target.value)} placeholder="Describe the observation or defect..."/>
   </div>
-  <div style={{marginBottom:12}}><label style={S.label}>Regulation Reference</label>
-    <input style={S.input} value={form.regulation} onChange={e=>setF("regulation",e.target.value)} placeholder="e.g. BS 7671 Reg 411.3.3, Table 41.1"/>
+  <div style={{marginBottom:10}}><label style={S.label}>Regulation Reference</label>
+    <input style={S.input} value={form.regulation} onChange={e=>setF("regulation",e.target.value)} placeholder="e.g. BS 7671 Reg 411.3.3"/>
   </div>
-  <div style={{marginBottom:12}}><label style={S.label}>Location</label>
-    <input style={S.input} value={form.location} onChange={e=>setF("location",e.target.value)} placeholder="e.g. Bedroom 1, Consumer unit, Garage"/>
+  <div style={{marginBottom:10}}><label style={S.label}>Location</label>
+    <input style={S.input} value={form.location} onChange={e=>setF("location",e.target.value)} placeholder="e.g. Consumer unit, Bedroom 1"/>
   </div>
   <div style={{marginBottom:16}}><label style={S.label}>Recommended Action</label>
-    <textarea style={{...S.input,minHeight:60}} value={form.recommendation} onChange={e=>setF("recommendation",e.target.value)} placeholder="What action should be taken..."/>
+    <textarea style={{...S.input,minHeight:60}} value={form.recommendation} onChange={e=>setF("recommendation",e.target.value)} placeholder="What remedial action is required..."/>
   </div>
 
   <button style={S.btn("primary")} onClick={saveObs}>Save Observation</button>
@@ -3162,33 +3355,52 @@ if(form) return (
 </div>
 );
 
+const c1s=observations.filter(o=>o.code==="C1");
+const c2s=observations.filter(o=>o.code==="C2");
+const c3s=observations.filter(o=>o.code==="C3");
+const fis=observations.filter(o=>o.code==="FI");
+
 return (
 <div style={{padding:16}}>
-  <div style={S.secTitle}>Observations</div>
-  <div style={{fontSize:13,color:"#64748b",marginBottom:14}}>
-    {observations.length===0?"No observations recorded — add any defects or recommendations below.":
-    `${observations.length} observation${observations.length!==1?"s":""} recorded`}
+  <div style={{background:"#1e3a5f",color:"#fff",borderRadius:"8px 8px 0 0",padding:"8px 12px",fontSize:12,fontWeight:700}}>7 OBSERVATIONS AND RECOMMENDATIONS FOR ACTIONS TO BE TAKEN</div>
+  <div style={{border:"1.5px solid #1e3a5f",borderTop:"none",borderRadius:"0 0 8px 8px",padding:"12px",marginBottom:12}}>
+    {observations.length===0 ? (
+      <div style={{fontSize:13,color:"#64748b",marginBottom:8}}>☑ There are no items adversely affecting electrical safety</div>
+    ) : (
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>
+        {[["C1",c1s,"#dc2626"],["C2",c2s,"#ea580c"],["C3",c3s,"#d97706"],["FI",fis,"#7c3aed"]].map(([code,items,col])=>(
+          <div key={code} style={{background:items.length>0?col+"22":"#f8fafc",border:`1.5px solid ${items.length>0?col:"#e2e8f0"}`,borderRadius:8,padding:"8px 10px"}}>
+            <div style={{fontSize:10,fontWeight:700,color:items.length>0?col:"#94a3b8"}}>{code}</div>
+            <div style={{fontSize:18,fontWeight:700,color:items.length>0?col:"#94a3b8"}}>{items.length}</div>
+            <div style={{fontSize:9,color:"#64748b"}}>{items.map(o=>o.item_no).join(", ")||"None"}</div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {observations.map((obs,i)=>(
+      <div key={i} onClick={()=>openEdit(i)} style={{background:"#fff",border:"2px solid",borderColor:codeCol[obs.code]||"#e2e8f0",borderRadius:10,padding:"10px 12px",marginBottom:6,cursor:"pointer"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <span style={{fontSize:11,color:"#64748b"}}>Item {obs.item_no}</span>
+            <span style={{fontSize:11,fontWeight:700,color:"#fff",background:codeCol[obs.code],padding:"2px 8px",borderRadius:4}}>{obs.code}</span>
+          </div>
+          <button onClick={e=>{e.stopPropagation();setObservations(o=>o.filter((_,idx)=>idx!==i));}} style={{background:"none",border:"none",color:"#94a3b8",fontSize:18,cursor:"pointer",padding:"0 4px"}}>×</button>
+        </div>
+        <div style={{fontSize:13,color:"#1e3a5f",fontWeight:600,marginBottom:2}}>{obs.description||"No description"}</div>
+        {obs.regulation && <div style={{fontSize:11,color:"#64748b"}}>Reg: {obs.regulation}</div>}
+      </div>
+    ))}
+    <button style={{...S.btn("primary"),marginBottom:0}} onClick={openNew}>+ Add Observation</button>
   </div>
 
-  {observations.map((obs,i)=>(
-    <div key={i} onClick={()=>openEdit(i)} style={{background:"#fff",border:"2px solid",borderColor:codeCol[obs.code]||"#e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:"pointer"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
-        <span style={{fontSize:12,fontWeight:700,color:"#fff",background:codeCol[obs.code],padding:"2px 10px",borderRadius:4}}>{obs.code}</span>
-        <button onClick={e=>{e.stopPropagation();setObservations(o=>o.filter((_,idx)=>idx!==i));}} style={{background:"none",border:"none",color:"#94a3b8",fontSize:18,cursor:"pointer",padding:"0 4px"}}>×</button>
-      </div>
-      <div style={{fontSize:13,color:"#1e3a5f",fontWeight:600,marginBottom:2}}>{obs.description||"No description"}</div>
-      {obs.regulation && <div style={{fontSize:11,color:"#64748b"}}>Reg: {obs.regulation}</div>}
-      {obs.location && <div style={{fontSize:11,color:"#64748b"}}>Location: {obs.location}</div>}
-    </div>
-  ))}
-
-  <button style={{...S.btn("primary"),marginBottom:8}} onClick={openNew}>+ Add Observation</button>
   <button style={S.btn("primary")} onClick={()=>onNext(observations)}>Continue to Review -></button>
   <button style={S.btn("ghost")} onClick={onBack}>← Back</button>
 </div>
 );
 }
 
+// - PROFILE SCREEN ----------------------
 
 // - ROOT APP -----------------
 export default function App() {
@@ -3210,6 +3422,7 @@ const [conditionality, setConditionality] = useState(null);
 const [saving,         setSaving]         = useState(false);
 const [profile,        setProfile]        = useState(null);
 const [eicrInstall,    setEicrInstall]    = useState(null);
+const [eicrSupply,     setEicrSupply]     = useState(null);
 const [eicrCircuits,   setEicrCircuits]   = useState(null);
 const [eicrInspection, setEicrInspection] = useState(null);
 const [eicrObservations,setEicrObservations] = useState(null);
@@ -3401,24 +3614,37 @@ setSaving(false);
 setScreen("conditionality");
 };
 
-// - SAVE EICR INSTALLATION ---------------
-const saveEicrInstall = async (data) => {
+// - SAVE EICR FRONT SHEET ---------------
+const saveEicrFrontSheet = async (data) => {
   const jobId = job?.id;
-  if(!jobId) { setEicrInstall(data); setScreen("eicr_circuits"); return; }
+  if(!jobId) { setEicrInstall(data); setScreen("eicr_supply"); return; }
   setSaving(true);
   const token = await getValidToken();
-  sb.upsert("eicr_installation", token, { job_id: jobId, ...data }, "job_id")
-    .then(r => { if(!r||!r[0]) console.log("EICR install save issue:", JSON.stringify(r)); })
-    .catch(e => alert("EICR install save error: " + e.message));
+  sb.upsert("eicr_installation", token, { job_id: jobId, front_sheet: JSON.stringify(data) }, "job_id")
+    .catch(e => console.error("EICR front sheet save error:", e));
   setEicrInstall(data);
+  setSaving(false);
+  setScreen("eicr_supply");
+};
+
+// - SAVE EICR SUPPLY --------------------
+const saveEicrSupply = async (data) => {
+  const jobId = job?.id;
+  if(!jobId) { setEicrSupply(data); setScreen("eicr_circuits"); return; }
+  setSaving(true);
+  const token = await getValidToken();
+  sb.upsert("eicr_installation", token, { job_id: jobId, supply_data: JSON.stringify(data) }, "job_id")
+    .catch(e => console.error("EICR supply save error:", e));
+  setEicrSupply(data);
   setSaving(false);
   setScreen("eicr_circuits");
 };
 
 // - SAVE EICR CIRCUITS -------------------
-const saveEicrCircuits = async (circuits) => {
+const saveEicrCircuits = async (data) => {
+  const circuits = data?.circuits || data;
   const jobId = job?.id;
-  if(!jobId) { setEicrCircuits(circuits); setScreen("eicr_inspection"); return; }
+  if(!jobId) { setEicrCircuits(data); setScreen("eicr_inspection"); return; }
   setSaving(true);
   const token = await getValidToken();
   // Delete existing circuits then re-insert
@@ -3523,7 +3749,7 @@ console.error("Supabase test failed:", e.message);
 const loadJobData = async (j) => {
 setJob(j);
 setAsset(null); setChecklist(null); setTestResults(null); setReview(null);
-setEicrInstall(null); setEicrCircuits(null); setEicrInspection(null); setEicrObservations(null);
+setEicrInstall(null); setEicrSupply(null); setEicrCircuits(null); setEicrInspection(null); setEicrObservations(null);
 setScreen("loading");
 
 try {
@@ -3784,12 +4010,21 @@ return (
       />
     )}
     {screen==="eicr_install" && (
-      <EICRInstallationScreen
+      <EICRFrontSheetScreen
         key={job?.id||"new"}
         job={job}
         initialData={eicrInstall}
         onBack={()=>setScreen("dashboard")}
-        onNext={saveEicrInstall}
+        onNext={saveEicrFrontSheet}
+      />
+    )}
+    {screen==="eicr_supply" && (
+      <EICRSupplyScreen
+        key={job?.id||"new"}
+        job={job}
+        initialData={eicrSupply}
+        onBack={()=>setScreen("eicr_install")}
+        onNext={saveEicrSupply}
       />
     )}
     {screen==="eicr_circuits" && (
@@ -3797,7 +4032,7 @@ return (
         key={job?.id||"new"}
         job={job}
         initialData={eicrCircuits}
-        onBack={()=>setScreen("eicr_install")}
+        onBack={()=>setScreen("eicr_supply")}
         onNext={saveEicrCircuits}
       />
     )}
