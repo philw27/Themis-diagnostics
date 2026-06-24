@@ -2810,10 +2810,7 @@ const EICR_OUTCOMES = [
 const RIVERSIDE_TEMPLATE = {
   id: "riverside",
   name: "Riverside Group",
-  client_address: "The Riverside Group
-2 Estuary Boulevard
-Liverpool
-L24 8RF",
+  client_address: "The Riverside Group\n2 Estuary Boulevard\nLiverpool\nL24 8RF",
   client_rep: "Iain Hardman",
   purpose: "To check the electrical fixed wiring within the property for safety of continued use, and to highlight any non-compliances with the current BS 7671 regulations that may give rise to danger. Fixed electrical equipment is to be also verified as fit for purpose and safe for continued use.",
   extent: "This report covers the inspection and testing of the fixed electrical wiring system within the named property, with the exception of any agreed or operational limitations as documented.",
