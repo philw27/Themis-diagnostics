@@ -1003,11 +1003,9 @@ const day = String(now.getDate()).padStart(2,"0");
 const rand = String(Math.floor(Math.random()*9000)+1000);
 return `TH-${year}${month}${day}-${rand}`;
 };
-const [form, setForm] = useState(()=>({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:[]}));
+const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:[]});
 const [customLim, setCustomLim] = useState("");
 const set = (k,v) => setForm(f=>({...f,[k]:v}));
-// Reset form with fresh job number each time screen opens
-useEffect(()=>{ setForm({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:[]}); },[]);
 
 const toggleLim = (lim) => setForm(f=>({
   ...f,
@@ -4683,6 +4681,7 @@ return saved ? JSON.parse(saved) : null;
 } catch(e) { return null; }
 });
 const [screen,      setScreen]      = useState("login");
+const [createJobKey, setCreateJobKey] = useState(0);
 const [job,         setJob]         = useState(null);
 const [asset,       setAsset]       = useState(null);
 const [checklist,   setChecklist]   = useState(null);
@@ -4730,31 +4729,21 @@ const saveJob = async (jobData) => {
 setSaving(true);
 try {
 const token = await getValidToken();
-// Auto-retry with new job number on duplicate
-const tryInsert = async (jobNum, attempts) => {
-  const payload = {
-    job_number:    jobNum,
-    user_id:       user.id,
-    client:        jobData.client,
-    address:       jobData.address,
-    mode:          jobData.mode,
-    status:        "open",
-    engineer_name: jobData.engineer,
-    date:          jobData.date,
-    flagged:       false,
-    limitations:   jobData.limitations || null,
-  };
-  const result = await sb.insert("jobs", token, payload);
-  // Check for duplicate key error
-  if (result && result.code === "23505" && attempts < 5) {
-    const newNum = generateJobNumber();
-    return tryInsert(newNum, attempts + 1);
-  }
-  return { result, jobNum };
+const payload = {
+job_number:    jobData.jobNumber,
+user_id:       user.id,
+client:        jobData.client,
+address:       jobData.address,
+mode:          jobData.mode,
+status:        "open",
+engineer_name: jobData.engineer,
+date:          jobData.date,
+flagged:       false,
+limitations:   jobData.limitations || null,
 };
-const { result, jobNum } = await tryInsert(jobData.jobNumber, 0);
+const result = await sb.insert("jobs", token, payload);
 if (result && result[0] && result[0].id) {
-const saved = { ...jobData, jobNumber: jobNum, id: result[0].id };
+const saved = { ...jobData, id: result[0].id };
 console.log("Job saved - Supabase ID:", result[0].id);
 setJob(saved);
 setAsset(null);
@@ -4772,6 +4761,7 @@ return saved;
 const errMsg = JSON.stringify(result);
 console.error("Job insert failed:", errMsg);
 alert("Save failed: " + errMsg);
+setScreen("asset");
 }
 } catch(e) { console.error("Save job failed:", e); alert("Save error: " + e.message); }
 setSaving(false);
@@ -5222,13 +5212,14 @@ return (
         onCreateJob={()=>{
           setJob(null); setAsset(null); setChecklist(null);
           setTestResults(null); setReview(null);
-          setScreen("create_job");
+          setCreateJobKey(k=>k+1); setScreen("create_job");
         }}
         onSelectJob={j=>{ loadJobData(j); }}
       />
     )}
     {screen==="create_job" && (
       <CreateJobScreen
+        key={createJobKey}
         onBack={()=>setScreen("dashboard")}
         onCreate={saveJob}
       />
