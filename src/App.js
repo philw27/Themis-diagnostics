@@ -3302,21 +3302,264 @@ return (
 );
 }
 
+const EICR_OBS_LIBRARY = [
+  { section: "1.0 Intake Equipment", items: [
+    { text: "Service cable shows signs of overheating (ESQCR)", code: "C3" },
+    { text: "Service cable not adequately supported (ESQCR)", code: "C3" },
+    { text: "Cables have signs of scorching (ESQCR)", code: "C3" },
+    { text: "Service head shows signs of tar residue (ESQCR)", code: "C3" },
+    { text: "Service cut-out fuse carrier seal not properly secure (ESQCR)", code: "C3" },
+    { text: "Service cut-out has been damaged (ESQCR)", code: "C3" },
+    { text: "Service cut-out has double pole fuses (ESQCR)", code: "C3" },
+    { text: "Neutral connection has exposed parts (ESQCR)", code: "C3" },
+    { text: "Service cut out underrated for installation (ESQCR)", code: "C3" },
+    { text: "Earthing conductor connects to single connection with other protective conductors (132.10526.2)", code: "C3" },
+    { text: "The earthing conductor termination to supply shows signs of corrosion (ESQCR)", code: "C3" },
+    { text: "Service cable earth connection not secure (ESQCR)", code: "C3" },
+    { text: "Incorrect connection of earthing conductor to TN-S service cable (ESQCR)", code: "C3" },
+    { text: "Meter tails not adequately supported (ESQCR)", code: "C3" },
+    { text: "Meter tails have not been provided with an outer sheath or other means of protecting conductors - not accessible without use of key(ESQCR)", code: "C3" },
+    { text: "Meter equipment has been damaged (ESQCR)", code: "C3" },
+    { text: "Overheating of metering equipment (ESQCR)", code: "C3" },
+    { text: "External meter enclosure subject to damage (ESQCR)", code: "C3" },
+    { text: "Meter terminal access plate not securely sealed (ESQCR)", code: "C3" },
+    { text: "Supplier side isolator not securely sealed (ESQCR)", code: "C3" },
+    { text: "The isolator enclosure has live exposed parts (ESQCR)", code: "C3" },
+    { text: "Isolator has not been provided with identification (ESQCR)", code: "C3" },
+    { text: "Isolator has not been provided with identification (514.11.1)", code: "C3" },
+    { text: "The isolator enclosure has live exposed parts (416.1)", code: "C3" },
+    { text: "No external isolator to DB", code: "C3" },
+    { text: "Meter tails bending radius, tighter than acceptable levels, no signs of thermal damage - No safety concerns (522.8.3)", code: "C3" },
+    { text: "Meter tails have not been adequately supported (522.8.5)", code: "C3" },
+    { text: "Meter tails exceed 3 meters in length no fused isolator in place(433.2.2)", code: "C3" },
+    { text: "Consumer supply conductors (meter tails) 16 mm where protective device is unknown. No evidence of thermal damage or overload and considered safe for continued use. (433.1.1)", code: "C3" },
+    { text: "Meter tails have not been provided with an outer sheath or other means of protecting conductors - not accessible without use of key(ESQCR)", code: "C3" },
+  ]},
+  { section: "2.0 Microgenerators", items: [
+    { text: "No warning notice informing of other sources of supply", code: "C3" },
+    { text: "No local isolation to isolate supply from public supply", code: "C3" },
+  ]},
+  { section: "3.0 Earthing & Bonding", items: [
+    { text: "Main earth terminal not provided (542.4.4)", code: "C3" },
+    { text: "Earth electrode termination has not been installed in a suitable enclosure (514.3.2)", code: "C3" },
+    { text: "Earth electrode termination has not been provided with a label (514.1.2)", code: "C3" },
+    { text: "Earth conductor 10mm showing no signs of thermal effects. Adiabatic equation carried out safe for continued use, (543.1.3)", code: "C3" },
+    { text: "Earth conductor 6mm showing no signs of thermal effects. Adiabatic equation carried out safe for continued use, (543.1.3)", code: "C3" },
+    { text: "Main earth terminal poor connections - No safety concerns (542.3.2)", code: "C3" },
+    { text: "No means of disconnection of earthing conductor, by means of a tool (542.4.2)", code: "C3" },
+    { text: "The main earth terminal is not accessible at the intake position (543.3.2)", code: "C3" },
+    { text: "The main protective bonding to the installation pipe(s) (water/gas/etc.) is a 6mm conductor, with no signs of thermal damage. Adiabatic equation carried out safe for continued use (544.1.1)", code: "C3" },
+    { text: "Unable to determine the bonding conductor cross-sectional area. (544.1.1)", code: "C3" },
+    { text: "The cross-sectional area for the main protective bonding conductor does not meet the minimum requirements. (544.1.1)", code: "C3" },
+    { text: "Main protective Gas bonding conductor connection not accessible - test method 2 (between the protective conductor disconnected at met and accessible part of pipe work) confirms connection. (543.3.2)", code: "C3" },
+    { text: "Main protective Water bonding conductor connection not accessible - test method 2 (between the protective conductor disconnected at met and accessible part of pipe work) confirms connection. (543.3.2)", code: "C3" },
+    { text: "Main protective Gas conductor not continuous (jointed) readings shows safe for continued use (528.3.3)", code: "C3" },
+    { text: "Main protective Water conductor not continuous (jointed) readings shows safe for continued use (528.3.3)", code: "C3" },
+    { text: "The main protective bonding conductor has not been connected within 600mm to the incoming installation pipe(s) (water/gas/etc.) at the point of entry to the premises/metering equipment (411.3.1.2/544.1.2)", code: "C3" },
+    { text: "Main protective bonding connection made with inappropriate termination. (526.1)", code: "C3" },
+    { text: "Earthing connection 'Safety electrical connection do not remove' label not provided. (514.13.1)", code: "C3" },
+    { text: "Earthing conductors not identified (514.4.2)", code: "C3" },
+    { text: "The bonding connection has not been provided with a label (514.1.2/514.13.1)", code: "C3" },
+    { text: "Insufficient segregation from LV circuits", code: "C3" },
+    { text: "Lack of clear identification of FELV circuits", code: "C3" },
+    { text: "No protective earth connection where required", code: "C3" },
+    { text: "Inadequate insulation or mechanical protection", code: "C3" },
+    { text: "Separation transformer not to BS EN standard or incorrectly installed", code: "C3" },
+    { text: "Missing documentation or labels indicating \"double-insulated only\"", code: "C3" },
+    { text: "Missing documentation or risk assessment for Reg. 419 application", code: "C3" },
+  ]},
+  { section: "4.0 Consumer Unit / Distribution Board", items: [
+    { text: "The DB mounted at a height which prevents ease of access for user (513.1)", code: "C3" },
+    { text: "The DB has restricted access due to cupboard/storage materials (132.12/513.1)", code: "C3" },
+    { text: "DB cover not provided with manufacturers fixings (123.1.1)", code: "C3" },
+    { text: "DB not fixed solidly to supporting structure, unlikely to fall (133.3/134.1.1)", code: "C3" },
+    { text: "Clip in blank plate fitted to DB (complying with BS EN 60/61439-3) is not secured with sufficient stability and durability - but no access to live parts. (113.1/134.1.1/416.2.3)", code: "C3" },
+    { text: "DB not installed suitable for properties historically affected by flooding. (522)", code: "C3" },
+    { text: "CU/DB in a domestic household premises is not metal or installed in a non combustible cabinet, showing no signs of thermal damage, located under a wooden staircase or sole means of escape.(412.1.201)", code: "C3" },
+    { text: "The DB/CU has excessive hole in the rear of the enclosure fixed to a standard material surface and has no signs of thermal damage. (527.1.1)", code: "C3" },
+    { text: "The DB/CU has a crack in the protective device access flap (651.2)", code: "C3" },
+    { text: "The main switch has not been properly mounted, loose, no signs of thermal damage - No safety concerns.(643.10)", code: "C3" },
+    { text: "Isolator for Solar PV inverter, not securely mounted - loose fixings. (643.10)", code: "C3" },
+    { text: "The neutral conductor has not been provided with isolation where a single pole RCD has been used as the main switch (462.1.201)", code: "C3" },
+    { text: "The main switch does not provide isolation of the installation (643.10)", code: "C3" },
+    { text: "The RCD manual test button failed to operate (643.10)", code: "C3" },
+    { text: "The AFDD manual test button failed to operate (643.10)", code: "C3" },
+    { text: "The circuit-breaker does not provide isolation of circuit (643.10)", code: "C3" },
+    { text: "The RCD manual test button failed to operate (643.10)", code: "C3" },
+    { text: "Selectivity not achieved with series-connected RCD - No safety concerns (531.3.2/536.4.1.4)", code: "C3" },
+    { text: "Type AC RCD providing fault and/ or additional protection where an appliance or equipment could foreseeably be connected that requires the installation of a Type A, F or B RCD. (531.3.3)", code: "C3" },
+    { text: "Type AC RCD providing fault and/ or additional protection where an appliance or equipment could foreseeably be connected that requires the installation of a Type A, F or B RCD. (531.3.3)", code: "C3" },
+    { text: "There is no RCD test label present (514.12.2)", code: "C3" },
+    { text: "No AFDD present for building that meets requirements stated in BS7671 (421.1.7)", code: "C3" },
+    { text: "There is no alternative supply installation warning label present (514.15.1)", code: "C3" },
+    { text: "There is no DB/CU ID label where more than one DB/CU is present (514.9)", code: "C3" },
+    { text: "The source of isolation has not been identified on DB/CU (514.9)", code: "C3" },
+    { text: "Installation has more than one supply - No warning label (514.11.1)", code: "C3" },
+    { text: "Absence of label for SPD fitted within the installation (514.16.1)", code: "C3" },
+    { text: "Devices fitted to DB/CU may not be compatible with original manufacturer's equipment - No signs of thermal damage - No safety concerns. (536.4.203)", code: "C3" },
+    { text: "RCD has not been selected appropriately for diversity, taking account of possible circuit loadings, and is not equal to or greater than its main supply OCPD rated current - No signs of overheating or thermal damage - No safety concerns (536.4.202)", code: "C3" },
+    { text: "Isolator has not been selected appropriately for diversity, taking account of possible circuit loadings, and is not equal to or greater than its main supply OCPD rated current - No signs of overheating or thermal damage - No safety concerns (522/536.4.202)", code: "C3" },
+    { text: "Old DB/CU has fusing of both line and neutral conductors (132.14.1/530.3.3))", code: "C3" },
+    { text: "The conductors have not been protected against strain on the terminations (526.1/522.8.5)", code: "C3" },
+    { text: "Insufficient Mechanical protection where cables enter a consumer unit. (522.8.1; 522.8.5; 522.8.11) . Inspected cables, no evidence of damage or thermal effects - No safety concerns.", code: "C3" },
+    { text: "The Line and Neutral DB/CU tails have been installed through different points of entry in the metal enclosure - no signs of overheating - No safety concerns. (521.5.1)", code: "C3" },
+    { text: "The Line and Neutral DB/CU tails have been installed through different points of entry to the earthing conductor in the metal enclosure - no signs of overheating - No safety concerns. (521.5.1)", code: "C3" },
+    { text: "No SPD provided for protection against transient overvoltage.(443.4)", code: "C3" },
+    { text: "SPD status indicator showing device is no longer providing overvoltage protection - No life safety circuits at property - safe for continued use.", code: "C3" },
+    { text: "Cable terminations at terminals, not correctly oriented - (526.1)", code: "C3" },
+    { text: "Method of connection is not compatible with the number/shape/csa of conductors being connected/joined - No signs of thermal damage safe for continued use. (526.2)", code: "C3" },
+  ]},
+  { section: "5.0 Final Circuits", items: [
+    { text: "Line conductor incorrectly identified", code: "C3" },
+    { text: "Neutral conductor incorrectly identified", code: "C3" },
+    { text: "Cables installed without means of support from premature collapse in case of an emergency, but not likely to cause a hazard. (521.10.202)", code: "C3" },
+    { text: "Insulation to live conductors shows signs of age‑related deterioration - safe for continued use", code: "C3" },
+    { text: "Containment systems are heavily populated and near capacity", code: "C3" },
+    { text: "Containment systems are not ideally suited to environmental conditions.", code: "C3" },
+    { text: "Cable terminations at terminals, not correctly oriented - (526.1)", code: "C3" },
+    { text: "Method of connection is not compatible with the number/shape/csa of conductors being connected/joined - No signs of thermal damage safe for continued use. (526.2)", code: "C3" },
+    { text: "Unsupported cables in lofts, resting on insulation but not under tension or damaged", code: "C3" },
+    { text: "The loading of the distribution circuit exceeds the current carrying capacity of the cable due to the addition of thermal insulation - no evidence of thermal damage/ overload. - safe for continued use. (523.9)", code: "C3" },
+    { text: "Type B MCB installed on a circuit likely to experience higher inrush currents (e.g. motor, transformer, some lighting).", code: "C3" },
+    { text: "CPC present but conductor size does not meet current BS 7671 requirements - tested and all readings are correct for continued use.", code: "C3" },
+    { text: "Protective device rating marginally exceeds conductor capacity - No signs of thermal damage/overloading - safe for continued use.", code: "C3" },
+    { text: "Cables run close to heat sources (e.g. hot water pipes, boilers) without insulation or separation.", code: "C3" },
+    { text: "Cable exposed to direct sunlight/ external elements, not of suitable type - no signs of thermal damage or deuteriation  - safe for continued use.. (522.1.1)", code: "C3" },
+    { text: "ELV cables not insulated to LV standards when mixed.", code: "C3" },
+    { text: "Cables have been secured to pipework (528.3)", code: "C3" },
+    { text: "Covers of accessories in place but not adequately secured such as securing loose screw - tool needed for removal - safe for continued use. (134.1.1)", code: "C3" },
+    { text: "External Accessories Showing Early Signs of Weathering slightly discoloured/ aged, seals intact, no signs of water ingress.", code: "C3" },
+    { text: "Single‑pole isolation provided; double‑pole isolation now recommended.", code: "C3" },
+    { text: "Multiple conductors terminated in accessories not designed for this arrangement. - Safe for continued use.", code: "C3" },
+    { text: "Isolation device present but not readily accessible", code: "C3" },
+    { text: "Isolation and switching devices are not clearly labelled.", code: "C3" },
+    { text: "Isolation device is not capable of being locked off.", code: "C3" },
+    { text: "Cable insulation temperature rating may be inadequate for the ambient conditions", code: "C3" },
+  ]},
+  { section: "6.0 General", items: [
+    { text: "Line conductor incorrectly identified", code: "C3" },
+    { text: "Neutral conductor incorrectly identified", code: "C3" },
+    { text: "Cables installed without means of support from premature collapse in case of an emergency, but not likely to cause a hazard. (521.10.202)", code: "C3" },
+    { text: "Insulation to live conductors shows signs of age‑related deterioration - safe for continued use", code: "C3" },
+  ]},
+  { section: "6.4 Bathrooms & Shower Rooms", items: [
+    { text: "Containment systems are heavily populated and near capacity", code: "C3" },
+    { text: "Containment systems are not ideally suited to environmental conditions.", code: "C3" },
+    { text: "The loading of multiple circuits exceeds the current carrying capacity of the cable due to the addition of thermal insulation - no evidence of thermal damage/ overload. - safe for continued use. (523.9)", code: "C3" },
+    { text: "The loading of sockets circuits exceeds the current carrying capacity of the cable due to the addition of thermal insulation - no evidence of thermal damage/ overload  - safe for continued use.. (523.9)", code: "C3" },
+    { text: "The loading of cooker circuits exceeds the current carrying capacity of the cable due to the addition of thermal insulation - no evidence of thermal damage/ overload  - safe for continued use.. (523.9)", code: "C3" },
+    { text: "The loading of shower circuits exceeds the current carrying capacity of the cable due to the addition of thermal insulation - no evidence of thermal damage/ overload  - safe for continued use.. (523.9)", code: "C3" },
+    { text: "Type B MCB installed on a circuit likely to experience higher inrush currents (e.g. motor, transformer, some lighting).", code: "C3" },
+    { text: "There is no circuit protective conductor installed on a lighting circuit with all class 2 fittings and accessories fitted  - safe for continued use..(411.3.1.1)", code: "C3" },
+    { text: "No fly earth to back box for CPC, does not have 1 fixed lug and has a class 1 face plate installed  - safe for continued use.. (411.4.2)", code: "C3" },
+    { text: "CPC present but conductor size does not meet current BS 7671 requirements - tested and all readings are correct for continued use.", code: "C3" },
+    { text: "2.5mm ring final circuit with a 1.0mm circuit protective conductor(s). (543.1.1)", code: "C3" },
+    { text: "Protective device rating marginally exceeds conductor capacity - No signs of thermal damage/overloading - safe for continued use.", code: "C3" },
+    { text: "Extension leads have been utilised due to insufficient number of sockets. (553.1.7)", code: "C3" },
+    { text: "Socket outlet installed to low - damage to plug/lead may happen (553.1.6)", code: "C3" },
+    { text: "Wiring system inappropriately installed, due to poor workmanship - safe for continued use.", code: "C3" },
+    { text: "Unsupported cables in lofts, resting on insulation but not under tension or damaged", code: "C3" },
+    { text: "Cables run close to heat sources (e.g. hot water pipes, boilers) without insulation or separation.", code: "C3" },
+    { text: "Cable exposed to direct sunlight/ external elements, not of suitable type - no signs of thermal damage or deterioration  - safe for continued use.. (522.1.1)", code: "C3" },
+  ]},
+  { section: "6.13 EV Charging", items: [
+    { text: "Socket outlets not protected by RCD to be used by ordinary persons - cannot be used to supply outdoor equipment - safe for continued use. (411.3.3(i))", code: "C3" },
+    { text: "RCD mot provided for mobile equipment for use outdoors (411.3.3(ii))", code: "C3" },
+    { text: "Cable concealed in a wall at depth of less then 50mm not protected by a 30 mA RCD. ( 522.6.6)", code: "C3" },
+    { text: "Luminaires within a domestic property without 30ma RCD protection where circuit does not supply a special location(411.3.4)", code: "C3" },
+    { text: "No non-combustible hoods fitted on open back downlights. (527.1.2)", code: "C3" },
+    { text: "ELV cables not insulated to LV standards when mixed.", code: "C3" },
+    { text: "Doorbell transform in consumer unit band ll cables not separated.", code: "C3" },
+    { text: "Cables have been secured to pipework (528.3)", code: "C3" },
+    { text: "Gas not segregated or 150mm from consumer unit.", code: "C3" },
+  ]},
+  { section: "6.17 Solar PV", items: [
+    { text: "Cables have been jointed in trunking without being enclosed junction box (526.5)", code: "C3" },
+    { text: "Covers of accessories in place but not adequately secured such as securing loose screw - tool needed for removal - safe for continued use. (134.1.1)", code: "C3" },
+    { text: "Socket outlet is less than 100m horizontally from a cooker/hob - No signs of thermal damage - safe for continued use. (512.2)", code: "C3" },
+    { text: "Socket outlet is less than 300m horizontally from a sink/basin - No signs of water damage - safe for continued use. (512.2)", code: "C3" },
+    { text: "External Accessories Showing Early Signs of Weathering slightly discoloured/ aged, seals intact, no signs of water ingress.", code: "C3" },
+    { text: "Isolation device present but not readily accessible", code: "C3" },
+    { text: "Single‑pole isolation provided; double‑pole isolation now recommended.", code: "C3" },
+  ]},
+  { section: "7.0 Special Locations", items: [
+    { text: "Isolator not local to fixed equipment", code: "C3" },
+    { text: "Only point of isolation is at origin of circuit", code: "C3" },
+    { text: "Isolator not local to fixed equipment/ has visible  label to indicate circuit use.", code: "C3" },
+    { text: "Isolator not local to fixed equipment/ has visible  label to indicate circuit use.", code: "C3" },
+  ]},
+  { section: "7.3 Agricultural / Horticultural", items: [
+    { text: "Opening behind light fixture not sealed to prevent risk stated.", code: "C3" },
+  ]},
+  { section: "9.0 Additional", items: [
+    { text: "Shower isolator in Zone 2, is less than 2.25m showing no signs of water ingress (701.512.2)", code: "C3" },
+  ]},
+];
+
 // ---- SCREEN 5: SECTION 7 — OBSERVATIONS ----
 function EICRObservationsScreen({ job, initialData, onBack, onNext }) {
 const [observations, setObservations] = useState(initialData || []);
 const [editing, setEditing] = useState(null);
 const [form, setForm] = useState(null);
-const blankObs = () => ({item_no: String(observations.length+1), code:"C3", description:"", regulation:"", location:"", recommendation:""});
-const openNew = () => { setForm(blankObs()); setEditing("new"); };
-const openEdit = (i) => { setForm({...observations[i]}); setEditing(i); };
+const [showLibrary, setShowLibrary] = useState(false);
+const [librarySearch, setLibrarySearch] = useState("");
+const [librarySection, setLibrarySection] = useState("all");
+
+const blankObs = () => ({item_no: String(observations.length+1), code:"C3", description:"", regulation:"", location:"", recommendation:"", photo:null});
+const openNew = () => { setForm(blankObs()); setEditing("new"); setShowLibrary(false); };
+const openEdit = (i) => { setForm({...observations[i]}); setEditing(i); setShowLibrary(false); };
 const setF = (k,v) => setForm(f=>({...f,[k]:v}));
+
 const saveObs = () => {
   if(editing==="new") setObservations(o=>[...o,form]);
   else setObservations(o=>o.map((x,i)=>i===editing?form:x));
   setEditing(null); setForm(null);
 };
+
+const pickFromLibrary = (item) => {
+  setF("description", item.text);
+  setF("code", item.code);
+  setShowLibrary(false);
+};
+
+const handlePhoto = (e) => {
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => setF("photo", ev.target.result);
+  reader.readAsDataURL(file);
+};
+
 const codeCol = {C1:"#dc2626",C2:"#ea580c",C3:"#d97706",FI:"#7c3aed"};
+
+// Library modal
+if(showLibrary) {
+  const allSections = ["all", ...EICR_OBS_LIBRARY.map(s=>s.section)];
+  const filtered = EICR_OBS_LIBRARY
+    .filter(s => librarySection==="all" || s.section===librarySection)
+    .flatMap(s => s.items.map(i=>({...i, section:s.section})))
+    .filter(i => !librarySearch || i.text.toLowerCase().includes(librarySearch.toLowerCase()));
+
+  return (
+    <div style={{padding:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <div style={{fontSize:16,fontWeight:700,color:"#1e3a5f"}}>Observation Library</div>
+        <button onClick={()=>setShowLibrary(false)} style={{background:"none",border:"none",fontSize:20,color:"#64748b",cursor:"pointer"}}>×</button>
+      </div>
+      <input style={{...S.input,marginBottom:8}} placeholder="Search observations..." value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)}/>
+      <select style={{...S.input,marginBottom:12,background:"#f8fafc"}} value={librarySection} onChange={e=>setLibrarySection(e.target.value)}>
+        {allSections.map(s=><option key={s} value={s}>{s==="all"?"All Sections":s}</option>)}
+      </select>
+      <div style={{fontSize:12,color:"#64748b",marginBottom:8}}>{filtered.length} observations</div>
+      {filtered.map((item,i)=>(
+        <button key={i} onClick={()=>pickFromLibrary(item)} style={{display:"block",width:"100%",textAlign:"left",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"10px 12px",marginBottom:6,cursor:"pointer",fontFamily:"inherit"}}>
+          <div style={{fontSize:11,color:"#94a3b8",marginBottom:2}}>{item.section}</div>
+          <div style={{fontSize:13,color:"#1e3a5f"}}>{item.text}</div>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 if(form) return (
 <div style={{padding:16}}>
@@ -3337,17 +3580,37 @@ if(form) return (
     </div>
   </div>
 
-  <div style={{marginBottom:10}}><label style={S.label}>Observation</label>
+  <div style={{marginBottom:10}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+      <label style={S.label}>Observation</label>
+      <button onClick={()=>setShowLibrary(true)} style={{fontSize:11,color:"#1e3a5f",background:"#f0f4ff",border:"1px solid #c7d2fe",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>📋 From Library</button>
+    </div>
     <textarea style={{...S.input,minHeight:80}} value={form.description} onChange={e=>setF("description",e.target.value)} placeholder="Describe the observation or defect..."/>
   </div>
+
   <div style={{marginBottom:10}}><label style={S.label}>Regulation Reference</label>
     <input style={S.input} value={form.regulation} onChange={e=>setF("regulation",e.target.value)} placeholder="e.g. BS 7671 Reg 411.3.3"/>
   </div>
   <div style={{marginBottom:10}}><label style={S.label}>Location</label>
     <input style={S.input} value={form.location} onChange={e=>setF("location",e.target.value)} placeholder="e.g. Consumer unit, Bedroom 1"/>
   </div>
-  <div style={{marginBottom:16}}><label style={S.label}>Recommended Action</label>
+  <div style={{marginBottom:10}}><label style={S.label}>Recommended Action</label>
     <textarea style={{...S.input,minHeight:60}} value={form.recommendation} onChange={e=>setF("recommendation",e.target.value)} placeholder="What remedial action is required..."/>
+  </div>
+
+  <div style={{marginBottom:16}}>
+    <label style={S.label}>Photo</label>
+    {form.photo ? (
+      <div style={{position:"relative",marginBottom:8}}>
+        <img src={form.photo} style={{width:"100%",borderRadius:8,border:"1.5px solid #e2e8f0"}} alt="observation"/>
+        <button onClick={()=>setF("photo",null)} style={{position:"absolute",top:6,right:6,background:"rgba(0,0,0,0.5)",border:"none",color:"#fff",borderRadius:20,width:28,height:28,cursor:"pointer",fontSize:14}}>×</button>
+      </div>
+    ) : (
+      <label style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"14px",background:"#f8fafc",border:"2px dashed #e2e8f0",borderRadius:8,cursor:"pointer",color:"#64748b",fontSize:13}}>
+        📷 Add Photo
+        <input type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
+      </label>
+    )}
   </div>
 
   <button style={S.btn("primary")} onClick={saveObs}>Save Observation</button>
@@ -3389,6 +3652,8 @@ return (
         </div>
         <div style={{fontSize:13,color:"#1e3a5f",fontWeight:600,marginBottom:2}}>{obs.description||"No description"}</div>
         {obs.regulation && <div style={{fontSize:11,color:"#64748b"}}>Reg: {obs.regulation}</div>}
+        {obs.location && <div style={{fontSize:11,color:"#64748b"}}>Location: {obs.location}</div>}
+        {obs.photo && <img src={obs.photo} style={{width:60,height:60,objectFit:"cover",borderRadius:6,marginTop:6,border:"1px solid #e2e8f0"}} alt=""/>}
       </div>
     ))}
     <button style={{...S.btn("primary"),marginBottom:0}} onClick={openNew}>+ Add Observation</button>
