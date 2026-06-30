@@ -1410,8 +1410,8 @@ const set = (k,v) => setR(x=>({...x,[k]:v}));
 return (
 <div style={{padding:16}}>
 <div style={S.secTitle}>* Array Test Results</div>
-{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm)"],["ir_neg","IR Neg-Earth (MOhm)"],["zs","Zs (Ohm)"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","MCB Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
-<div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="number" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
+{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm) — enter value or LIM"],["ir_neg","IR Neg-Earth (MOhm) — enter value or LIM"],["zs","Zs (Ohm) — enter value or LIM"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","Protective Device Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
+<div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="text" inputMode="decimal" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
 ))}
 <div style={{marginBottom:12}}>
 <label style={S.label}>RCD Type</label>
@@ -2086,7 +2086,7 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
       ["IR Neg-Earth", testResults?.ir_neg?testResults.ir_neg+" MOhm":"-"],
       ["Zs (Earth Fault Loop)", testResults?.zs?testResults.zs+" Ohm":"-"],
       ["RCD Trip Time", testResults?.rcd_trip?testResults.rcd_trip+" ms":"-"],
-      ["MCB Rating", testResults?.mcb_rating?testResults.mcb_rating+" A":"-"],
+      ["Protective Device Rating", testResults?.mcb_rating?testResults.mcb_rating+" A":"-"],
       ["OCPD Device (BS No.)", testResults?.ocpd_bs||"-"],
       ["Breaking Capacity", testResults?.breaking_cap?testResults.breaking_cap+" kA":"-"],
       ["Polarity Check", testResults?.polarity||"-"],
@@ -2492,7 +2492,7 @@ const pages = [
       ["Zs", testResults?.zs, "Ohm", "-"],
       ["RCD Type", testResults?.rcd_type, "", "Type A min"],
       ["RCD Trip Time", testResults?.rcd_trip, "ms", "<=300ms"],
-      ["MCB Rating", testResults?.mcb_rating, "A", "-"],
+      ["Protective Device Rating", testResults?.mcb_rating, "A", "-"],
       ["OCPD Device (BS No.)", testResults?.ocpd_bs, "", "-"],
       ["Breaking Capacity", testResults?.breaking_cap, "kA", "-"],
       ["Switchgear Function", testResults?.switchgear, "", "Satisfactory"],
