@@ -587,8 +587,26 @@ return (
 }
 
 // - CHECKLIST SCREEN --------------------
-function ChecklistScreen({ job, initialData, onBack, onNext }) {
-const [answers, setAnswers] = useState(initialData || {});
+function ChecklistScreen({ job, asset, initialData, onBack, onNext }) {
+const [answers, setAnswers] = useState(() => {
+  const base = initialData || {};
+  // Auto-populate overlapping fields from the asset register (only if not already set)
+  if (asset) {
+    const prefill = (id, assetVal) => {
+      if (assetVal && !base[id]?.value) {
+        base[id] = { ...(base[id]||{}), value: assetVal };
+      }
+    };
+    prefill("inv1", asset.inverter_make);
+    prefill("inv2", asset.inverter_model);
+    prefill("inv3", asset.inverter_serial);
+    prefill("inv4", asset.inverter_loc || asset.inverter_location);
+    prefill("met1", asset.meter_make);
+    prefill("met2", asset.meter_model);
+    prefill("met3", asset.meter_serial);
+  }
+  return base;
+});
 const [expanded, setExpanded] = useState("panels");
 const [stamp, setStamp] = useState(true);
 const [engName, setEngName] = useState(job?.engineer||"");
@@ -1987,6 +2005,54 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
     addFooter(pageNum++);
   });
 
+  // ---- PHOTO SUMMARY PAGE: all photos labelled in a grid ----
+  const allPhotos = [];
+  PDF_SECTIONS.forEach(section=>{
+    section.items.forEach(item=>{
+      const photos = (checklist?.[item.id]?.photos || []).map(p=>p.dataUrl||p.url).filter(Boolean);
+      photos.forEach((src,idx)=>{
+        allPhotos.push({ src, label: item.q, section: section.label, multi: photos.length>1?` (${idx+1}/${photos.length})`:"" });
+      });
+    });
+  });
+
+  if(allPhotos.length>0){
+    doc.addPage();
+    addHeader("PHOTOGRAPHIC SUMMARY");
+    y=26;
+    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
+    doc.text("Photographic Summary", margin, y+8); y+=16;
+
+    const COLS = 3;
+    const GW = (pageW - margin*2 - (COLS-1)*6) / COLS;  // grid cell width
+    const IMG_H = GW * 0.72;
+    const LBL_H = 9;
+    const CELL_H = IMG_H + LBL_H + 6;
+    let col = 0;
+    let rowTop = y;
+
+    allPhotos.forEach((ph)=>{
+      const cx = margin + col*(GW+6);
+      // page break
+      if(rowTop + CELL_H > pageH - 16){
+        doc.addPage();
+        addHeader("PHOTOGRAPHIC SUMMARY (CONT.)");
+        rowTop = 30; col = 0;
+      }
+      const px = margin + col*(GW+6);
+      try { doc.addImage(ph.src, "JPEG", px, rowTop, GW, IMG_H); } catch(e){ console.error("Summary photo error:",e); }
+      // Label under photo
+      doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(100,116,139);
+      const lbl = (ph.label.length>52? ph.label.substring(0,50)+"…" : ph.label) + ph.multi;
+      const lblLines = doc.splitTextToSize(lbl, GW);
+      doc.text(lblLines.slice(0,2), px, rowTop + IMG_H + 4);
+
+      col++;
+      if(col>=COLS){ col=0; rowTop += CELL_H; }
+    });
+    addFooter(pageNum++);
+  }
+
 
   // ---- NEXT PAGE: TEST RESULTS ----
   doc.addPage();
@@ -2172,55 +2238,6 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
   addFooter(pageNum++);
 
   const filename="Themis-"+(job?.client||"Report").replace(/\s+/g,"-")+"-"+certNum+".pdf";
-  // ---- PHOTO SUMMARY PAGE: all photos labelled in a grid ----
-  const allPhotos = [];
-  PDF_SECTIONS.forEach(section=>{
-    section.items.forEach(item=>{
-      const photos = (checklist?.[item.id]?.photos || []).map(p=>p.dataUrl||p.url).filter(Boolean);
-      photos.forEach((src,idx)=>{
-        allPhotos.push({ src, label: item.q, section: section.label, multi: photos.length>1?` (${idx+1}/${photos.length})`:"" });
-      });
-    });
-  });
-
-  if(allPhotos.length>0){
-    doc.addPage();
-    addHeader("PHOTOGRAPHIC SUMMARY");
-    y=26;
-    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
-    doc.text("Photographic Summary", margin, y+8); y+=16;
-
-    const COLS = 3;
-    const GW = (pageW - margin*2 - (COLS-1)*6) / COLS;  // grid cell width
-    const IMG_H = GW * 0.72;
-    const LBL_H = 9;
-    const CELL_H = IMG_H + LBL_H + 6;
-    let col = 0;
-    let rowTop = y;
-
-    allPhotos.forEach((ph)=>{
-      const cx = margin + col*(GW+6);
-      // page break
-      if(rowTop + CELL_H > pageH - 16){
-        doc.addPage();
-        addHeader("PHOTOGRAPHIC SUMMARY (CONT.)");
-        rowTop = 30; col = 0;
-      }
-      const px = margin + col*(GW+6);
-      try { doc.addImage(ph.src, "JPEG", px, rowTop, GW, IMG_H); } catch(e){ console.error("Summary photo error:",e); }
-      // Label under photo
-      doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(100,116,139);
-      const lbl = (ph.label.length>52? ph.label.substring(0,50)+"…" : ph.label) + ph.multi;
-      const lblLines = doc.splitTextToSize(lbl, GW);
-      doc.text(lblLines.slice(0,2), px, rowTop + IMG_H + 4);
-
-      col++;
-      if(col>=COLS){ col=0; rowTop += CELL_H; }
-    });
-    addFooter(pageNum++);
-  }
-
-
   doc.save(filename);
 }
 
@@ -5287,6 +5304,7 @@ return (
       <ChecklistScreen
         key={job?.id||"new"}
         job={job}
+        asset={asset}
         initialData={checklist}
         onBack={()=>setScreen("asset")}
         onNext={saveChecklist}
