@@ -189,7 +189,7 @@ const SECTIONS = [
 {id:"sp1",q:"Orientation of solar panels",type:"select",opts:["South","South-East","South-West","East","West","Flat roof"]},
 {id:"sp2",q:"Number of solar panels",type:"number"},
 {id:"sp3",q:"Location of solar panels",type:"select",opts:["Front","Rear","Side","Flat roof","Ground mount"]},
-{id:"sp4",q:"Are the panels damaged?"},
+{id:"sp4",q:"Are the panels damaged?",invert:true},
 {id:"sp5",q:"Are the panels clean / clear of debris?"},
 {id:"sp6",q:"Can the panel make be identified?"},
 {id:"sp7",q:"Do PV array cables appear to be secure?"},
@@ -1414,9 +1414,22 @@ const set = (k,v) => setR(x=>({...x,[k]:v}));
 return (
 <div style={{padding:16}}>
 <div style={S.secTitle}>* Array Test Results</div>
-{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm) — value or LIM"],["ir_neg","IR Neg-Earth (MOhm) — value or LIM"],["zs","Zs (Ohm) — value or LIM"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","Protective Device Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
+{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","Protective Device Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
 <div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="text" inputMode="decimal" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
 ))}
+{[["ir_pos","IR Pos-Earth (MOhm)"],["ir_neg","IR Neg-Earth (MOhm)"],["zs","Zs (Ohm)"]].map(([k,l])=>{
+const isLim = r[k]==="LIM"; const isNa = r[k]==="N/A";
+return (
+<div key={k} style={{marginBottom:12}}>
+<label style={S.label}>{l}</label>
+<div style={{display:"flex",gap:6,alignItems:"stretch"}}>
+<input style={{...S.input,flex:1,margin:0}} type="text" inputMode="decimal" value={(isLim||isNa)?"":r[k]} onChange={e=>set(k,e.target.value)} placeholder="Enter reading"/>
+<button onClick={()=>set(k,isLim?"":"LIM")} style={{padding:"0 16px",borderRadius:7,border:`1.5px solid ${isLim?C.amber:C.border}`,background:isLim?C.amber+"22":"#f8fafc",color:isLim?C.amber:C.muted,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>LIM</button>
+<button onClick={()=>set(k,isNa?"":"N/A")} style={{padding:"0 16px",borderRadius:7,border:`1.5px solid ${isNa?C.muted:C.border}`,background:isNa?C.muted+"22":"#f8fafc",color:isNa?C.text:C.muted,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>N/A</button>
+</div>
+</div>
+);
+})}
 <div style={{marginBottom:12}}>
 <label style={S.label}>RCD Type</label>
 <div style={{display:"flex",gap:6}}>
@@ -1679,7 +1692,7 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
   const PDF_SECTIONS = [
     { id:"panels", label:"Solar Panels", items:[
       {id:"sp1",q:"Orientation of solar panels"},{id:"sp2",q:"Number of solar panels"},
-      {id:"sp3",q:"Location of solar panels"},{id:"sp4",q:"Are the panels damaged?"},
+      {id:"sp3",q:"Location of solar panels"},{id:"sp4",q:"Are the panels damaged?",invert:true},
       {id:"sp5",q:"Are the panels clean / clear of debris?"},{id:"sp6",q:"Can the panel make be identified?"},
       {id:"sp7",q:"Do PV array cables appear to be secure?"},
       {id:"sp8",q:"Has array frame equipotential bonding been installed? (IEC 60364-7-712)"},
