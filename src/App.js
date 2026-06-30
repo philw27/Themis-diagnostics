@@ -930,7 +930,9 @@ function Dashboard({ user, onCreateJob, onSelectJob }) {
 const [jobs,    setJobs]    = useState([]);
 const [loading, setLoading] = useState(true);
 const [error,   setError]   = useState(null);
-const modeCol = {inspection:C.blue,service:C.green,diagnostic:C.amber,commissioning:C.accent};
+const [filter,  setFilter]  = useState("all"); // all | open | completed
+const modeCol = {solar_inspection:C.blue,ashp_service:C.green,eicr:C.accent,inspection:C.blue,service:C.green};
+const modeLabel = {solar_inspection:"SOLAR INSPECTION",ashp_service:"ASHP SERVICE",eicr:"EICR",inspection:"INSPECTION",service:"SERVICE"};
 
 useEffect(() => {
 loadJobs();
@@ -982,8 +984,37 @@ return (
     ))}
   </div>
   <button style={S.btn("primary")} onClick={onCreateJob}>+ New Job</button>
-  <div style={S.secTitle}>> Jobs</div>
-  {jobs.map(j=>(
+
+  <div style={{display:"flex",gap:6,margin:"16px 0 10px"}}>
+    {[["all","All"],["open","Open"],["completed","Completed"]].map(([v,l])=>(
+      <button key={v} onClick={()=>setFilter(v)} style={{flex:1,padding:"9px 0",borderRadius:8,border:`1.5px solid ${filter===v?C.blue:C.border}`,background:filter===v?C.blue+"15":"#f8fafc",color:filter===v?C.blue:C.muted,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+    ))}
+  </div>
+
+  {filter==="completed" ? (
+    <>
+    <div style={{display:"flex",fontSize:10,color:C.muted,fontWeight:700,letterSpacing:"0.05em",padding:"0 12px 6px",textTransform:"uppercase"}}>
+      <span style={{flex:2}}>Job</span><span style={{flex:1.4}}>Engineer</span><span style={{flex:1,textAlign:"right"}}>Completed</span>
+    </div>
+    {jobs.filter(j=>j.status==="completed").length===0 && <div style={{...S.card,textAlign:"center",color:C.muted,fontSize:13}}>No completed jobs yet</div>}
+    {jobs.filter(j=>j.status==="completed").map(j=>{
+      const completed = j.completed_at || j.updated_at || j.date || "";
+      const cdate = completed ? new Date(completed).toLocaleDateString("en-GB") : "—";
+      return (
+      <div key={j.id} style={{...S.card,cursor:"pointer",display:"flex",alignItems:"center",borderLeft:`3px solid ${j.flagged?C.red:C.green}`,padding:"12px"}} onClick={()=>onSelectJob(j)}>
+        <div style={{flex:2,minWidth:0}}>
+          <div style={{fontSize:14,fontWeight:700,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{j.client||"Unnamed"}</div>
+          <div style={{fontSize:11,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{modeLabel[j.mode]||j.mode} · {j.job_number||j.jobNumber||""}</div>
+        </div>
+        <div style={{flex:1.4,fontSize:12,color:C.text,minWidth:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{j.engineer_name||"—"}</div>
+        <div style={{flex:1,fontSize:12,color:C.muted,textAlign:"right"}}>{cdate}</div>
+      </div>
+      );
+    })}
+    </>
+  ) : (
+  <>
+  {jobs.filter(j=> filter==="all" ? true : (j.status==="open"||j.status==="in_progress")).map(j=>(
     <div key={j.id} style={{...S.card,cursor:"pointer",borderLeft:`3px solid ${j.status==="completed"?C.green:j.flagged?C.red:C.blue}`}} onClick={()=>onSelectJob(j)}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
         <div style={{fontSize:15,fontWeight:700,color:C.text}}>{j.client||"Unnamed Job"}</div>
@@ -994,11 +1025,13 @@ return (
       </div>
       <div style={{fontSize:12,color:C.muted,marginBottom:8}}>{j.address||"No address"}{(user.role||"").toLowerCase()==="admin" && j.engineer_name ? ` · 👷 ${j.engineer_name}` : ""}</div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <span style={S.tag(modeCol[j.mode]||C.muted)}>{(j.mode||"inspection").toUpperCase()}</span>
+        <span style={S.tag(modeCol[j.mode]||C.muted)}>{modeLabel[j.mode]||(j.mode||"").toUpperCase()}</span>
         <span style={{fontSize:11,color:C.muted}}>{j.job_number||j.jobNumber||""}</span>
       </div>
     </div>
   ))}
+  </>
+  )}
 </div>
 
 );
@@ -1029,8 +1062,9 @@ const day = String(now.getDate()).padStart(2,"0");
 const rand = String(Math.floor(Math.random()*9000)+1000);
 return `TH-${year}${month}${day}-${rand}`;
 };
-const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"inspection",limitations:[]});
+const [form, setForm] = useState({client:"",address:"",jobNumber:generateJobNumber(),engineer:"",date:new Date().toISOString().split("T")[0],mode:"solar_inspection",limitations:[]});
 const [customLim, setCustomLim] = useState("");
+const [step, setStep] = useState(1);
 const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
 const toggleLim = (lim) => setForm(f=>({
@@ -1046,24 +1080,35 @@ const addCustom = () => {
   setCustomLim("");
 };
 
+// ---- STEP 1: JOB DETAILS ----
+if (step === 1) {
 return (
 <div style={{padding:16}}>
-<div style={S.secTitle}>* New Job</div>
+<div style={S.secTitle}>* New Job — Details</div>
 {[["client","Client Name"],["address","Site Address"],["jobNumber","Job Number"],["engineer","Engineer"]].map(([k,l])=>(
 <div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={l}/></div>
 ))}
 <div style={{marginBottom:12}}><label style={S.label}>Date</label><input style={S.input} type="date" value={form.date} onChange={e=>set("date",e.target.value)}/></div>
-<div style={{marginBottom:14}}>
-<label style={S.label}>Mode</label>
+<div style={{marginBottom:18}}>
+<label style={S.label}>Job Type</label>
 <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-{[["inspection","Inspection"],["service","Service"],["commissioning","Commission"],["diagnostic","Diagnostic"],["eicr","EICR"]].map(([v,l])=>(
+{[["solar_inspection","Solar Inspection"],["ashp_service","ASHP Service"],["eicr","EICR"]].map(([v,l])=>(
 <button key={v} onClick={()=>set("mode",v)} style={{...S.btn(form.mode===v?"primary":"ghost"),marginBottom:0,padding:"10px 14px",fontSize:13,flex:"1 0 calc(50% - 3px)"}}>{l}</button>
 ))}
 </div>
 </div>
+<button style={S.btn("primary")} onClick={()=>setStep(2)}>Next: Limitations -></button>
+<button style={S.btn("ghost")} onClick={onBack}>Cancel</button>
+</div>
+);
+}
 
+// ---- STEP 2: LIMITATIONS ----
+return (
+<div style={{padding:16}}>
+<div style={S.secTitle}>* New Job — Limitations</div>
+<div style={{fontSize:12,color:"#64748b",marginBottom:14,lineHeight:1.5}}>Select any agreed or operational limitations for this job. These appear on the certificate.</div>
 <div style={{marginBottom:18}}>
-<label style={S.label}>Limitations / Exclusions</label>
 <div style={{marginBottom:8}}>
 {DEFAULT_LIMITATIONS.map(lim=>{
   const ticked = form.limitations.includes(lim);
@@ -1089,7 +1134,7 @@ return (
 </div>
 
 <button style={S.btn("primary")} onClick={()=>onCreate({...form,id:Date.now(),status:"open",flagged:false,limitations:form.limitations.join(". ")})}>Create Job -></button>
-<button style={S.btn("ghost")} onClick={onBack}>Cancel</button>
+<button style={S.btn("ghost")} onClick={()=>setStep(1)}>← Back to Details</button>
 </div>
 );
 }
@@ -4997,7 +5042,7 @@ tags:                reviewData.tags || [],
 engineer_notes:      reviewData.engineer_notes || null,
 }, "job_id").catch(e => console.error("Review save error:", e));
 sb.update("jobs", await getValidToken(),
-{ status: "completed", flagged: (reviewData.risk_items||[]).some(r=>r.code==="C2") },
+{ status: "completed", completed_at: new Date().toISOString(), flagged: (reviewData.risk_items||[]).some(r=>r.code==="C2") },
 "id=eq." + jobId
 ).catch(e => console.error("Job update error:", e));
 setReview(reviewData);
