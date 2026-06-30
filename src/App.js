@@ -1951,26 +1951,43 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
       },
     });
     // ---- PHOTOS for this section ----
-    let py = doc.lastAutoTable.finalY + 8;
-    section.items.forEach(item=>{
-      const photos = checklist?.[item.id]?.photos || [];
-      if(photos.length===0) return;
-      if(py > 250){ doc.addPage(); addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (PHOTOS)"); py=30; }
-      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...navy);
-      doc.text(item.q.substring(0,90), margin, py); py+=4;
+    let py = doc.lastAutoTable.finalY + 6;
+    const photoItems = section.items.filter(item => (checklist?.[item.id]?.photos || []).length > 0);
+    if (photoItems.length > 0) {
+      doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
+      doc.text("Photographic Evidence", margin, py); py += 6;
+
+      const PW = 42, PH = 32, GAP = 4, LABEL_H = 4;
       let px = margin;
-      photos.forEach(p=>{
-        const src = p.dataUrl || p.url;
-        if(!src) return;
-        if(px + 50 > pageW - margin){ px = margin; py += 42; }
-        if(py > 255){ doc.addPage(); addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (PHOTOS)"); py=30; px=margin; }
-        try {
-          doc.addImage(src, "JPEG", px, py, 48, 38);
-          px += 52;
-        } catch(e){ console.error("PDF photo error:", e); }
+      let rowMaxH = 0;
+
+      photoItems.forEach(item=>{
+        const photos = checklist[item.id].photos || [];
+        const label = item.q.length > 38 ? item.q.substring(0,36)+"…" : item.q;
+        photos.forEach(p=>{
+          const src = p.dataUrl || p.url;
+          if(!src) return;
+          // Wrap to new row if exceeds page width
+          if(px + PW > pageW - margin){ px = margin; py += PH + LABEL_H + GAP + 3; rowMaxH = 0; }
+          // New page if needed
+          if(py + PH + LABEL_H > pageH - 18){
+            doc.addPage();
+            addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (PHOTOS)");
+            py = 30; px = margin;
+            doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
+            doc.text("Photographic Evidence (continued)", margin, py); py += 6;
+          }
+          // Label above photo
+          doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(100,116,139);
+          doc.text(label, px, py, {maxWidth: PW});
+          try {
+            doc.addImage(src, "JPEG", px, py + 1, PW, PH);
+          } catch(e){ console.error("PDF photo error:", e); }
+          px += PW + GAP;
+        });
       });
-      py += 44;
-    });
+      py += PH + LABEL_H + 6;
+    }
     addFooter(pageNum++);
   });
 
