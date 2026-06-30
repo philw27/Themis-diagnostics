@@ -1923,73 +1923,70 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
   });
   addFooter(pageNum++);
 
-  // ---- PAGES 4+: INSPECTION CHECKLIST ----
+  // ---- PAGES 4+: INSPECTION CHECKLIST (SafetyCulture-style item blocks) ----
   PDF_SECTIONS.forEach((section)=>{
     doc.addPage();
     addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase());
     y=26;
     doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...navy);
-    doc.text(section.label, margin, y+8); y+=18;
-    autoTable(doc,{
-      startY:y,
-      head:[["Inspection Item","Result","Notes"]],
-      body:section.items.map(item=>[item.q, getAnswer(item.id), getNote(item.id)]),
-      margin:{left:margin,right:margin},
-      headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:8},
-      bodyStyles:{fontSize:8},
-      alternateRowStyles:{fillColor:[248,250,252]},
-      columnStyles:{0:{cellWidth:90},1:{cellWidth:20,halign:"center"},2:{cellWidth:72}},
-      didParseCell:(data)=>{
-        if(data.column.index===1 && data.section==="body"){
-          const v=data.cell.raw;
-          if(v==="Yes") data.cell.styles.textColor=[5,150,105];
-          else if(v==="No") data.cell.styles.textColor=[220,38,38];
-          else if(v==="Limited") data.cell.styles.textColor=[217,119,6];
-          else if(v==="FI") data.cell.styles.textColor=[124,58,237];
-          data.cell.styles.fontStyle="bold";
-        }
-      },
-    });
-    // ---- PHOTOS for this section ----
-    let py = doc.lastAutoTable.finalY + 6;
-    const photoItems = section.items.filter(item => (checklist?.[item.id]?.photos || []).length > 0);
-    if (photoItems.length > 0) {
-      doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
-      doc.text("Photographic Evidence", margin, py); py += 6;
+    doc.text(section.label, margin, y+8); y+=16;
 
-      const PW = 42, PH = 32, GAP = 4, LABEL_H = 4;
-      let px = margin;
-      let rowMaxH = 0;
+    const answerColors = {Yes:[5,150,105],No:[220,38,38],Limited:[217,119,6],FI:[124,58,237],"N/A":[148,163,184]};
+    const TEXT_W = 110;          // width of text column
+    const IMG_X = margin + TEXT_W + 6;  // where photos start
+    const IMG_W = 50, IMG_H = 38, IMG_GAP = 4;
 
-      photoItems.forEach(item=>{
-        const photos = checklist[item.id].photos || [];
-        const label = item.q.length > 38 ? item.q.substring(0,36)+"…" : item.q;
-        photos.forEach(p=>{
-          const src = p.dataUrl || p.url;
-          if(!src) return;
-          // Wrap to new row if exceeds page width
-          if(px + PW > pageW - margin){ px = margin; py += PH + LABEL_H + GAP + 3; rowMaxH = 0; }
-          // New page if needed
-          if(py + PH + LABEL_H > pageH - 18){
-            doc.addPage();
-            addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (PHOTOS)");
-            py = 30; px = margin;
-            doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...navy);
-            doc.text("Photographic Evidence (continued)", margin, py); py += 6;
-          }
-          // Label above photo
-          doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(100,116,139);
-          doc.text(label, px, py, {maxWidth: PW});
-          try {
-            doc.addImage(src, "JPEG", px, py + 1, PW, PH);
-          } catch(e){ console.error("PDF photo error:", e); }
-          px += PW + GAP;
-        });
+    section.items.forEach(item=>{
+      const ans = getAnswer(item.id);
+      const note = getNote(item.id);
+      const photos = (checklist?.[item.id]?.photos || []).map(p=>p.dataUrl||p.url).filter(Boolean);
+
+      // Measure heights
+      doc.setFontSize(9);
+      const qLines = doc.splitTextToSize(item.q, TEXT_W);
+      const noteLines = note ? doc.splitTextToSize("Note: "+note, TEXT_W) : [];
+      const textH = qLines.length*4.5 + 5 + (noteLines.length*4) + 6;
+      const photoH = photos.length>0 ? photos.length*(IMG_H+IMG_GAP) : 0;
+      const blockH = Math.max(textH, photoH) + 4;
+
+      // Page break if needed
+      if(y + blockH > pageH - 16){
+        doc.addPage();
+        addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (CONT.)");
+        y=30;
+      }
+
+      const blockTop = y;
+      // Question
+      doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(30,41,59);
+      doc.text(qLines, margin, y+4); y += qLines.length*4.5 + 2;
+      // Result
+      doc.setFont("helvetica","bold"); doc.setFontSize(9);
+      const rc = answerColors[ans] || [100,116,139];
+      doc.setTextColor(...rc);
+      doc.text("Result: "+(ans||"-"), margin, y+3); y += 5;
+      // Note
+      if(noteLines.length){
+        doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(100,116,139);
+        doc.text(noteLines, margin, y+2); y += noteLines.length*4 + 2;
+      }
+
+      // Photos on the right, stacked
+      let ipy = blockTop;
+      photos.forEach(src=>{
+        try { doc.addImage(src, "JPEG", IMG_X, ipy, IMG_W, IMG_H); } catch(e){ console.error("PDF photo error:",e); }
+        ipy += IMG_H + IMG_GAP;
       });
-      py += PH + LABEL_H + 6;
-    }
+
+      // Advance y to bottom of whichever column is taller
+      y = Math.max(y, blockTop + photoH) + 4;
+      // Divider line
+      doc.setDrawColor(226,232,240); doc.setLineWidth(0.2);
+      doc.line(margin, y, pageW-margin, y); y += 5;
+    });
     addFooter(pageNum++);
   });
+
 
   // ---- NEXT PAGE: TEST RESULTS ----
   doc.addPage();
