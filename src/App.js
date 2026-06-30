@@ -189,7 +189,7 @@ const SECTIONS = [
 {id:"sp1",q:"Orientation of solar panels",type:"select",opts:["South","South-East","South-West","East","West","Flat roof"]},
 {id:"sp2",q:"Number of solar panels",type:"number"},
 {id:"sp3",q:"Location of solar panels",type:"select",opts:["Front","Rear","Side","Flat roof","Ground mount"]},
-{id:"sp4",q:"Are the panels damaged?"},
+{id:"sp4",q:"Are the panels damaged?",invert:true},
 {id:"sp5",q:"Are the panels clean / clear of debris?"},
 {id:"sp6",q:"Can the panel make be identified?"},
 {id:"sp7",q:"Do PV array cables appear to be secure?"},
