@@ -189,7 +189,7 @@ const SECTIONS = [
 {id:"sp1",q:"Orientation of solar panels",type:"select",opts:["South","South-East","South-West","East","West","Flat roof"]},
 {id:"sp2",q:"Number of solar panels",type:"number"},
 {id:"sp3",q:"Location of solar panels",type:"select",opts:["Front","Rear","Side","Flat roof","Ground mount"]},
-{id:"sp4",q:"Are the panels damaged?",invert:true},
+{id:"sp4",q:"Are the panels damaged?"},
 {id:"sp5",q:"Are the panels clean / clear of debris?"},
 {id:"sp6",q:"Can the panel make be identified?"},
 {id:"sp7",q:"Do PV array cables appear to be secure?"},
@@ -1409,13 +1409,13 @@ return (
 
 // - TEST RESULTS ---------------
 function TestResultsScreen({ initialData, onBack, onNext }) {
-const [r, setR] = useState(initialData || {voc:"",isc:"",irradiance:"",ir_pos:"",ir_neg:"",polarity:null,zs:"",rcd_type:"Type A",rcd_trip:"",mcb_rating:"",breaking_cap:"",ocpd_bs:"",switchgear:null,inverter_ok:null,loss_mains:null});
+const [r, setR] = useState(initialData || {voc:"",isc:"",irradiance:"",ir_pos:"",ir_neg:"",polarity:null,zs:"",rcd_type:"Type A",rcd_trip:"",mcb_rating:"",breaking_cap:"",ocpd_bs:"",ocpd_type:"",switchgear:null,inverter_ok:null,loss_mains:null});
 const set = (k,v) => setR(x=>({...x,[k]:v}));
 return (
 <div style={{padding:16}}>
 <div style={S.secTitle}>* Array Test Results</div>
-{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm)"],["ir_neg","IR Neg-Earth (MOhm)"],["zs","Zs (Ohm)"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","MCB Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
-<div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="number" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
+{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm) — value or LIM"],["ir_neg","IR Neg-Earth (MOhm) — value or LIM"],["zs","Zs (Ohm) — value or LIM"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","Protective Device Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
+<div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="text" inputMode="decimal" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
 ))}
 <div style={{marginBottom:12}}>
 <label style={S.label}>RCD Type</label>
@@ -1424,7 +1424,7 @@ return (
 </div>
 </div>
 <div style={{marginBottom:12}}>
-<label style={S.label}>OCPD Device Type (BS Number)</label>
+<label style={S.label}>OCPD Device (BS Number)</label>
 <select style={S.input} value={r.ocpd_bs} onChange={e=>set("ocpd_bs",e.target.value)}>
 <option value="">-- Select device --</option>
 <option value="BS EN 60898">BS EN 60898 — MCB (circuit-breaker)</option>
@@ -1436,6 +1436,27 @@ return (
 <option value="BS 1361">BS 1361 — Cartridge Fuse</option>
 <option value="BS 3036">BS 3036 — Rewireable Fuse</option>
 <option value="BS EN 62606">BS EN 62606 — AFDD</option>
+</select>
+</div>
+<div style={{marginBottom:12}}>
+<label style={S.label}>OCPD Type / Curve</label>
+<select style={S.input} value={r.ocpd_type||""} onChange={e=>set("ocpd_type",e.target.value)}>
+<option value="">-- Select type --</option>
+<optgroup label="MCB / RCBO curve">
+<option value="B">Type B (3–5 × In)</option>
+<option value="C">Type C (5–10 × In)</option>
+<option value="D">Type D (10–20 × In)</option>
+</optgroup>
+<optgroup label="RCD type">
+<option value="AC">Type AC</option>
+<option value="A">Type A</option>
+<option value="F">Type F</option>
+<option value="B (RCD)">Type B (RCD)</option>
+</optgroup>
+<optgroup label="Fuse">
+<option value="gG">gG (general purpose)</option>
+<option value="gM">gM (motor circuit)</option>
+</optgroup>
 </select>
 </div>
 {[["polarity","Polarity Check"],["switchgear","Switchgear Functioning"],["inverter_ok","Inverter Functioning"],["loss_mains","Loss of Mains Test"]].map(([k,l])=>(
@@ -2091,7 +2112,7 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
       ["Zs (Earth Fault Loop)", testResults?.zs?testResults.zs+" Ohm":"-"],
       ["RCD Trip Time", testResults?.rcd_trip?testResults.rcd_trip+" ms":"-"],
       ["MCB Rating", testResults?.mcb_rating?testResults.mcb_rating+" A":"-"],
-      ["OCPD Device (BS No.)", testResults?.ocpd_bs||"-"],
+      ["OCPD Device (BS No.)", testResults?.ocpd_bs?(testResults.ocpd_bs+(testResults.ocpd_type?" — Type "+testResults.ocpd_type:"")):"-"],
       ["Breaking Capacity", testResults?.breaking_cap?testResults.breaking_cap+" kA":"-"],
       ["Polarity Check", testResults?.polarity||"-"],
       ["Switchgear Functioning", testResults?.switchgear||"-"],
@@ -2497,7 +2518,7 @@ const pages = [
       ["RCD Type", testResults?.rcd_type, "", "Type A min"],
       ["RCD Trip Time", testResults?.rcd_trip, "ms", "<=300ms"],
       ["MCB Rating", testResults?.mcb_rating, "A", "-"],
-      ["OCPD Device (BS No.)", testResults?.ocpd_bs, "", "-"],
+      ["OCPD Device (BS No.)", testResults?.ocpd_bs?(testResults.ocpd_bs+(testResults.ocpd_type?" — Type "+testResults.ocpd_type:"")):null, "", "-"],
       ["Breaking Capacity", testResults?.breaking_cap, "kA", "-"],
       ["Switchgear Function", testResults?.switchgear, "", "Satisfactory"],
       ["Inverter Function", testResults?.inverter_ok, "", "Satisfactory"],
