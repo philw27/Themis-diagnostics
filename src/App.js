@@ -939,11 +939,15 @@ loadJobs();
 const loadJobs = async () => {
 setLoading(true);
 try {
-const data = await sb.query("jobs", user.token, {
+const isAdmin = (user.role||"engineer").toLowerCase()==="admin";
+const q = {
 select: "*",
 order: "created_at.desc",
-limit: 50,
-});
+limit: isAdmin ? 200 : 50,
+};
+// Engineers only see their own jobs; admins see everyone's
+if (!isAdmin) q.filter = "user_id=eq."+user.id;
+const data = await sb.query("jobs", user.token, q);
 if (Array.isArray(data)) {
 setJobs(data);
 } else {
@@ -988,7 +992,7 @@ return (
           <span style={S.tag(j.status==="completed"?C.green:j.status==="flagged"?C.red:C.blue)}>{(j.status||"open").toUpperCase()}</span>
         </div>
       </div>
-      <div style={{fontSize:12,color:C.muted,marginBottom:8}}>{j.address||"No address"}</div>
+      <div style={{fontSize:12,color:C.muted,marginBottom:8}}>{j.address||"No address"}{(user.role||"").toLowerCase()==="admin" && j.engineer_name ? ` · 👷 ${j.engineer_name}` : ""}</div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <span style={S.tag(modeCol[j.mode]||C.muted)}>{(j.mode||"inspection").toUpperCase()}</span>
         <span style={{fontSize:11,color:C.muted}}>{j.job_number||j.jobNumber||""}</span>
