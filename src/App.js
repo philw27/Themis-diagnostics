@@ -194,7 +194,7 @@ const SECTIONS = [
 {id:"sp6",q:"Can the panel make be identified?"},
 {id:"sp7",q:"Do PV array cables appear to be secure?"},
 {id:"sp8",q:"Has array frame equipotential bonding been installed? (IEC 60364-7-712)"},
-{id:"sp9",q:"Is there evidence of bird / pest damage or fouling?"},
+{id:"sp9",q:"Is there evidence of bird / pest damage or fouling?",invert:true},
 {id:"sp10",q:"Are all junction boxes secure and undamaged?"},
 ]},
 { id:"inverter", label:"Inverter", items:[
@@ -561,12 +561,16 @@ return { overall_status:status, summary, missing_information:missing, risk_items
 }
 
 // - ANSWER ROW -----------------------
-function AnswerRow({ value, onChange }) {
+function AnswerRow({ value, onChange, invert }) {
 return (
 <div style={{display:"flex",gap:5}}>
 {ANSWER_OPTS.map(opt => {
 const sel = value === opt.val;
-return <button key={opt.val} onClick={()=>onChange(sel?null:opt.val)} style={{flex:1,padding:"8px 0",fontSize:11,fontWeight:700,borderRadius:7,border:`1.5px solid ${sel?opt.col:C.border}`,background:sel?opt.col+"22":"#f8fafc",color:sel?opt.col:C.muted,cursor:"pointer",fontFamily:"inherit",fontWeight:sel?700:600,transition:"all 0.12s"}}>{opt.label}</button>;
+// For inverted items (e.g. "evidence of damage?") No is good (green), Yes is bad (red)
+let col = opt.col;
+if (invert && opt.val === "no") col = C.green;
+else if (invert && opt.val === "yes") col = C.red;
+return <button key={opt.val} onClick={()=>onChange(sel?null:opt.val)} style={{flex:1,padding:"8px 0",fontSize:11,fontWeight:700,borderRadius:7,border:`1.5px solid ${sel?col:C.border}`,background:sel?col+"22":"#f8fafc",color:sel?col:C.muted,cursor:"pointer",fontFamily:"inherit",fontWeight:sel?700:600,transition:"all 0.12s"}}>{opt.label}</button>;
 })}
 </div>
 );
@@ -576,7 +580,7 @@ return <button key={opt.val} onClick={()=>onChange(sel?null:opt.val)} style={{fl
 function SectionScore({ items, answers }) {
 const yesno = items.filter(i=>!i.type);
 const done  = yesno.filter(i=>answers[i.id]?.answer).length;
-const flag  = yesno.filter(i=>["no","lim","fi"].includes(answers[i.id]?.answer)).length;
+const flag  = yesno.filter(i=>{const a=answers[i.id]?.answer; if(i.invert&&a==="no")return false; if(i.invert&&a==="yes")return true; return ["no","lim","fi"].includes(a);}).length;
 const pct   = yesno.length>0 ? Math.round(done/yesno.length*100) : 0;
 return (
 <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -618,7 +622,7 @@ const remPic  = (id,pid)  => setAnswers(a=>({...a,[id]:{...(a[id]||{}),photos:(a
 const totalYN = SECTIONS.reduce((n,s)=>n+s.items.filter(i=>!i.type).length,0);
 const done    = Object.values(answers).filter(a=>a.answer).length;
 const pct     = Math.round(done/totalYN*100);
-const flagged = SECTIONS.reduce((n,s)=>n+s.items.filter(i=>["no","lim","fi"].includes(answers[i.id]?.answer)).length,0);
+const flagged = SECTIONS.reduce((n,s)=>n+s.items.filter(i=>{const a=answers[i.id]?.answer; if(i.invert&&a==="no")return false; if(i.invert&&a==="yes")return true; return ["no","lim","fi"].includes(a);}).length,0);
 
 return (
 <div style={{padding:16}}>
@@ -661,11 +665,11 @@ return (
           <div style={{borderTop:`1px solid ${C.border}`}}>
             {sec.items.map((item,idx) => {
               const ia = answers[item.id]||{};
-              const flagged = ["no","lim","fi"].includes(ia.answer);
+              const flagged = item.invert ? (ia.answer==="yes") : ["no","lim","fi"].includes(ia.answer);
               return (
                 <div key={item.id} style={{padding:"14px 16px",borderTop:idx>0?`1px solid ${C.border}10`:"none",background:flagged?C.red+"05":"transparent"}}>
                   <div style={{fontSize:14,color:C.text,marginBottom:10,lineHeight:1.55,fontWeight:500}}>{item.q}</div>
-                  {!item.type && <AnswerRow value={ia.answer} onChange={v=>setAns(item.id,"answer",v)}/>}
+                  {!item.type && <AnswerRow value={ia.answer} onChange={v=>setAns(item.id,"answer",v)} invert={item.invert}/>}
                   {item.type==="number" && <input style={S.input} type="number" placeholder="Enter value" value={ia.value||""} onChange={e=>setAns(item.id,"value",e.target.value)}/>}
                   {item.type==="text" && <input style={S.input} placeholder="Enter details" value={ia.value||""} onChange={e=>setAns(item.id,"value",e.target.value)}/>}
                   {item.type==="select" && (
@@ -1410,8 +1414,8 @@ const set = (k,v) => setR(x=>({...x,[k]:v}));
 return (
 <div style={{padding:16}}>
 <div style={S.secTitle}>* Array Test Results</div>
-{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm) — enter value or LIM"],["ir_neg","IR Neg-Earth (MOhm) — enter value or LIM"],["zs","Zs (Ohm) — enter value or LIM"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","Protective Device Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
-<div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="text" inputMode="decimal" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
+{[["voc","Voc (V)"],["isc","Isc (A)"],["irradiance","Irradiance (W/m2)"],["ir_pos","IR Pos-Earth (MOhm)"],["ir_neg","IR Neg-Earth (MOhm)"],["zs","Zs (Ohm)"],["rcd_trip","RCD Trip Time (ms)"],["mcb_rating","MCB Rating (A)"],["breaking_cap","Breaking Capacity (kA)"]].map(([k,l])=>(
+<div key={k} style={{marginBottom:12}}><label style={S.label}>{l}</label><input style={S.input} type="number" value={r[k]} onChange={e=>set(k,e.target.value)} placeholder="-"/></div>
 ))}
 <div style={{marginBottom:12}}>
 <label style={S.label}>RCD Type</label>
@@ -2086,7 +2090,7 @@ async function generatePDF(job, asset, checklist, testResults, review, type, pro
       ["IR Neg-Earth", testResults?.ir_neg?testResults.ir_neg+" MOhm":"-"],
       ["Zs (Earth Fault Loop)", testResults?.zs?testResults.zs+" Ohm":"-"],
       ["RCD Trip Time", testResults?.rcd_trip?testResults.rcd_trip+" ms":"-"],
-      ["Protective Device Rating", testResults?.mcb_rating?testResults.mcb_rating+" A":"-"],
+      ["MCB Rating", testResults?.mcb_rating?testResults.mcb_rating+" A":"-"],
       ["OCPD Device (BS No.)", testResults?.ocpd_bs||"-"],
       ["Breaking Capacity", testResults?.breaking_cap?testResults.breaking_cap+" kA":"-"],
       ["Polarity Check", testResults?.polarity||"-"],
@@ -2492,7 +2496,7 @@ const pages = [
       ["Zs", testResults?.zs, "Ohm", "-"],
       ["RCD Type", testResults?.rcd_type, "", "Type A min"],
       ["RCD Trip Time", testResults?.rcd_trip, "ms", "<=300ms"],
-      ["Protective Device Rating", testResults?.mcb_rating, "A", "-"],
+      ["MCB Rating", testResults?.mcb_rating, "A", "-"],
       ["OCPD Device (BS No.)", testResults?.ocpd_bs, "", "-"],
       ["Breaking Capacity", testResults?.breaking_cap, "kA", "-"],
       ["Switchgear Function", testResults?.switchgear, "", "Satisfactory"],
