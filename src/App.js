@@ -4721,25 +4721,43 @@ const saveChecklist = async (checklistData) => {
 const jobId = job?.id;
 if (!jobId) { setChecklist(checklistData); setScreen("test_results"); return; }
 setSaving(true);
-const rows = Object.entries(checklistData).map(([itemId, val]) => ({
-job_id:  jobId,
-item_id: itemId,
-answer:  val.answer || null,
-value:   val.value  || null,
-note:    val.note   || null,
-risk:    val.risk   || null,
-}));
-// Save in background - don't block navigation
-(async () => {
-for (let i = 0; i < rows.length; i += 20) {
-await sb.upsert("checklist_answers", await getValidToken(),
-rows.slice(i, i+20), "job_id,item_id").catch(e => console.error("Checklist batch error:", e));
-}
-console.log("Checklist saved");
-})();
 setChecklist(checklistData);
-setSaving(false);
 setScreen("test_results");
+// Save in background - don't block navigation. Upload photos then save rows with URLs.
+(async () => {
+  try {
+    const token = await getValidToken();
+    const rows = [];
+    for (const [itemId, val] of Object.entries(checklistData)) {
+      const photos = val.photos || [];
+      const photoUrls = [];
+      for (const p of photos) {
+        // If already a stored URL (starts with http), keep it. Otherwise upload the dataUrl.
+        if (p.url) { photoUrls.push({ id: p.id, url: p.url, name: p.name }); continue; }
+        if (p.dataUrl && p.dataUrl.startsWith("data:")) {
+          const fname = (p.id + "_" + (p.name || "photo.jpg")).replace(/[^a-zA-Z0-9._-]/g, "_");
+          const url = await sb.uploadPhoto(token, jobId, itemId, p.dataUrl, fname).catch(()=>null);
+          if (url) photoUrls.push({ id: p.id, url, name: p.name });
+          else photoUrls.push({ id: p.id, dataUrl: p.dataUrl, name: p.name }); // fallback keep dataUrl
+        }
+      }
+      rows.push({
+        job_id:  jobId,
+        item_id: itemId,
+        answer:  val.answer || null,
+        value:   val.value  || null,
+        note:    val.note   || null,
+        risk:    val.risk   || null,
+        photos:  photoUrls.length ? photoUrls : null,
+      });
+    }
+    for (let i = 0; i < rows.length; i += 20) {
+      await sb.upsert("checklist_answers", token, rows.slice(i, i+20), "job_id,item_id").catch(e => console.error("Checklist batch error:", e));
+    }
+    console.log("Checklist + photos saved");
+  } catch(e) { console.error("Checklist save failed:", e); }
+})();
+setSaving(false);
 };
 
 // - SAVE TEST RESULTS TO SUPABASE -------------
@@ -4990,12 +5008,25 @@ try {
   const checklist = {};
   if (Array.isArray(clData)) {
     clData.forEach(row => {
+      // Reconstruct photos from stored URLs
+      let photos = [];
+      if (row.photos) {
+        try {
+          const parsed = typeof row.photos === "string" ? JSON.parse(row.photos) : row.photos;
+          photos = (parsed || []).map(p => ({
+            id: p.id || (Date.now()+Math.random()),
+            dataUrl: p.url || p.dataUrl,  // use stored URL as the img src
+            url: p.url || undefined,
+            name: p.name,
+          }));
+        } catch(e) { photos = []; }
+      }
       checklist[row.item_id] = {
         answer: row.answer || undefined,
         value:  row.value  || undefined,
         note:   row.note   || undefined,
         risk:   row.risk   || undefined,
-        photos: [],
+        photos,
       };
     });
   }
