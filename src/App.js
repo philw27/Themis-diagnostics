@@ -1596,7 +1596,28 @@ return (
 }
 
 // - PDF GENERATION ENGINE ------------------
-function generatePDF(job, asset, checklist, testResults, review, type, profile) {
+async function generatePDF(job, asset, checklist, testResults, review, type, profile) {
+  // Preload any URL-based photos into base64 so jsPDF can embed them
+  const loadImageAsDataUrl = (url) => new Promise((resolve) => {
+    if (!url || url.startsWith("data:")) { resolve(url); return; }
+    fetch(url).then(r=>r.blob()).then(blob=>{
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    }).catch(()=>resolve(null));
+  });
+  if (checklist) {
+    for (const key of Object.keys(checklist)) {
+      const photos = checklist[key]?.photos || [];
+      for (const p of photos) {
+        const src = p.dataUrl || p.url;
+        if (src && !src.startsWith("data:")) {
+          p.dataUrl = await loadImageAsDataUrl(src);
+        }
+      }
+    }
+  }
   const PDF_SECTIONS = [
     { id:"panels", label:"Solar Panels", items:[
       {id:"sp1",q:"Orientation of solar panels"},{id:"sp2",q:"Number of solar panels"},
@@ -1928,6 +1949,27 @@ function generatePDF(job, asset, checklist, testResults, review, type, profile) 
           data.cell.styles.fontStyle="bold";
         }
       },
+    });
+    // ---- PHOTOS for this section ----
+    let py = doc.lastAutoTable.finalY + 8;
+    section.items.forEach(item=>{
+      const photos = checklist?.[item.id]?.photos || [];
+      if(photos.length===0) return;
+      if(py > 250){ doc.addPage(); addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (PHOTOS)"); py=30; }
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...navy);
+      doc.text(item.q.substring(0,90), margin, py); py+=4;
+      let px = margin;
+      photos.forEach(p=>{
+        const src = p.dataUrl || p.url;
+        if(!src) return;
+        if(px + 50 > pageW - margin){ px = margin; py += 42; }
+        if(py > 255){ doc.addPage(); addHeader("INSPECTION CHECKLIST - "+section.label.toUpperCase()+" (PHOTOS)"); py=30; px=margin; }
+        try {
+          doc.addImage(src, "JPEG", px, py, 48, 38);
+          px += 52;
+        } catch(e){ console.error("PDF photo error:", e); }
+      });
+      py += 44;
     });
     addFooter(pageNum++);
   });
